@@ -23,6 +23,7 @@ using namespace swamp;
 // Library of Species+Diffusion Coefficient
 ////////////////////////////////////////////////////////////////////////////////
 
+
 class Library : public library
 {
 public:
@@ -275,8 +276,47 @@ public:
         
     }
     
-    void compteDiff( double t, const string &id )
+    
+    // Finite volume for one species
+    void computeOneDiff( double t, const string &id )
     {
+        Workspace &self = *this;
+        const double D = lib[id].get<double>();
+        Array1D     &U  = self[id].as<Array1D>();
+        Array1D     &F  = self[id + "_flux"].as<Array1D>();
+        Array1D     &G =  self[id + "_incr"].as<Array1D>();
+        
+        for( unit_t i=0; i < ntop; ++i )
+        {
+            F[i] = -D * (U[i+1]-U[i]) * ih_half[i];
+        }
+        
+        for( unit_t i=1; i < ntop; ++i )
+        {
+            G[i] = ih[i] * ( F[i] - F[i-1] );
+        }
+    }
+    
+    
+    void applyChemistry( double t, unit_t i )
+    {
+        for( library::const_iterator p = lib.begin(); p != lib.end(); ++p )
+        {
+            const string &id          = (**p).name;
+            const string  id_incr     = id + "_incr"; // SLOW, do better  
+        }
+    }
+    
+    // Finite Volumes for all species
+    void computeAllDiff( double t )
+    {
+        //-- collect raw increase
+        for( library::const_iterator p = lib.begin(); p != lib.end(); ++p )
+        {
+            computeOneDiff(t, (**p).name );
+        }
+        
+        //-- reduce chemistry
         
     }
     
@@ -306,6 +346,7 @@ int main(int argc, char *argv[])
         
         Cell sim(L);
         
+        sim.computeAllDiff(0);
         
     }
     catch( const exception &e )
