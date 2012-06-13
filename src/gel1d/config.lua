@@ -27,5 +27,11 @@ ini_right =
     { 0.0,     { 1, "AcH" }, { 1, "Ac-" } }
 }
 
+ini_core =
+{
+    { 10^(-7), { 1, "H+" } },
+    { 0.0,     { 1, "AcH" }, { 1, "Ac-" } }
+}
+
 ntop       = 100;  -- mesh: 0..ntop
 gel_length = 1e-2; -- in meters
