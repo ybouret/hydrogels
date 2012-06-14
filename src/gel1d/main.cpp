@@ -326,8 +326,10 @@ public:
     }
     
     
+    //==========================================================================
     // Finite volume for one species
-    void computeOneDiff( double t, double dt, SpeciesData &data )
+    //==========================================================================
+    void computeOneIncrease( double t, double dt, SpeciesData &data )
     {
         
         const double D  = data.D;
@@ -346,13 +348,17 @@ public:
         }
     }
     
-    
+    //==========================================================================
+    // reduce increases from composition
+    //==========================================================================
     void applyChemistry( double t, unit_t i )
     {
         assert( C.size() == spd.size() );
         assert( dC.size() == spd.size() );
         
+        //----------------------------------------------------------------------
         //-- collect raw increases
+        //----------------------------------------------------------------------
         for( size_t s=spd.size();s>0;--s )
         {
             SpeciesData &data = spd[s];
@@ -360,11 +366,14 @@ public:
             dC[s]  = (* data.Grow)[i];
         }
         
-        
+        //----------------------------------------------------------------------
         //-- reduce
+        //----------------------------------------------------------------------
         reduce(t);
         
+        //----------------------------------------------------------------------
         //-- dispatch raw increases
+        //----------------------------------------------------------------------
         for( size_t s=spd.size();s>0;--s )
         {
             SpeciesData &data = spd[s];
@@ -372,17 +381,23 @@ public:
         }
     }
     
+    //==========================================================================
     // Finite Volumes for all species
-    void computeAllDiff( double t, double dt )
+    //==========================================================================
+    void computeIncreases( double t, double dt )
     {
         std::cerr << "*** Diffusion" << std::endl;
+        //----------------------------------------------------------------------
         //-- collect raw increase
+        //----------------------------------------------------------------------
         for( size_t s=spd.size();s>0;--s )
         {
-            computeOneDiff(t, dt, spd[s] );
+            computeOneIncrease(t, dt, spd[s] );
         }
         
+        //----------------------------------------------------------------------
         //-- reduce chemistry on each point
+        //----------------------------------------------------------------------
         for( size_t i=1; i < ntop; ++i )
         {
             applyChemistry(t, i);
@@ -410,14 +425,14 @@ int main(int argc, char *argv[])
         Lua::Config::DoFile(L,argv[1]);
         
         ////////////////////////////////////////////////////////////////////////
-        // loading chemistry
+        // Create the Cell
         ////////////////////////////////////////////////////////////////////////
-        
-        
         Cell sim(L);
         
-        const double dt = 0.1;
-        sim.computeAllDiff(0.0,dt);
+        
+        
+        const double dt = 0.01;
+        sim.computeIncreases(0.0,dt);
         
     }
     catch( const exception &e )
