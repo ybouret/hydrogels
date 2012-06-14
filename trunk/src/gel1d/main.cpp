@@ -524,6 +524,27 @@ void save_grow( const string &filename, const Cell &cell, const string &id )
 }
 
 
+#if HAS_FLTK == 1
+#include "ui.h"
+#include "yocto/auto-ptr.hpp"
+
+static inline void load_pH( const Cell &cell )
+{
+    const Workspace &W = cell;
+    FLTK::Curve &crv = Ca->curves["pH"];
+    crv.free();
+    const Array1D &x = cell.x;
+    const Array1D &h = W["H+"].as<Array1D>();
+    for( unit_t i=0; i <= cell.ntop; ++i )
+    {
+        crv.push_back( FLTK::Point(x[i],-log10(h[i])) );
+    }
+    Ca->xaxis.set_range(x[0],x[cell.ntop]);
+    Ca->yaxis.set_range(4, 8);
+    Ca->redraw();
+}
+#endif
+
 int main(int argc, char *argv[])
 {
     const char *progname = _vfs::get_base_name(argv[0]);
@@ -543,22 +564,35 @@ int main(int argc, char *argv[])
         ////////////////////////////////////////////////////////////////////////
         // Create the Cell
         ////////////////////////////////////////////////////////////////////////
-        Cell sim(L);
+        Cell cell(L);
         
-        
+#if HAS_FLTK
+        auto_ptr<Fl_Window> win( makeUI() );
+        win->show(argc,argv);
+        load_pH(cell);
+        Fl::check();
+#endif
         
         const double dt = 0.01;
-        for( size_t iter=1; iter <= 2000; ++iter )
+        for( size_t  iter=1; iter <= 20000; ++iter )
         {
             double t_old = (iter-1) * dt;
-            double t_now = iter     * dt;
+            double t_now =  iter    * dt;
             std::cerr << "t=" << t_now << std::endl;
-            sim.perform(t_old,dt);
+            cell.perform(t_old,dt);
+            
+#if HAS_FLTK
+            if( 0 == (iter%10) )
+            {
+                load_pH(cell);
+                Fl::check();
+                if( !UI_Window->shown() )
+                    break;
+            }
+#endif
         }
+     
         
-        save_profile( "h.dat", sim, "H+");
-        save_flux("Fh.dat", sim, "H+");
-        save_grow("Ih.dat", sim, "H+");
     }
     catch( const exception &e )
     {

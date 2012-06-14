@@ -1,0 +1,41 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0300 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include "yocto/FLTK/Canvas.hpp"} {public global
+} 
+
+decl {\#include "yocto/FLTK/Matte_Button.hpp"} {public global
+} 
+
+decl {\#include "FL/fl_ask.H"} {public global
+} 
+
+decl {using namespace yocto;} {public global
+} 
+
+Function {makeUI()} {open
+} {
+  Fl_Window UI_Window {
+    label {Output Window}
+    callback {{
+}} open
+    xywh {569 178 400 443} type Double resizable visible
+  } {
+    Fl_Box Ca {
+      label label
+      xywh {25 25 350 350} box FLAT_BOX color 0 labeltype NO_LABEL resizable
+      class {FLTK::Canvas}
+    }
+    Fl_Button {} {
+      label Stop
+      callback {if( fl_ask("Really Stop?") )
+{
+	UI_Window->hide();
+}} selected
+      xywh {30 390 63 23}
+      code0 {o->color(FL_RED);}
+      class {FLTK::Matte_Button}
+    }
+  }
+} 
