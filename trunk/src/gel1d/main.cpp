@@ -11,6 +11,14 @@ using namespace yocto;
 using namespace aqueous;
 using namespace swamp;
 
+
+
+typedef coord1D         Coord;
+typedef array1D<double> Array1D;
+typedef layout1D        Layout;
+typedef workspace<Layout,double,rmesh> Workspace;
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //
@@ -23,11 +31,41 @@ using namespace swamp;
 // Library of Species+Diffusion Coefficient
 ////////////////////////////////////////////////////////////////////////////////
 
+class SpeciesData
+{
+public:
+    explicit SpeciesData( double Dvalue ) throw() :
+    D( Dvalue ),
+    U(0),
+    Flux(0),
+    Grow(0)
+    {
+    }
+    
+    ~SpeciesData() throw() {}
+    
+    SpeciesData( const SpeciesData &other ) throw() :
+    D( other.D ),
+    U( other.U ),
+    Flux( other.Flux ),
+    Grow( other.Grow )
+    {
+    }
+    
+    
+    const double D; //!< diffusion coefficient
+    Array1D *U;     //!< associated field
+    Array1D *Flux;  //!< associated flux
+    Array1D *Grow;  //!< associated gain
+    
+private:
+    YOCTO_DISABLE_ASSIGN(SpeciesData);
+};
 
 class Library : public library
 {
 public:
-    explicit Library( lua_State *L ) : library( sizeof(double) )
+    explicit Library( lua_State *L ) : library( sizeof(SpeciesData) )
     {
         _lua::species_ctor getD( this, & Library:: loadDiffusionCoefficient );
         _lua::load(L, *this, "species", &getD);
@@ -47,9 +85,9 @@ private:
             throw exception("'%s': invalid type for D", sp.name.c_str());
         }
         
-        double &D = sp.get<double>();
-        D = lua_tonumber(L,-1);
+        const double D = lua_tonumber(L,-1);
         if( D < 0 ) throw exception("'%s': invalid D value", sp.name.c_str());
+        sp.make<SpeciesData,double>(D);
     }
     YOCTO_DISABLE_COPY_AND_ASSIGN(Library);
 };
@@ -103,11 +141,6 @@ private:
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-typedef coord1D         Coord;
-typedef array1D<double> Array1D;
-typedef layout1D        Layout;
-typedef workspace<Layout,double,rmesh> Workspace;
 
 
 static inline void workspace2solution( solution &s, const Workspace &w, unit_t i )
@@ -190,7 +223,7 @@ public Workspace
 {
 public:
     
-    
+    vector<SpeciesData> spd;
     Initializer ini_left;    //!< compute what is at left
     Initializer ini_right;   //!< compute what is at right
     Initializer ini_core;    //!< compute what is inside core
@@ -203,12 +236,13 @@ public:
     Array1D    &x_half;
     Array1D    &ih;
     Array1D    &ih_half;
-
+    
     explicit Cell( lua_State *L ) :
     Library(L),
     ChemSys(L,*this),
     Parameters(L,*this),
     Workspace( sim_layout, sim_ghosts, sim_fields),
+    spd(),
     ini_left(  L, *this, "ini_left"  ),
     ini_right( L, *this, "ini_right" ),
     ini_core(  L, *this, "ini_core"  ), 
@@ -235,7 +269,7 @@ public:
         std::cerr << "@left =" << std::endl << sol_left  << std::endl;
         std::cerr << "@right=" << std::endl << sol_right << std::endl;
         std::cerr << "@core =" << std::endl << sol_right << std::endl;
-
+        
         
         
         //----------------------------------------------------------------------
@@ -269,6 +303,21 @@ public:
         for( unit_t i=1; i < ntop; ++i)
             solution2workspace( *this, sol_core, i);
         solution2workspace( *this, sol_right, ntop);
+        
+        //----------------------------------------------------------------------
+        // hook up species
+        //----------------------------------------------------------------------
+        Workspace &self = *this;
+        for( species::iterator i=lib.begin(); i != lib.end(); ++i)
+        {
+            const species &sp = **i;
+            SpeciesData   &data = sp.get<SpeciesData>();
+            data.U    = & self[ sp.name ].as<Array1D>();
+            data.Flux = & self[ sp.name + "_flux"].as<Array1D>();
+            data.Grow = & self[ sp.name + "_incr"].as<Array1D>();
+            spd.push_back(data);
+        }
+        
     }
     
     virtual ~Cell() throw()
@@ -278,13 +327,13 @@ public:
     
     
     // Finite volume for one species
-    void computeOneDiff( double t, const string &id )
+    void computeOneDiff( double t, double dt, SpeciesData &data )
     {
-        Workspace &self = *this;
-        const double D = lib[id].get<double>();
-        Array1D     &U  = self[id].as<Array1D>();
-        Array1D     &F  = self[id + "_flux"].as<Array1D>();
-        Array1D     &G =  self[id + "_incr"].as<Array1D>();
+        
+        const double D  = data.D;
+        Array1D     &U  = * data.U;
+        Array1D     &F  = * data.Flux;
+        Array1D     &G =  * data.Grow;
         
         for( unit_t i=0; i < ntop; ++i )
         {
@@ -293,30 +342,51 @@ public:
         
         for( unit_t i=1; i < ntop; ++i )
         {
-            G[i] = ih[i] * ( F[i] - F[i-1] );
+            G[i] = dt * ih[i] * ( F[i] - F[i-1] );
         }
     }
     
     
     void applyChemistry( double t, unit_t i )
     {
-        for( library::const_iterator p = lib.begin(); p != lib.end(); ++p )
+        assert( C.size() == spd.size() );
+        assert( dC.size() == spd.size() );
+        
+        //-- collect raw increases
+        for( size_t s=spd.size();s>0;--s )
         {
-            const string &id          = (**p).name;
-            const string  id_incr     = id + "_incr"; // SLOW, do better  
+            SpeciesData &data = spd[s];
+            C[s]   = (* data.U)   [i];
+            dC[s]  = (* data.Grow)[i];
+        }
+        
+        
+        //-- reduce
+        reduce(t);
+        
+        //-- dispatch raw increases
+        for( size_t s=spd.size();s>0;--s )
+        {
+            SpeciesData &data = spd[s];
+            (*data.Grow)[i]   = dC[s];
         }
     }
     
     // Finite Volumes for all species
-    void computeAllDiff( double t )
+    void computeAllDiff( double t, double dt )
     {
+        std::cerr << "*** Diffusion" << std::endl;
         //-- collect raw increase
-        for( library::const_iterator p = lib.begin(); p != lib.end(); ++p )
+        for( size_t s=spd.size();s>0;--s )
         {
-            computeOneDiff(t, (**p).name );
+            computeOneDiff(t, dt, spd[s] );
         }
         
-        //-- reduce chemistry
+        //-- reduce chemistry on each point
+        for( size_t i=1; i < ntop; ++i )
+        {
+            applyChemistry(t, i);
+        }
         
     }
     
@@ -346,7 +416,8 @@ int main(int argc, char *argv[])
         
         Cell sim(L);
         
-        sim.computeAllDiff(0);
+        const double dt = 0.1;
+        sim.computeAllDiff(0.0,dt);
         
     }
     catch( const exception &e )
