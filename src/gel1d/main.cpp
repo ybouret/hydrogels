@@ -125,6 +125,7 @@ public:
     initializer(the_lib)
     {
         _lua::load(L, *this, ininame);
+        electroneutrality();
     }
     
     virtual ~Initializer() throw()
@@ -389,7 +390,7 @@ public:
     //==========================================================================
     void computeIncreases( double t, double dt )
     {
-        std::cerr << "*** Diffusion" << std::endl;
+        //std::cerr << "*** Diffusion" << std::endl;
         //----------------------------------------------------------------------
         //-- collect raw increase
         //----------------------------------------------------------------------
@@ -535,14 +536,36 @@ static inline void load_pH( const Cell &cell )
     crv.free();
     const Array1D &x = cell.x;
     const Array1D &h = W["H+"].as<Array1D>();
+    
     for( unit_t i=0; i <= cell.ntop; ++i )
     {
         crv.push_back( FLTK::Point(x[i],-log10(h[i])) );
     }
+    
     Ca->xaxis.set_range(x[0],x[cell.ntop]);
-    Ca->yaxis.set_range(4, 8);
+    Ca->yaxis.set_range(-log10(h[0]), -log10(h[cell.ntop]) );
     Ca->redraw();
 }
+
+static inline void load_CO2( const Cell &cell )
+{
+    const Workspace &W = cell;
+    FLTK::Curve &crv = Ca->curves2["CO2"];
+    crv.free();
+    crv.color = FL_RED;
+    const Array1D &x = cell.x;
+    const Array1D &y = W["CO2"].as<Array1D>();
+    
+    for( unit_t i=0; i <= cell.ntop; ++i )
+    {
+        crv.push_back( FLTK::Point(x[i],y[i]) );
+    }
+    
+    Ca->xaxis.set_range(x[0],x[cell.ntop]);
+    Ca->y2axis.autoscaleY(crv);
+    Ca->redraw();
+}
+
 #endif
 
 int main(int argc, char *argv[])
@@ -573,18 +596,19 @@ int main(int argc, char *argv[])
         Fl::check();
 #endif
         
-        const double dt = 0.01;
-        for( size_t  iter=1; iter <= 20000; ++iter )
+        const double dt = 0.005;
+        for( size_t  iter=1; ; ++iter )
         {
             double t_old = (iter-1) * dt;
             double t_now =  iter    * dt;
-            std::cerr << "t=" << t_now << std::endl;
             cell.perform(t_old,dt);
             
 #if HAS_FLTK
-            if( 0 == (iter%10) )
+            if( 0 == (iter%50) )
             {
+                std::cerr << "t=" << t_now << std::endl;
                 load_pH(cell);
+                load_CO2(cell);
                 Fl::check();
                 if( !UI_Window->shown() )
                     break;
@@ -592,7 +616,6 @@ int main(int argc, char *argv[])
 #endif
         }
      
-        
     }
     catch( const exception &e )
     {
