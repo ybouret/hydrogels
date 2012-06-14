@@ -385,7 +385,7 @@ public:
     }
     
     //==========================================================================
-    // Finite Volumes for all species
+    // compute increases for all species
     //==========================================================================
     void computeIncreases( double t, double dt )
     {
@@ -406,8 +406,79 @@ public:
             applyChemistry(t, i);
         }
     }
-
-
+    
+    
+    //==========================================================================
+    // pseudo adaptive step
+    //==========================================================================
+    void perform( double t, double dt )
+    {
+        double t_now  = t;  //! where we are
+        double dt_rem = dt; //! remaining step
+        
+        while( dt_rem > 0 )
+        {
+            computeIncreases( t_now, dt_rem );
+            double dt_done = dt_rem;
+            double factor  = 1;
+            
+        CHECK: ;
+            for( size_t i=1; i < ntop; ++i )
+            {
+                for( size_t s=spd.size();s>0;--s )
+                {
+                    const SpeciesData &data = spd[s];
+                    const Array1D &U = *data.U;
+                    const Array1D &G = *data.Grow;
+                    const double U_i = U[i]; assert( U[i] >= 0 );
+                    const double G_i = G[i];
+                    if( G_i <= -U_i )
+                    {
+                        const double tmp = -U_i/(G_i+G_i);
+                        if( tmp < factor )
+                            factor = tmp;
+                    }
+                }
+            }
+            
+            if( factor < 1 )
+            {
+                std::cerr << "Need to rescale" << std::endl;
+                dt_done *= factor;
+                for( size_t i=1; i < ntop; ++i )
+                {
+                    for( size_t s=spd.size();s>0;--s )
+                    {
+                        (*spd[s].Grow)[i] *= factor;
+                    }
+                }
+                factor = 1;
+                goto CHECK;
+            }
+            
+            
+            //------------------------------------------------------------------
+            // increase
+            //------------------------------------------------------------------
+            for( size_t i=1; i < ntop; ++i )
+            {
+                for( size_t s=spd.size();s>0;--s )
+                {
+                    SpeciesData &data = spd[s];
+                    Array1D       &U = *data.U;
+                    const Array1D &G = *data.Grow;
+                    U[i] += G[i];
+                }
+            }
+            
+            dt_rem -= dt_done;
+            t_now  += dt_done;
+            
+        }
+        
+    }
+    
+    
 };
 
 static inline 
@@ -477,7 +548,14 @@ int main(int argc, char *argv[])
         
         
         const double dt = 0.01;
-        sim.computeIncreases(0.0,dt);
+        for( size_t iter=1; iter <= 2000; ++iter )
+        {
+            double t_old = (iter-1) * dt;
+            double t_now = iter     * dt;
+            std::cerr << "t=" << t_now << std::endl;
+            sim.perform(t_old,dt);
+        }
+        
         save_profile( "h.dat", sim, "H+");
         save_flux("Fh.dat", sim, "H+");
         save_grow("Ih.dat", sim, "H+");
