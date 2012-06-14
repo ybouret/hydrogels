@@ -6,6 +6,7 @@
 #include "yocto/string/vfs-utils.hpp"
 
 #include "yocto/swamp/common.hpp"
+#include "yocto/ios/ocstream.hpp"
 
 using namespace yocto;
 using namespace aqueous;
@@ -332,19 +333,21 @@ public:
     void computeOneIncrease( double t, double dt, SpeciesData &data )
     {
         
-        const double D  = data.D;
+        const double D  =   data.D;
         Array1D     &U  = * data.U;
         Array1D     &F  = * data.Flux;
         Array1D     &G =  * data.Grow;
         
+        // flux
         for( unit_t i=0; i < ntop; ++i )
         {
             F[i] = -D * (U[i+1]-U[i]) * ih_half[i];
         }
         
+        // - div Flux
         for( unit_t i=1; i < ntop; ++i )
         {
-            G[i] = dt * ih[i] * ( F[i] - F[i-1] );
+            G[i] = -dt * ih[i] * ( F[i] - F[i-1] );
         }
     }
     
@@ -402,10 +405,52 @@ public:
         {
             applyChemistry(t, i);
         }
-        
+    }
+
+
+};
+
+static inline 
+void save_profile( const string &filename, const Cell &cell, const string &id )
+{
+    const Workspace &W = cell;
+    const Array1D   &U = W[id].as<Array1D>();
+    const Array1D   &x = cell.x;
+    ios::ocstream    fp(filename,false);
+    for( unit_t i=0; i <= cell.ntop; ++i )
+    {
+        fp("%g %g\n", x[i], U[i]);
     }
     
-};
+}
+
+static inline 
+void save_flux( const string &filename, const Cell &cell, const string &id )
+{
+    const Workspace &W = cell;
+    const Array1D   &F = W[id + "_flux" ].as<Array1D>();
+    const Array1D   &x = cell.x;
+    ios::ocstream    fp(filename,false);
+    for( unit_t i=0; i < cell.ntop; ++i )
+    {
+        fp("%g %g\n", x[i], F[i]);
+    }
+    
+}
+
+static inline 
+void save_grow( const string &filename, const Cell &cell, const string &id )
+{
+    const Workspace &W = cell;
+    const Array1D   &G = W[id + "_incr" ].as<Array1D>();
+    const Array1D   &x = cell.x;
+    ios::ocstream    fp(filename,false);
+    for( unit_t i=1; i < cell.ntop; ++i )
+    {
+        fp("%g %g\n", x[i], G[i]);
+    }
+    
+}
 
 
 int main(int argc, char *argv[])
@@ -433,7 +478,9 @@ int main(int argc, char *argv[])
         
         const double dt = 0.01;
         sim.computeIncreases(0.0,dt);
-        
+        save_profile( "h.dat", sim, "H+");
+        save_flux("Fh.dat", sim, "H+");
+        save_grow("Ih.dat", sim, "H+");
     }
     catch( const exception &e )
     {
