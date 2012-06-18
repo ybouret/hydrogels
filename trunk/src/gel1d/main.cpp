@@ -8,6 +8,8 @@
 #include "yocto/swamp/common.hpp"
 #include "yocto/ios/ocstream.hpp"
 
+#include "yocto/code/utils.hpp"
+
 using namespace yocto;
 using namespace aqueous;
 using namespace swamp;
@@ -239,7 +241,8 @@ public:
     Array1D    &ih;
     Array1D    &ih_half;
     bool        noRightFlux;
-    
+    double      weight_coef;
+    double      weight_diff;
     explicit Cell( lua_State *L ) :
     Library(L),
     ChemSys(L,*this),
@@ -257,7 +260,10 @@ public:
     x( mesh.X() ),
     x_half(  adb["x_half" ].as<Array1D>() ),
     ih(      adb["ih"     ].as<Array1D>() ),
-    ih_half( adb["ih_half"].as<Array1D>() )
+    ih_half( adb["ih_half"].as<Array1D>() ),
+    noRightFlux(false),
+    weight_coef(0),
+    weight_diff(0)
     {
         //----------------------------------------------------------------------
         // initialize chemistry
@@ -268,6 +274,25 @@ public:
         sol_right.get( C );
         ini_core(*this,0.0);
         sol_core.get( C );
+        
+        //----------------------------------------------------------------------
+        // special boundary condition
+        //----------------------------------------------------------------------
+        lua_getglobal(L, "noRightFlux" );
+        if( lua_isboolean(L, -1) )
+            noRightFlux = lua_toboolean(L, -1) ? true : false ;
+        std::cerr << "No Right Flux=" << ( noRightFlux ? "true" : "false") << std::endl;
+        
+        const double dx1 = x[ntop] - x[ntop-1];
+        const double dx2 = x[ntop] - x[ntop-2];
+        weight_coef = dx2/dx1;
+        weight_coef *= weight_coef;
+        weight_diff  = weight_coef - 1.0;
+        if( noRightFlux )
+        {
+            sol_right.copy( sol_core );
+        }
+        
         
         std::cerr << "@left =" << std::endl << sol_left  << std::endl;
         std::cerr << "@right=" << std::endl << sol_right << std::endl;
@@ -320,15 +345,6 @@ public:
             data.Grow = & self[ sp.name + "_incr"].as<Array1D>();
             spd.push_back(data);
         }
-        
-        
-        //----------------------------------------------------------------------
-        // special boundary condition
-        //----------------------------------------------------------------------
-        lua_getglobal(L, "noRightFlux" );
-        if( lua_isboolean(L, -1) )
-            noRightFlux = lua_toboolean(L, -1) ? true : false ;
-        std::cerr << "No Right Flux=" << ( noRightFlux ? "true" : "false") << std::endl;
         
         
     }
@@ -455,7 +471,7 @@ public:
             
             if( factor < 1 )
             {
-                std::cerr << "Need to rescale" << std::endl;
+                //std::cerr << "Need to rescale" << std::endl;
                 dt_done *= factor;
                 for( size_t i=1; i < ntop; ++i )
                 {
@@ -488,7 +504,13 @@ public:
             //------------------------------------------------------------------
             if( noRightFlux )
             {
-                
+                for( size_t s=spd.size();s>0;--s )
+                {
+                    SpeciesData   &data  = spd[s];
+                    Array1D       &U     = *data.U;
+                    const double   Utop  = (weight_coef * U[ntop-1] - U[ntop-2])/weight_diff;
+                    U[ntop]              = max_of<double>(Utop,0.0);
+                }
             }
             dt_rem -= dt_done;
             t_now  += dt_done;

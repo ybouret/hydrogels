@@ -7,7 +7,7 @@ IF(FLTK_FOUND)
 	FLUID_UIC(ui)
 ENDIF()
 
-ADD_EXECUTABLE(gel1d main.cpp config.lua ${ui_SOURCES})
+ADD_EXECUTABLE(gel1d main.cpp config.lua front.lua ${ui_SOURCES})
 TARGET_LINK_YOCTO(gel1d aqueous lua lua++ swamp mk)
 
 IF(FLTK_FOUND)
