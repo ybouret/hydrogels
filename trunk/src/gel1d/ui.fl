@@ -32,10 +32,14 @@ Function {makeUI()} {open
       callback {if( fl_ask("Really Stop?") )
 {
 	UI_Window->hide();
-}} selected
+}}
       xywh {30 390 63 23}
       code0 {o->color(FL_RED);}
       class {FLTK::Matte_Button}
+    }
+    Fl_Value_Output Cmax {
+      label {info=}
+      xywh {160 391 135 24}
     }
   }
 } 
