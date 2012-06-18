@@ -62,5 +62,6 @@ ini_core =
     { 0.0,     { 1,  "CO2"}, { 1, "HCO3-"}, { 1, "CO3--"} }
 }
 
-ntop       = 500;  -- mesh: 0..ntop
-gel_length = 0.5e-2; -- in meters
+ntop        = 500;    -- mesh: 0..ntop
+gel_length  = 0.5e-2; -- in meters
+noRightFlux = false;  -- boundary condition

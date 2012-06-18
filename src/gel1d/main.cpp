@@ -238,6 +238,7 @@ public:
     Array1D    &x_half;
     Array1D    &ih;
     Array1D    &ih_half;
+    bool        noRightFlux;
     
     explicit Cell( lua_State *L ) :
     Library(L),
@@ -319,6 +320,16 @@ public:
             data.Grow = & self[ sp.name + "_incr"].as<Array1D>();
             spd.push_back(data);
         }
+        
+        
+        //----------------------------------------------------------------------
+        // special boundary condition
+        //----------------------------------------------------------------------
+        lua_getglobal(L, "noRightFlux" );
+        if( lua_isboolean(L, -1) )
+            noRightFlux = lua_toboolean(L, -1) ? true : false ;
+        std::cerr << "No Right Flux=" << ( noRightFlux ? "true" : "false") << std::endl;
+        
         
     }
     
@@ -472,6 +483,13 @@ public:
                 }
             }
             
+            //------------------------------------------------------------------
+            // boundary
+            //------------------------------------------------------------------
+            if( noRightFlux )
+            {
+                
+            }
             dt_rem -= dt_done;
             t_now  += dt_done;
             
@@ -561,9 +579,12 @@ static inline void load_CO2( const Cell &cell )
         crv.push_back( FLTK::Point(x[i],y[i]) );
     }
     
+    
     Ca->xaxis.set_range(x[0],x[cell.ntop]);
     Ca->y2axis.autoscaleY(crv);
+    Cmax->value( Ca->y2axis.vmax );
     Ca->redraw();
+    
 }
 
 #endif
@@ -588,11 +609,14 @@ int main(int argc, char *argv[])
         // Create the Cell
         ////////////////////////////////////////////////////////////////////////
         Cell cell(L);
+        const bool hasCO2 = cell.lib.search("CO2") != NULL;
         
 #if HAS_FLTK
         auto_ptr<Fl_Window> win( makeUI() );
-        win->show(argc,argv);
+        win->show();
         load_pH(cell);
+        if( hasCO2 )
+            load_CO2(cell);
         Fl::check();
 #endif
         
@@ -604,18 +628,19 @@ int main(int argc, char *argv[])
             cell.perform(t_old,dt);
             
 #if HAS_FLTK
-            if( 0 == (iter%50) )
+            if( 0 == (iter%20) )
             {
                 std::cerr << "t=" << t_now << std::endl;
                 load_pH(cell);
-                load_CO2(cell);
+                if( hasCO2 )
+                    load_CO2(cell);
                 Fl::check();
                 if( !UI_Window->shown() )
                     break;
             }
 #endif
         }
-     
+        
     }
     catch( const exception &e )
     {
