@@ -6,11 +6,6 @@
 D_h = 9.3046e-9;
 D_w = 5.2291e-9;
 
-D_CO2       = 1.9e-9;
-D_Bicarb    = 1.4532e-9;
-D_Carbonate = 0.9222e-9;
-
-D_Acetate = 1.0888e-09;
 
 D_Na = 1.3328e-09;
 D_K  = 1.9568e-09;
@@ -23,45 +18,31 @@ species =
 {
 	{ "H+",     1, D_h },
 	{ "HO-",   -1, D_w },
-    { "AcH",    0, D_Acetate   },
-    { "Ac-",   -1, D_Acetate   },
-    { "CO2",    0, D_CO2       },
-    { "HCO3-", -1, D_Bicarb    },
-    { "CO3--", -2, D_Carbonate },
-    { "Na+",    1, D_Na        } 
+    { "Na+",    1, D_Na },
+    { "Cl-",   -1, D_Cl } 
 };
 
 
 equilibria =
 {
     { "water",  1e-14,     { 1, "H+" }, { 1, "HO-" } },
-    { "acetic", 10^(-4.7), { 1, "H+"},  { 1, "Ac-"}, { -1, "AcH"} },
-    { "K1",     4.45e-7,   { 1, "H+"},  { 1, "HCO3-"}, {-1,"CO2"} },
-    { "K2",     4.69e-11,  { 1, "H+"},  { 1, "CO3--"}, {-1,"HCO3-"} }
 };
 
--- the programm add the electroneutrality
+-- the program adds the electroneutrality
 ini_left =
 {
-    { 1.0,    { 1, "AcH" }, { 1, "Ac-" } },
-    { 0.0,    { 1,  "Na+"}  },
-    { 0.0,    { 1,  "CO2"}, { 1, "HCO3-"}, { 1, "CO3--"} }
-}
-
-ini_right =
-{
-    { 0.0,     { 1, "AcH" }, { 1, "Ac-" } },
-    { 1.0,     { 1, "Na+" } },
-    { 1.0,     { 1,  "CO2"}, { 1, "HCO3-"}, { 1, "CO3--"} }
+    { 10^(-2), { 1, "H+" } },
+    { 0.1,     { 1, "Na+"} }
 }
 
 ini_core =
 {
-    { 0.0,     { 1, "AcH" }, { 1, "Ac-" } },
-    { 0.0,     { 1, "Na+" } },
-    { 0.0,     { 1,  "CO2"}, { 1, "HCO3-"}, { 1, "CO3--"} }
+    { 10^(-5), { 1, "H+" } },
+    { 0.1,     { 1, "Cl-"} }
 }
+
+ini_right = ini_core;
 
 ntop        = 500;    -- mesh: 0..ntop
 gel_length  = 0.5e-2; -- in meters
-noRightFlux = false;  -- boundary condition
+noRightFlux = true;    -- boundary condition
