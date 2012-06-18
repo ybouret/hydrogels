@@ -283,21 +283,11 @@ public:
             noRightFlux = lua_toboolean(L, -1) ? true : false ;
         std::cerr << "No Right Flux=" << ( noRightFlux ? "true" : "false") << std::endl;
         
-        const double dx1 = x[ntop] - x[ntop-1];
-        const double dx2 = x[ntop] - x[ntop-2];
-        weight_coef = dx2/dx1;
-        weight_coef *= weight_coef;
-        weight_diff  = weight_coef - 1.0;
-        if( noRightFlux )
-        {
-            sol_right.copy( sol_core );
-        }
-        
+              
         
         std::cerr << "@left =" << std::endl << sol_left  << std::endl;
         std::cerr << "@right=" << std::endl << sol_right << std::endl;
         std::cerr << "@core =" << std::endl << sol_right << std::endl;
-        
         
         
         //----------------------------------------------------------------------
@@ -346,6 +336,16 @@ public:
             spd.push_back(data);
         }
         
+        const double dx1 = x[ntop] - x[ntop-1];
+        const double dx2 = x[ntop] - x[ntop-2];
+        weight_coef = dx2/dx1;
+        weight_coef *= weight_coef;
+        weight_diff  = weight_coef - 1.0;
+        if( noRightFlux )
+        {
+            sol_right.copy( sol_core );
+        }
+
         
     }
     
@@ -504,12 +504,16 @@ public:
             //------------------------------------------------------------------
             if( noRightFlux )
             {
+                //std::cerr << "weight_coef=" << weight_coef << std::endl;
+                //std::cerr << "weight_diff=" << weight_diff << std::endl;
+                
                 for( size_t s=spd.size();s>0;--s )
                 {
                     SpeciesData   &data  = spd[s];
                     Array1D       &U     = *data.U;
                     const double   Utop  = (weight_coef * U[ntop-1] - U[ntop-2])/weight_diff;
                     U[ntop]              = max_of<double>(Utop,0.0);
+                    //std::cerr << "Uright #" << s << " = " << U[ntop] << std::endl;
                 }
             }
             dt_rem -= dt_done;
@@ -584,6 +588,7 @@ static inline void load_pH( const Cell &cell )
     
     Ca->xaxis.set_range(x[0],x[cell.ntop]);
     Ca->yaxis.set_range(-log10(h[0]), -log10(h[cell.ntop]) );
+    Cmax->value( Ca->yaxis.vmax );
     Ca->redraw();
 }
 
