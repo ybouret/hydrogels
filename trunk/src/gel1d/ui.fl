@@ -8,6 +8,9 @@ decl {\#include "yocto/FLTK/Canvas.hpp"} {public global
 decl {\#include "yocto/FLTK/Matte_Button.hpp"} {public global
 } 
 
+decl {\#include "yocto/FLTK/ColorScale.hpp"} {public global
+} 
+
 decl {\#include "FL/fl_ask.H"} {public global
 } 
 
@@ -20,7 +23,7 @@ Function {makeUI()} {open
     label {Output Window}
     callback {{
 }} open
-    xywh {569 178 400 443} type Double resizable visible
+    xywh {569 178 400 501} type Double resizable visible
   } {
     Fl_Box Ca {
       label label
@@ -33,13 +36,18 @@ Function {makeUI()} {open
 {
 	UI_Window->hide();
 }}
-      xywh {30 390 63 23}
+      xywh {35 455 63 23}
       code0 {o->color(FL_RED);}
       class {FLTK::Matte_Button}
     }
     Fl_Value_Output Cmax {
       label {info=}
-      xywh {160 391 135 24}
+      xywh {165 456 135 23}
+    }
+    Fl_Box Scale {
+      label label selected
+      xywh {25 389 350 50} box FLAT_BOX color 0 labeltype NO_LABEL
+      class {FLTK::HColorScale}
     }
   }
 } 
