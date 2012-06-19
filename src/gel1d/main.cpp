@@ -9,6 +9,7 @@
 #include "yocto/ios/ocstream.hpp"
 
 #include "yocto/code/utils.hpp"
+#include "yocto/geom/color.hpp"
 
 using namespace yocto;
 using namespace aqueous;
@@ -178,6 +179,9 @@ public:
     ghosts_setup<Coord>    sim_ghosts;
     fields_setup<layout1D> sim_fields;
     const double           gel_length;
+    const double           Ki;
+    color::rgba32          IA;
+    color::rgba32          IB;
     
     explicit Parameters( lua_State *L, const library &lib ) :
     __GET_NUMBER(ntop),
@@ -185,7 +189,8 @@ public:
     sim_layout(0,ntop),
     sim_ghosts(),
     sim_fields(),
-    __GET_NUMBER(gel_length)
+    __GET_NUMBER(gel_length),
+    Ki(1e-4)
     {
         if( volumes < 1 )
             throw exception("not enough volumes");
@@ -200,6 +205,15 @@ public:
         sim_fields.add<Array1D>("ih",false);
         sim_fields.add<Array1D>("h_half",false);
         sim_fields.add<Array1D>("ih_half",false);
+        
+        IA.r = 255;
+        IA.g = 255;
+        IA.b = 255;
+        
+        IB.r = 0;
+        IB.g = 255;
+        IB.b = 0;
+        
     }
     
     virtual ~Parameters() throw()
@@ -243,6 +257,7 @@ public:
     bool        noRightFlux;
     double      weight_coef;
     double      weight_diff;
+    
     explicit Cell( lua_State *L ) :
     Library(L),
     ChemSys(L,*this),
@@ -283,7 +298,7 @@ public:
             noRightFlux = lua_toboolean(L, -1) ? true : false ;
         std::cerr << "No Right Flux=" << ( noRightFlux ? "true" : "false") << std::endl;
         
-              
+        
         
         std::cerr << "@left =" << std::endl << sol_left  << std::endl;
         std::cerr << "@right=" << std::endl << sol_right << std::endl;
@@ -345,7 +360,7 @@ public:
         {
             sol_right.copy( sol_core );
         }
-
+        
         
     }
     
@@ -573,7 +588,7 @@ void save_grow( const string &filename, const Cell &cell, const string &id )
 #include "ui.h"
 #include "yocto/auto-ptr.hpp"
 
-static inline void load_pH( const Cell &cell )
+static inline void load_pH( const Cell &cell, bool rescale = false )
 {
     const Workspace &W = cell;
     FLTK::Curve &crv = Ca->curves["pH"];
@@ -587,9 +602,26 @@ static inline void load_pH( const Cell &cell )
     }
     
     Ca->xaxis.set_range(x[0],x[cell.ntop]);
-    Ca->yaxis.set_range(-log10(h[0]), -log10(h[cell.ntop]) );
-    Cmax->value( Ca->yaxis.vmax );
+    if( rescale )
+        Ca->yaxis.set_range(-log10(h[0]), -log10(h[cell.ntop]) );
+    Cmax->value(  -log10(h[cell.ntop]) );
     Ca->redraw();
+    
+    Scale->xaxis.set_range(x[0],x[cell.ntop]);
+    Scale->yaxis.set_range(0, 1);
+    
+       
+    //! fill scale
+    FLTK::Points &data = Scale->data;
+    data.free();
+    for( unit_t i=0; i <= cell.ntop; ++i )
+    {
+        const double weight = h[i] / (cell.Ki + h[i] );
+        data.push_back( FLTK::Point(x[i],weight ) );
+    }
+    
+    Scale->redraw();
+    
 }
 
 static inline void load_CO2( const Cell &cell )
@@ -641,7 +673,11 @@ int main(int argc, char *argv[])
 #if HAS_FLTK
         auto_ptr<Fl_Window> win( makeUI() );
         win->show();
-        load_pH(cell);
+        
+        Scale->color1 = fl_rgb_color(255, 0,0);
+        Scale->color2 = fl_rgb_color(255, 237, 34);
+
+        load_pH(cell,true);
         if( hasCO2 )
             load_CO2(cell);
         Fl::check();
