@@ -9,7 +9,8 @@
 #include "yocto/ios/ocstream.hpp"
 
 #include "yocto/code/utils.hpp"
-#include "yocto/geom/color.hpp"
+
+#include "yocto/math/dat/linear.hpp"
 
 using namespace yocto;
 using namespace aqueous;
@@ -180,8 +181,6 @@ public:
     fields_setup<layout1D> sim_fields;
     const double           gel_length;
     const double           Ki;
-    color::rgba32          IA;
-    color::rgba32          IB;
     
     explicit Parameters( lua_State *L, const library &lib ) :
     __GET_NUMBER(ntop),
@@ -190,7 +189,7 @@ public:
     sim_ghosts(),
     sim_fields(),
     __GET_NUMBER(gel_length),
-    Ki(1e-4)
+    Ki( pow(10,-3.1) )
     {
         if( volumes < 1 )
             throw exception("not enough volumes");
@@ -206,13 +205,7 @@ public:
         sim_fields.add<Array1D>("h_half",false);
         sim_fields.add<Array1D>("ih_half",false);
         
-        IA.r = 255;
-        IA.g = 255;
-        IA.b = 255;
-        
-        IB.r = 0;
-        IB.g = 255;
-        IB.b = 0;
+   
         
     }
     
@@ -539,6 +532,23 @@ public:
     }
     
     
+    bool find_front( double &pos ) const
+    {
+        const Workspace &W = *this;
+        const Array1D   &h = W["H+"].as<Array1D>();
+        const c_array<double> arr_x( (double*)&x[0], ntop+1);
+        const c_array<double> arr_h( (double*)&h[0], ntop+1);
+        vector<double>  front(1,as_capacity);
+        math::linear_find(Ki, front, arr_x, arr_h, 1);
+        if( front.size() )
+        {
+            pos = front.front();
+            return true;
+        }
+        else
+            return false;
+    }
+    
 };
 
 static inline 
@@ -583,6 +593,16 @@ void save_grow( const string &filename, const Cell &cell, const string &id )
     
 }
 
+static inline
+void save_front( const string &filename, const Cell &cell, double t )
+{
+    const bool append = t > 0;
+    ios::ocstream fp( filename, append );
+    double pos = 0;
+    if( cell.find_front(pos) )
+        fp("%.15g %.15g\n", t, pos);
+}
+
 
 #if HAS_FLTK == 1
 #include "ui.h"
@@ -610,13 +630,14 @@ static inline void load_pH( const Cell &cell, bool rescale = false )
     Scale->xaxis.set_range(x[0],x[cell.ntop]);
     Scale->yaxis.set_range(0, 1);
     
-       
+    
     //! fill scale
     FLTK::Points &data = Scale->data;
     data.free();
     for( unit_t i=0; i <= cell.ntop; ++i )
     {
         const double weight = h[i] / (cell.Ki + h[i] );
+        //const double weight = h[i] < cell.Ki ? 0 : 1;
         data.push_back( FLTK::Point(x[i],weight ) );
     }
     
@@ -674,22 +695,26 @@ int main(int argc, char *argv[])
         auto_ptr<Fl_Window> win( makeUI() );
         win->show();
         
-        Scale->color1 = fl_rgb_color(255, 0,0);
-        Scale->color2 = fl_rgb_color(255, 237, 34);
-
+        Scale->color1 = fl_rgb_color(203, 1,1);
+        Scale->color2 = fl_rgb_color(255, 168, 4);
+        
         load_pH(cell,true);
         if( hasCO2 )
             load_CO2(cell);
         Fl::check();
 #endif
         
+        
         const double dt = 0.005;
+        
+        
+        save_front( "front.dat", cell, 0.0 );
         for( size_t  iter=1; ; ++iter )
         {
             double t_old = (iter-1) * dt;
             double t_now =  iter    * dt;
             cell.perform(t_old,dt);
-            
+            save_front( "front.dat", cell, t_now );
 #if HAS_FLTK
             if( 0 == (iter%20) )
             {
