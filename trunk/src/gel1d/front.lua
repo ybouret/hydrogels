@@ -19,30 +19,37 @@ species =
 	{ "H+",     1, D_h },
 	{ "HO-",   -1, D_w },
     { "Na+",    1, D_Na },
-    { "Cl-",   -1, D_Cl } 
+    { "Cl-",   -1, D_Cl },
+    { "AH",     0, 0 },
+    { "A-",    -1, 0 }
 };
 
+
+Ki = 10^(-3.39)
 
 equilibria =
 {
     { "water",  1e-14,     { 1, "H+" }, { 1, "HO-" } },
+    { "indic",  Ki,        { 1, "H+" }, { 1, "A-"}, {-1,"AH" }}
 };
 
 -- the program adds the electroneutrality
 ini_left =
 {
-    { 10^(-2), { 1, "H+" } },
-    { 0.1,     { 1, "Na+"} }
+    { 0.1,      { 1, "Na+"} },
+    { 0.1,      { 1, "Cl-" } },
+    { 1e-4,     { 1, "AH"}, {1,"A-"}}
 }
 
 ini_core =
 {
-    { 10^(-5), { 1, "H+" } },
-    { 0.1,     { 1, "Cl-"} }
+    { 0.1,     { 1, "Na+"} },
+    { 0.1,     { 1, "Cl-"} },
+    { 1e-5,    { 1, "AH"}, {1,"A-"}}
 }
 
 ini_right = ini_core;
 
 ntop        = 500;    -- mesh: 0..ntop
-gel_length  = 0.5e-2; -- in meters
+gel_length  = 0.022; -- in meters
 noRightFlux = true;    -- boundary condition

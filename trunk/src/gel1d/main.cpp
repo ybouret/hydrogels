@@ -278,11 +278,18 @@ public:
         //----------------------------------------------------------------------
         ini_left(*this,0.0);
         sol_left.get( C );
-        ini_right(*this,0.0);
-        sol_right.get( C );
+        std::cerr << "@left =" << std::endl << sol_left  << std::endl;
+
+       
+
         ini_core(*this,0.0);
         sol_core.get( C );
-        
+        std::cerr << "@core =" << std::endl << sol_core << std::endl;
+
+        ini_right(*this,0.0);
+        sol_right.get( C );
+        std::cerr << "@right=" << std::endl << sol_right << std::endl;
+      
         //----------------------------------------------------------------------
         // special boundary condition
         //----------------------------------------------------------------------
@@ -291,11 +298,6 @@ public:
             noRightFlux = lua_toboolean(L, -1) ? true : false ;
         std::cerr << "No Right Flux=" << ( noRightFlux ? "true" : "false") << std::endl;
         
-        
-        
-        std::cerr << "@left =" << std::endl << sol_left  << std::endl;
-        std::cerr << "@right=" << std::endl << sol_right << std::endl;
-        std::cerr << "@core =" << std::endl << sol_right << std::endl;
         
         
         //----------------------------------------------------------------------
@@ -354,7 +356,7 @@ public:
             sol_right.copy( sol_core );
         }
         
-        
+        exit(0);
     }
     
     virtual ~Cell() throw()
