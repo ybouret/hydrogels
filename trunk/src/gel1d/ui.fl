@@ -22,12 +22,16 @@ Function {makeUI()} {open
   Fl_Window UI_Window {
     label {Output Window}
     callback {{
-}} open
-    xywh {569 178 400 501} type Double resizable visible
+}} open selected
+    xywh {603 88 400 516} type Double resizable visible
   } {
+    Fl_Value_Output Tmx {
+      label {time=}
+      xywh {70 12 135 23} labelfont 5 textfont 5 textsize 12
+    }
     Fl_Box Ca {
       label label
-      xywh {25 25 350 350} box FLAT_BOX color 0 labeltype NO_LABEL resizable
+      xywh {25 46 350 350} box FLAT_BOX color 0 labeltype NO_LABEL resizable
       class {FLTK::Canvas}
     }
     Fl_Button {} {
@@ -36,17 +40,17 @@ Function {makeUI()} {open
 {
 	UI_Window->hide();
 }}
-      xywh {35 455 63 23}
+      xywh {35 476 63 23} labelfont 5
       code0 {o->color(FL_RED);}
       class {FLTK::Matte_Button}
     }
     Fl_Value_Output Cmax {
       label {info=}
-      xywh {165 456 135 23}
+      xywh {165 477 135 23} labelfont 5 textfont 5 textsize 12
     }
     Fl_Box Scale {
-      label label selected
-      xywh {25 389 350 50} box FLAT_BOX color 0 labeltype NO_LABEL
+      label label
+      xywh {25 410 350 50} box FLAT_BOX color 0 labeltype NO_LABEL
       class {FLTK::HColorScale}
     }
   }

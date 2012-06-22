@@ -11,6 +11,7 @@ D_Na = 1.3328e-09;
 D_K  = 1.9568e-09;
 D_Cl = 2.0313e-09;
 
+D_color = 1e-9;
 -- -----------------------------------------------------------------------------
 -- species
 -- -----------------------------------------------------------------------------
@@ -20,8 +21,8 @@ species =
 	{ "HO-",   -1, D_w },
     { "Na+",    1, D_Na },
     { "Cl-",   -1, D_Cl },
-    { "AH",     0, 0 },
-    { "A-",    -1, 0 }
+    { "AH",     0, D_color },
+    { "A-",    -1, D_color }
 };
 
 
@@ -33,23 +34,24 @@ equilibria =
     { "indic",  Ki,        { 1, "H+" }, { 1, "A-"}, {-1,"AH" }}
 };
 
+Ca = 1e-4;
 -- the program adds the electroneutrality
 ini_left =
 {
     { 0.1,      { 1, "Na+"} },
-    { 0.1,      { 1, "Cl-" } },
-    { 1e-4,     { 1, "AH"}, {1,"A-"}}
+    { 0.1+1e-2, { 1, "Cl-" } },
+    { Ca,       { 1, "AH"}, {1,"A-"}}
 }
 
 ini_core =
 {
     { 0.1,     { 1, "Na+"} },
-    { 0.1,     { 1, "Cl-"} },
-    { 1e-5,    { 1, "AH"}, {1,"A-"}}
+    { 0.1+1e-5,     { 1, "Cl-"} },
+    { Ca,    { 1, "AH"}, {1,"A-"}}
 }
 
 ini_right = ini_core;
 
-ntop        = 500;    -- mesh: 0..ntop
-gel_length  = 0.022; -- in meters
+ntop        = 200;     -- mesh: 0..ntop
+gel_length  = 0.022;   -- in meters
 noRightFlux = true;    -- boundary condition

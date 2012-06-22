@@ -12,6 +12,8 @@
 
 #include "yocto/math/dat/linear.hpp"
 
+#include "yocto/wtime.hpp"
+
 using namespace yocto;
 using namespace aqueous;
 using namespace swamp;
@@ -205,7 +207,7 @@ public:
         sim_fields.add<Array1D>("h_half",false);
         sim_fields.add<Array1D>("ih_half",false);
         
-   
+        
         
     }
     
@@ -273,23 +275,34 @@ public:
     weight_coef(0),
     weight_diff(0)
     {
+        
+        std::cerr << "Left Initializer: " << std::endl;
+        std::cerr << ini_left << std::endl;
+        
+        
+        std::cerr << "Core Initializer: " << std::endl;
+        std::cerr << ini_core << std::endl;
+        
+        std::cerr << "Right Initializer: " << std::endl;
+        std::cerr << ini_right << std::endl;
+        
         //----------------------------------------------------------------------
         // initialize chemistry
         //----------------------------------------------------------------------
         ini_left(*this,0.0);
         sol_left.get( C );
         std::cerr << "@left =" << std::endl << sol_left  << std::endl;
-
-       
-
+        
+        
+        
         ini_core(*this,0.0);
         sol_core.get( C );
         std::cerr << "@core =" << std::endl << sol_core << std::endl;
-
+        
         ini_right(*this,0.0);
         sol_right.get( C );
         std::cerr << "@right=" << std::endl << sol_right << std::endl;
-      
+        
         //----------------------------------------------------------------------
         // special boundary condition
         //----------------------------------------------------------------------
@@ -356,7 +369,6 @@ public:
             sol_right.copy( sol_core );
         }
         
-        exit(0);
     }
     
     virtual ~Cell() throw()
@@ -481,7 +493,6 @@ public:
             
             if( factor < 1 )
             {
-                //std::cerr << "Need to rescale" << std::endl;
                 dt_done *= factor;
                 for( size_t i=1; i < ntop; ++i )
                 {
@@ -541,7 +552,9 @@ public:
         const c_array<double> arr_x( (double*)&x[0], ntop+1);
         const c_array<double> arr_h( (double*)&h[0], ntop+1);
         vector<double>  front(1,as_capacity);
-        math::linear_find(Ki, front, arr_x, arr_h, 1);
+        
+        const double h_front = pow(10.0, -3.5);
+        math::linear_find(h_front, front, arr_x, arr_h, 1);
         if( front.size() )
         {
             pos = front.front();
@@ -644,8 +657,31 @@ static inline void load_pH( const Cell &cell, bool rescale = false )
     }
     
     Scale->redraw();
+}
+
+static inline void load_alpha( const Cell &cell, bool rescale = false )
+{
+    const Workspace &W = cell;
+    FLTK::Curve &crv = Ca->curves2["alpha"];
+    crv.free();
+    crv.color = FL_CYAN;
+    const Array1D &x = cell.x;
+    const Array1D &h = W["H+"].as<Array1D>();
+    
+    for( unit_t i=0; i <= cell.ntop; ++i )
+    {
+        const double alpha = h[i] / (cell.Ki+h[i]);
+        crv.push_back( FLTK::Point(x[i],alpha) );
+    }
+    
+    Ca->xaxis.set_range(x[0],x[cell.ntop]);
+    if( rescale )
+        Ca->y2axis.set_range( crv.front().y, crv.back().y );
+    Ca->redraw();
     
 }
+
+
 
 static inline void load_CO2( const Cell &cell )
 {
@@ -696,40 +732,84 @@ int main(int argc, char *argv[])
 #if HAS_FLTK
         auto_ptr<Fl_Window> win( makeUI() );
         win->show();
-        
+        Tmx->value(0.0);
         Scale->color1 = fl_rgb_color(203, 1,1);
         Scale->color2 = fl_rgb_color(255, 168, 4);
         
         load_pH(cell,true);
+        load_alpha(cell,true);
         if( hasCO2 )
             load_CO2(cell);
         Fl::check();
 #endif
         
+        double Dmax = 0;
+        for( library::const_iterator i = cell.lib.begin(); i != cell.lib.end(); ++i )
+        {
+            const species &sp = **i;
+            SpeciesData   &data = sp.get<SpeciesData>();
+            if( data.D > Dmax )
+                Dmax = data.D;
+        }
+        std::cerr << "Dmax=" << Dmax << std::endl;
+
         
-        const double dt = 0.005;
+        double dx_min = fabs(cell.x[cell.ntop] - cell.x[0]);
+        for( unit_t i=0; i < cell.ntop; ++i )
+        {
+            const double tmp = fabs(cell.mesh.dX()[i]);
+            if( tmp < dx_min ) dx_min = tmp;
+        }
+        std::cerr << "dx_min=" << dx_min << std::endl;
+        
+#define ALPHA_DIFF_MAX (0.1)
+        const double D_over_dx2 = Dmax / (dx_min * dx_min );
+        const double dt_max     = ALPHA_DIFF_MAX / D_over_dx2;
+        const double dt_log     = pow(10.0,floor(log10(dt_max)));
+        const double dt_rnd     = floor(dt_max/dt_log);
+        
+        
+        const double dt = dt_rnd * dt_log;
+        
+        std::cerr << "dt=" << dt << std::endl;
+
+        const double dt_sav = 1;
+        const size_t every  = max_of<size_t>(1,dt_sav / dt);
+        std::cerr << "Saving every " << every << " step" << std::endl;
         
         
         save_front( "front.dat", cell, 0.0 );
+        wtime chrono;
+        chrono.start();
+        double tmx_old = chrono.query();
+        std::cerr.flush();
         for( size_t  iter=1; ; ++iter )
         {
             double t_old = (iter-1) * dt;
             double t_now =  iter    * dt;
             cell.perform(t_old,dt);
-            save_front( "front.dat", cell, t_now );
-#if HAS_FLTK
-            if( 0 == (iter%20) )
+            if( (iter%every) == 0 )
             {
-                std::cerr << "t=" << t_now << std::endl;
+                fprintf( stderr, "t= %.4g          \r",t_now);fflush(stderr);
+                save_front( "front.dat", cell, t_now );
+            }
+#if HAS_FLTK
+            const double tmx_now = chrono.query();
+            if( tmx_now - tmx_old >= 0.1 )
+            {
+                Tmx->value(t_now);
                 load_pH(cell);
+                load_alpha(cell);
                 if( hasCO2 )
                     load_CO2(cell);
                 Fl::check();
                 if( !UI_Window->shown() )
                     break;
+                tmx_old = tmx_now;
             }
 #endif
         }
+        fprintf(stderr,"\n\n");
         
     }
     catch( const exception &e )

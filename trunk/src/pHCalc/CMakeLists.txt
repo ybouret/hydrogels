@@ -1,5 +1,6 @@
 PROJECT(pHCalc)
 
+
 INCLUDE(${YROOT}/share/yocto/fltk.cmake)
 
 IF(FLTK_FOUND)
@@ -9,6 +10,11 @@ IF(FLTK_FOUND)
 	TARGET_LINK_YOCTO(pHCalc fltk aqueous mk)
 	TARGET_LINK_FLTK(pHCalc)
 	IF(YOCTO_GNU)
- 	#TARGET_LINK_LIBRARIES(pHCalc -static-libgcc -static-libstdc++)	
+		IF("${GCC_TRIPLET}" VERSION_GREATER "4.5.0" )
+			MESSAGE( STATUS "Max Static Linking" )
+			TARGET_LINK_LIBRARIES(pHCalc -static-libgcc -static-libstdc++)	
+		ELSE()
+			MESSAGE( STATUS "No Possible Max Static Linking" )
+		ENDIF()
 	ENDIF()
 ENDIF()
