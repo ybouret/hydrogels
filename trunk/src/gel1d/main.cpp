@@ -182,7 +182,7 @@ public:
     ghosts_setup<Coord>    sim_ghosts;
     fields_setup<layout1D> sim_fields;
     const double           gel_length;
-    const double           Ki;
+    const double           pH_front;
     
     explicit Parameters( lua_State *L, const library &lib ) :
     __GET_NUMBER(ntop),
@@ -191,7 +191,7 @@ public:
     sim_ghosts(),
     sim_fields(),
     __GET_NUMBER(gel_length),
-    Ki( pow(10,-3.1) )
+    __GET_NUMBER(pH_front)
     {
         if( volumes < 1 )
             throw exception("not enough volumes");
@@ -252,6 +252,8 @@ public:
     bool        noRightFlux;
     double      weight_coef;
     double      weight_diff;
+    double      Ki;
+    
     
     explicit Cell( lua_State *L ) :
     Library(L),
@@ -273,8 +275,15 @@ public:
     ih_half( adb["ih_half"].as<Array1D>() ),
     noRightFlux(false),
     weight_coef(0),
-    weight_diff(0)
+    weight_diff(0),
+    Ki(0)
     {
+        
+        const ChemSys &cs = *this;
+        const equilibrium::ptr *ppEq = cs.search("indic");
+        if(!ppEq)
+            throw exception("Missing Indicator");
+        Ki = (**ppEq).K(0);
         
         std::cerr << "Left Initializer: " << std::endl;
         std::cerr << ini_left << std::endl;
@@ -553,7 +562,7 @@ public:
         const c_array<double> arr_h( (double*)&h[0], ntop+1);
         vector<double>  front(1,as_capacity);
         
-        const double h_front = pow(10.0, -3.5);
+        const double h_front = pow(10.0, -pH_front);
         math::linear_find(h_front, front, arr_x, arr_h, 1);
         if( front.size() )
         {
@@ -609,13 +618,18 @@ void save_grow( const string &filename, const Cell &cell, const string &id )
 }
 
 static inline
-void save_front( const string &filename, const Cell &cell, double t )
+bool save_front( const string &filename, const Cell &cell, double t )
 {
     const bool append = t > 0;
     ios::ocstream fp( filename, append );
     double pos = 0;
     if( cell.find_front(pos) )
+    {
         fp("%.15g %.15g\n", t, pos);
+        return true;
+    }
+    else
+        return false;
 }
 
 
@@ -752,7 +766,7 @@ int main(int argc, char *argv[])
                 Dmax = data.D;
         }
         std::cerr << "Dmax=" << Dmax << std::endl;
-
+        
         
         double dx_min = fabs(cell.x[cell.ntop] - cell.x[0]);
         for( unit_t i=0; i < cell.ntop; ++i )
@@ -772,7 +786,7 @@ int main(int argc, char *argv[])
         const double dt = dt_rnd * dt_log;
         
         std::cerr << "dt=" << dt << std::endl;
-
+        
         const double dt_sav = 1;
         const size_t every  = max_of<size_t>(1,dt_sav / dt);
         std::cerr << "Saving every " << every << " step" << std::endl;
@@ -791,7 +805,8 @@ int main(int argc, char *argv[])
             if( (iter%every) == 0 )
             {
                 fprintf( stderr, "t= %.4g          \r",t_now);fflush(stderr);
-                save_front( "front.dat", cell, t_now );
+                if( !save_front( "front.dat", cell, t_now ) )
+                    break;
             }
 #if HAS_FLTK
             const double tmx_now = chrono.query();
@@ -810,7 +825,7 @@ int main(int argc, char *argv[])
 #endif
         }
         fprintf(stderr,"\n\n");
-        
+        return 0;
     }
     catch( const exception &e )
     {
@@ -822,5 +837,5 @@ int main(int argc, char *argv[])
     {
         std::cerr << "unhandled exception in " << progname << std::endl;
     }
-	return 0;
+	return 1;
 }

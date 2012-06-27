@@ -18,7 +18,7 @@ D_color = 1e-9;
 species =
 {
 	{ "H+",     1, D_h },
-	{ "HO-",   -1, D_w },
+ 	{ "HO-",   -1, D_w },
     { "Na+",    1, D_Na },
     { "Cl-",   -1, D_Cl },
     { "AH",     0, D_color },
@@ -52,6 +52,8 @@ ini_core =
 
 ini_right = ini_core;
 
-ntop        = 200;     -- mesh: 0..ntop
+ntop        = 440;     -- mesh: 0..ntop
 gel_length  = 0.022;   -- in meters
 noRightFlux = true;    -- boundary condition
+pH_front    = 3.5;
+
