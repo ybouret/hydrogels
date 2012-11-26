@@ -2,6 +2,7 @@
 #define LIBRARY_INCLUDED 1
 
 #include "yocto/aqueous/lua.hpp"
+#include "yocto/exception.hpp"
 
 using namespace yocto;
 using namespace aqueous;
@@ -21,7 +22,7 @@ private:
 class Library : public library
 {
 public:
-    explicit Library();
+    explicit Library( lua_State *L );
     virtual ~Library() throw();
     
     
