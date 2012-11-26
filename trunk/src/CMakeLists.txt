@@ -12,10 +12,10 @@ INCLUDE( ${YROOT}/share/yocto/rules.cmake )
 INCLUDE_DIRECTORIES( ${YROOT}/include )
 LINK_DIRECTORIES(    ${YROOT}/lib     )
 
-SET(CMAKE_OSX_SYSROOT /Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk)
+#SET(CMAKE_OSX_SYSROOT /Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.6.sdk)
 
 MESSAGE( STATUS "OSX_SYSROOT=${CMAKE_OSX_SYSROOT}" )
-ADD_SUBDIRECTORY(gel1d)
+ADD_SUBDIRECTORY(diff1d)
 ADD_SUBDIRECTORY(pHCalc)
 ADD_SUBDIRECTORY(fitFront)
 
