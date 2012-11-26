@@ -12,8 +12,16 @@ Library:: ~Library() throw()
 {
 }
 
-Library:: Library()
+
+static inline
+void SpeciesDataCtor( species &sp, lua_State *L )
 {
-    
+    std::cerr << "-- Loading Data for " << sp.name << std::endl;
+}
+
+Library:: Library( lua_State *L )
+{
+    _lua::species_ctor ctor( cfunctor2(SpeciesDataCtor) );
+    _lua::load(L, *this, "species", &ctor);
 }
 
