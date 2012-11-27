@@ -14,11 +14,14 @@ ENDIF()
 
 #ADD_EXECUTABLE(diff1d main.cpp config.lua front.lua ${ui_SOURCES})
 ADD_EXECUTABLE(diff1d main.cpp config.lua
+types.hpp types.cpp
 library.cpp library.hpp
 chemsys.cpp chemsys.hpp
 initializer.cpp initializer.hpp
+param.hpp param.cpp
+workspace.hpp workspace.cpp
 )
-TARGET_LINK_YOCTO(diff1d aqueous lua lua++ mk)
+TARGET_LINK_YOCTO(diff1d aqueous spade lua lua++ mk)
 
 IF(FLTK_FOUND)
 	TARGET_LINK_LIBRARIES(gel1d y-fltk)
