@@ -16,7 +16,7 @@ public:
     
     const double D;
     Array       *U; //!< associated concentrations
-    
+    Array       *F; //!< associated fluxes
 private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(SpeciesData);
 };
