@@ -3,7 +3,9 @@
 
 SpeciesData:: SpeciesData( double DiffusionCoeff ) throw() :
 D(DiffusionCoeff),
-U(0)
+U(0),
+F(0),
+I(0)
 {
     
 }
