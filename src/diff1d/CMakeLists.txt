@@ -20,6 +20,8 @@ chemsys.cpp chemsys.hpp
 initializer.cpp initializer.hpp
 param.hpp param.cpp
 workspace.hpp workspace.cpp
+worker.hpp    worker.cpp
+cell.hpp      cell.cpp
 )
 TARGET_LINK_YOCTO(diff1d aqueous spade lua lua++ mk)
 

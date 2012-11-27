@@ -30,7 +30,9 @@ fields( l.size() * 3 )
     for( library::const_iterator i = l.begin(); i != l.end(); ++i )
     {
         const species &sp = **i;
-        Y_SPADE_FIELD(fields, sp.name.c_str(), Array);
+        const string   spf = sp.name + "F";
+        Y_SPADE_FIELD(fields, sp.name.c_str(),  Array);
+        Y_SPADE_FIELD(fields, spf.c_str(),      Array);
     }
 }
 

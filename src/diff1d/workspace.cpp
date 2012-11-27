@@ -17,6 +17,7 @@ handles(l.size())
     {
         mesh.X()[i] = ( (i-X.lower) * param.length ) / den;
     }
+    mesh.X()[X.upper] = param.length;
     std::cerr << "X=" << X << std::endl;
     
     //--------------------------------------------------------------------------
@@ -27,8 +28,11 @@ handles(l.size())
     {
         species     &sp = **i;
         SpeciesData &sd = sp.get<SpeciesData>();
+        const string spf = sp.name + "F";
         Array       &U  = (*this)[ sp.name ].as<Array>();
+        Array       &F  = (*this)[ spf     ].as<Array>();
         sd.U = &U;
+        sd.F = &F;
         var.append(sp.name);
     }
     
