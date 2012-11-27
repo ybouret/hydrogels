@@ -15,8 +15,20 @@ void save_h( const Cell &cell, const string &name )
     const Array     &X = cell.X;
     for( unit_t i=X.lower;i<=X.upper;++i)
     {
-        fp("%g %g\n", X[i], h[i]);
+        //fp("%g %g\n", X[i], (h[i]));
+        fp("%g %g\n", X[i], -log10(h[i]));
     }
+}
+
+
+double dt_round( double dt_max )
+{
+    //std::cerr << "dt_max=" << dt_max << std::endl;
+    const double dt_log = floor( log10(dt_max) );
+    //std::cerr << "dt_log=" << dt_log << std::endl;
+    const double dt_one = floor(dt_max * pow(10.0,-dt_log));
+    //std::cerr << "dt_one=" << dt_one << std::endl;
+    return dt_one * pow(10.0,dt_log);
 }
 
 int main( int argc, char *argv[] )
@@ -33,10 +45,10 @@ int main( int argc, char *argv[] )
             throw exception("Usage: %s config.lua", progname);
         
         const string cfg = argv[1];
-        Lua::State VM;
-        lua_State *L = VM();
+        Lua::State   VM;
+        lua_State   *L = VM();
         Lua::Config::DoFile(L, cfg);
-
+        
         
         //======================================================================
         //
@@ -44,16 +56,26 @@ int main( int argc, char *argv[] )
         //
         //======================================================================
         Cell cell(L);
-        cell.dt = 0.001;
-        double shrink = -1;
+        const double dt_max = cell.max_dt();
+        std::cerr << "dt_max=" << dt_max << std::endl;
+        double t=0;
+        double dt=dt_round(dt_max);
+        std::cerr << "dt=" << dt << std::endl;
+        
         cell.initialize();
+        
         save_h(cell, "h0.dat");
         
-        cell.compute_fluxes();
-        cell.compute_increases();
-        cell.reduce();
-        cell.find_shrink(shrink);
-        cell.update();
+        
+        double ell = 0;
+        size_t nst = 0;
+        for( size_t i=1; i <= 1000; ++i )
+        {
+            ell += cell.step(t,dt);
+            ++nst;
+            t += dt;
+        }
+        std::cerr << "<steps/s>=" << nst/ell << std::endl;
         
         save_h(cell,"h1.dat");
         return 0;

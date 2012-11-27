@@ -32,6 +32,7 @@ public:
     void reduce_all( Cell &cell ) throw();
     void find_shrink() throw();
     void update(Cell &cell) throw();
+    void partial_update( Cell &cell ) throw();
     
 private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(Worker);
