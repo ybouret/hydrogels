@@ -1,4 +1,4 @@
-#include "library.hpp"
+#include "initializer.hpp"
 #include "yocto/lua/lua-state.hpp"
 #include "yocto/lua/lua-config.hpp"
 #include "yocto/string/vfs-utils.hpp"
@@ -26,8 +26,10 @@ int main( int argc, char *argv[] )
         // Loading Simulation Parameters
         //
         //======================================================================
-        Library lib(L);
-        
+        Library     lib(L);
+        ChemSys     cs(lib,L);
+        Initializer ini("ini_left",lib,L);
+        ini(cs,0.0);
         
         return 0;
     }

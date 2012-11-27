@@ -21,11 +21,11 @@ Library:: ~Library() throw()
 static inline
 void SpeciesDataCtor( species &sp, lua_State *L )
 {
-    std::cerr << "-- Loading Data for " << sp.name << std::endl;
+    std::cerr << "***\t\tLoading Data for " << sp.name << std::endl;
     if( !lua_isnumber(L,-1) )
         throw exception("Missing Diffusion Coefficicent for %s", sp.name.c_str());
     sp.make<SpeciesData,double>( lua_tonumber(L, -1));
-    std::cerr << "D_{" << sp.name <<  "} = " << sp.get<SpeciesData>().D << std::endl;
+    std::cerr << "***\t\tD_{" << sp.name <<  "} = " << sp.get<SpeciesData>().D << std::endl;
 }
 
 Library:: Library( lua_State *L ) : library( sizeof(SpeciesData) )

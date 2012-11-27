@@ -13,7 +13,11 @@ ENDIF()
 ENDIF()
 
 #ADD_EXECUTABLE(diff1d main.cpp config.lua front.lua ${ui_SOURCES})
-ADD_EXECUTABLE(diff1d main.cpp library.cpp library.hpp)
+ADD_EXECUTABLE(diff1d main.cpp config.lua
+library.cpp library.hpp
+chemsys.cpp chemsys.hpp
+initializer.cpp initializer.hpp
+)
 TARGET_LINK_YOCTO(diff1d aqueous lua lua++ mk)
 
 IF(FLTK_FOUND)
