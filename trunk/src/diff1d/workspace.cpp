@@ -24,22 +24,29 @@ handles(l.size())
     // link arrays to species
     //--------------------------------------------------------------------------
     variables var;
+    variables dvar;
     for( library::iterator i=l.begin();i != l.end(); ++i )
     {
         species     &sp = **i;
         SpeciesData &sd = sp.get<SpeciesData>();
         const string spf = sp.name + "F";
+        const string spi = sp.name + "I";
         Array       &U  = (*this)[ sp.name ].as<Array>();
         Array       &F  = (*this)[ spf     ].as<Array>();
+        Array       &I  = (*this)[ spi     ].as<Array>();
         sd.U = &U;
         sd.F = &F;
+        sd.I = &I;
+        
         var.append(sp.name);
+        dvar.append(spi);
     }
     
     //--------------------------------------------------------------------------
     // prepare handles to concentrations
     //--------------------------------------------------------------------------
     query(handles,var);
+    query(handles_dC,dvar);
     
 }
 
@@ -50,7 +57,21 @@ void Workspace:: loadC( array<double> &C, unit_t x ) const
 }
 
 
+void Workspace:: load_dC( array<double> &dC, unit_t x ) const
+{
+    assert( dC.size() >= handles.size() );
+    load<double>(dC, handles_dC, x-X.lower);
+}
+
+
 void Workspace:: saveC( const array<double> &C, unit_t x )
 {
     save<double>(handles, C, x-X.lower);
 }
+
+void Workspace:: save_dC( const array<double> &dC, unit_t x )
+{
+    save<double>(handles_dC, dC, x-X.lower);
+}
+
+

@@ -20,10 +20,10 @@ chemsys.cpp chemsys.hpp
 initializer.cpp initializer.hpp
 param.hpp param.cpp
 workspace.hpp workspace.cpp
-worker.hpp    worker.cpp
+worker.hpp    worker.cpp worker-cell.cpp
 cell.hpp      cell.cpp
 )
-TARGET_LINK_YOCTO(diff1d aqueous spade lua lua++ mk)
+TARGET_LINK_YOCTO(diff1d aqueous spade thr lua lua++ mk)
 
 IF(FLTK_FOUND)
 	TARGET_LINK_LIBRARIES(gel1d y-fltk)

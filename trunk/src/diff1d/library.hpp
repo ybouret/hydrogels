@@ -15,8 +15,10 @@ public:
     ~SpeciesData() throw();
     
     const double D;
-    Array       *U; //!< associated concentrations
-    Array       *F; //!< associated fluxes
+    Array       *U;  //!< associated concentrations
+    Array       *F;  //!< associated fluxes
+    Array       *I;  //!< associated increases
+    
 private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(SpeciesData);
 };

@@ -31,8 +31,11 @@ fields( l.size() * 3 )
     {
         const species &sp = **i;
         const string   spf = sp.name + "F";
+        const string   spi = sp.name + "I";
         Y_SPADE_FIELD(fields, sp.name.c_str(),  Array);
         Y_SPADE_FIELD(fields, spf.c_str(),      Array);
+        Y_SPADE_FIELD(fields, spi.c_str(),      Array);
+        
     }
 }
 

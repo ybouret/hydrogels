@@ -1,5 +1,5 @@
 #include "initializer.hpp"
-#include "workspace.hpp"
+#include "cell.hpp"
 #include "yocto/lua/lua-state.hpp"
 #include "yocto/lua/lua-config.hpp"
 #include "yocto/string/vfs-utils.hpp"
@@ -27,13 +27,13 @@ int main( int argc, char *argv[] )
         // Loading Simulation Parameters
         //
         //======================================================================
-        Library     lib(L);
-        ChemSys     cs(lib,L);
-        Initializer ini("ini_left",lib,L);
-        ini(cs,0.0);
-        Parameters  param(lib,L);
-        Workspace   W(param,lib);
+        Cell cell(L);
         
+        cell.initialize();
+        
+        cell.compute_fluxes();
+        cell.compute_increases();
+        cell.reduce();
         
         return 0;
     }
