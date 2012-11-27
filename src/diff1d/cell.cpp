@@ -11,15 +11,18 @@ Parameters(*this,L),
 Workspace(*this,*this),
 t(0),
 dt(0),
+shrink(0),
 crew(),
 workers(crew.size,as_capacity),
 task_compute_fluxes( this, & Cell::ComputeFluxesCB),
 task_compute_increases( this, & Cell::ComputeIncreasesCB),
 task_reduce( this, & Cell:: ReduceCB ),
-task_shrink( this, & Cell:: ShrinkCB ),
+task_find_shrink( this, & Cell:: FindShrinkCB ),
 task_update( this, & Cell:: UpdateCB ),
+task_partial_update( this, &Cell::PartialUpdateCB),
 iniBulk( "ini_bulk", *this, L ),
-iniCore( "ini_core", *this, L )
+iniCore( "ini_core", *this, L ),
+chrono()
 {
     
     //--------------------------------------------------------------------------
@@ -43,8 +46,23 @@ iniCore( "ini_core", *this, L )
         incr_total -= incr_count;
         incr_shift += incr_count;
     }
+    
+    chrono.start();
 }
 
+
+double Cell:: max_dt() const
+{
+    double Dmax = 0;
+    for( library::const_iterator i = begin(); i != end(); ++i )
+    {
+        const double D = (**i).get<SpeciesData>().D;
+        if( D > Dmax ) Dmax = D;
+    }
+    if( Dmax <= 0 )
+        throw exception("Invalid Diffusion Coefficients");
+    return 0.1 * (dx*dx) / Dmax;
+}
 
 void Cell:: initialize()
 {
@@ -89,7 +107,7 @@ void Cell:: ComputeIncreasesCB( const Context &ctx ) throw()
 void Cell:: compute_increases()
 {
     crew.cycle( task_compute_increases );
-  
+    
 }
 
 void Cell:: ReduceCB(const Context &ctx ) throw()
@@ -116,19 +134,72 @@ void Cell:: update()
     crew.cycle( task_update );
 }
 
-void Cell:: ShrinkCB(const Context &ctx ) throw()
+
+void Cell:: PartialUpdateCB( const Context &ctx ) throw()
 {
-    workers[ctx.indx]->find_shrink();
-   
+    workers[ctx.indx]->partial_update(*this);
 }
 
-bool Cell:: find_shrink(double &s)
+void Cell:: partial_update()
 {
-    s = -1;
-    crew.cycle( task_shrink );
+    crew.cycle( task_partial_update );
+}
+
+void Cell:: FindShrinkCB(const Context &ctx ) throw()
+{
+    workers[ctx.indx]->find_shrink();
+    
+}
+
+bool Cell:: found_shrink()
+{
+    shrink = -1;
+    crew.cycle( task_find_shrink );
     for(size_t i=crew.size;i>0;--i)
     {
-        std::cerr << "shrink #" << i << " = " << workers[i]->shrink << std::endl;
+        const double ws = workers[i]->shrink;
+        if( ws >= 0 )
+        {
+            if( shrink < 0 )
+                shrink = ws;
+            else
+                if( ws < shrink ) shrink=ws;
+        }
     }
-    return false;
+    return shrink >= 0;
 }
+
+
+double Cell:: step(double t0, double dt0)
+{
+    
+    chrono.start();
+    {
+        //-- initialize
+        t  = t0;
+        const double t_end = t0 + dt0;
+        
+    STEP:
+        dt = t_end - t;
+        //std::cerr << "step: " << t << " -> " << t_end << std::endl;
+        //-- forward physics
+        compute_fluxes();
+        compute_increases();
+        
+        //-- apply chemistry
+        reduce();
+        if( found_shrink() )
+        {
+            shrink *= 0.5;
+            dt     *= shrink;
+            partial_update();
+            t += dt;
+            goto STEP;
+        }
+        else
+            update();
+    }
+    return chrono.query();
+}
+
+
