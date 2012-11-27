@@ -9,11 +9,15 @@ Cell:: Cell( lua_State *L ) :
 Library(L),
 Parameters(*this,L),
 Workspace(*this,*this),
+t(0),
+dt(0),
 crew(),
 workers(crew.size,as_capacity),
 task_compute_fluxes( this, & Cell::ComputeFluxesCB),
 task_compute_increases( this, & Cell::ComputeIncreasesCB),
-task_reduce( this, & Cell:: ReduceCB),
+task_reduce( this, & Cell:: ReduceCB ),
+task_shrink( this, & Cell:: ShrinkCB ),
+task_update( this, & Cell:: UpdateCB ),
 iniBulk( "ini_bulk", *this, L ),
 iniCore( "ini_core", *this, L )
 {
@@ -79,17 +83,13 @@ void Cell:: compute_fluxes()
 void Cell:: ComputeIncreasesCB( const Context &ctx ) throw()
 {
     const Worker &worker = *workers[ ctx.indx ];
-    if(false)
-    {
-        scoped_lock guard(ctx.access);
-        std::cerr << "Worker Increases: " << worker.incr_shift << "," << worker.incr_count << std::endl;
-    }
     worker.compute_increases(dt,dx);
 }
 
 void Cell:: compute_increases()
 {
     crew.cycle( task_compute_increases );
+  
 }
 
 void Cell:: ReduceCB(const Context &ctx ) throw()
@@ -104,4 +104,31 @@ void Cell:: reduce()
     for(size_t i=crew.size;i>0;--i)
         if( ! workers[i]->valid )
             throw exception("Invalid Composition Found!");
+}
+
+void Cell:: UpdateCB( const Context &ctx ) throw()
+{
+    workers[ctx.indx]->update(*this);
+}
+
+void Cell:: update()
+{
+    crew.cycle( task_update );
+}
+
+void Cell:: ShrinkCB(const Context &ctx ) throw()
+{
+    workers[ctx.indx]->find_shrink();
+   
+}
+
+bool Cell:: find_shrink(double &s)
+{
+    s = -1;
+    crew.cycle( task_shrink );
+    for(size_t i=crew.size;i>0;--i)
+    {
+        std::cerr << "shrink #" << i << " = " << workers[i]->shrink << std::endl;
+    }
+    return false;
 }
