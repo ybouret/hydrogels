@@ -1,4 +1,5 @@
 #include "initializer.hpp"
+#include "workspace.hpp"
 #include "yocto/lua/lua-state.hpp"
 #include "yocto/lua/lua-config.hpp"
 #include "yocto/string/vfs-utils.hpp"
@@ -30,6 +31,9 @@ int main( int argc, char *argv[] )
         ChemSys     cs(lib,L);
         Initializer ini("ini_left",lib,L);
         ini(cs,0.0);
+        Parameters  param(lib,L);
+        Workspace   W(param,lib);
+        
         
         return 0;
     }

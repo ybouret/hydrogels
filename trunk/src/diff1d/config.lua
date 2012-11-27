@@ -17,3 +17,8 @@ ini_left =
 {
     { 1e-5, { 1, "H+" } }
 };
+
+
+
+volumes=100;
+length =2;
