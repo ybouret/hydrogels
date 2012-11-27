@@ -23,19 +23,26 @@ public:
     Task                task_compute_fluxes;
     Task                task_compute_increases;
     Task                task_reduce;
+    Task                task_shrink;
+    Task                task_update;
     Initializer         iniBulk;
     Initializer         iniCore;
     
     void initialize();
+    
     void compute_fluxes();
     void compute_increases();
     void reduce();
+    bool find_shrink(double &s);
+    void update();
     
 private:
     
     void ComputeFluxesCB( const Context & ) throw();
     void ComputeIncreasesCB( const Context &) throw();
     void ReduceCB( const Context & ) throw();
+    void UpdateCB( const Context & ) throw();
+    void ShrinkCB( const Context & ) throw();
     
     YOCTO_DISABLE_COPY_AND_ASSIGN(Cell);
 };

@@ -3,6 +3,22 @@
 #include "yocto/lua/lua-state.hpp"
 #include "yocto/lua/lua-config.hpp"
 #include "yocto/string/vfs-utils.hpp"
+
+#include "yocto/ios/ocstream.hpp"
+
+static inline
+void save_h( const Cell &cell, const string &name )
+{
+    ios::ocstream fp( name, false );
+    const Workspace &W = cell;
+    const Array     &h = W["H+"].as<Array>();
+    const Array     &X = cell.X;
+    for( unit_t i=X.lower;i<=X.upper;++i)
+    {
+        fp("%g %g\n", X[i], h[i]);
+    }
+}
+
 int main( int argc, char *argv[] )
 {
     const char *progname = _vfs::get_base_name( argv[0]);
@@ -28,13 +44,18 @@ int main( int argc, char *argv[] )
         //
         //======================================================================
         Cell cell(L);
-        
+        cell.dt = 0.001;
+        double shrink = -1;
         cell.initialize();
+        save_h(cell, "h0.dat");
         
         cell.compute_fluxes();
         cell.compute_increases();
         cell.reduce();
+        cell.find_shrink(shrink);
+        cell.update();
         
+        save_h(cell,"h1.dat");
         return 0;
     }
     catch( const exception &e )
