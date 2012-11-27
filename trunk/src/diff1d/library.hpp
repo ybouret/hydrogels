@@ -7,6 +7,7 @@
 using namespace yocto;
 using namespace aqueous;
 
+//! extraneous data for each species
 class SpeciesData
 {
 public:
@@ -19,6 +20,8 @@ private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(SpeciesData);
 };
 
+
+//! auto-initalized library
 class Library : public library
 {
 public:
