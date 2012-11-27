@@ -2,7 +2,8 @@
 #include "yocto/lua/lua-state.hpp"
 
 SpeciesData:: SpeciesData( double DiffusionCoeff ) throw() :
-D(DiffusionCoeff)
+D(DiffusionCoeff),
+U(0)
 {
     
 }
