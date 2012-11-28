@@ -11,6 +11,7 @@ public:
     
     const size_t       volumes; //!< finite volumes
     const Layout       vlayout; //!< 0..volumes
+    const unit_t       vtop;    //!< vlayout.upper-1
     const double       length;  //!< space is [0:length];
     const double       dx;      //!< length/volumes
     const ghosts_setup noghost;

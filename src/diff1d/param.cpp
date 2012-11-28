@@ -19,6 +19,7 @@ static double __check_length( double length )
 Parameters:: Parameters( const library &l, lua_State *L) :
 volumes( __check_volumes(Lua::Config::Get<LUA_NUMBER>(L, "volumes")) ),
 vlayout(0,volumes),
+vtop(vlayout.upper-1),
 length( __check_length( Lua::Config::Get<LUA_NUMBER>(L,"length") ) ),
 dx( length/volumes ),
 noghost(),

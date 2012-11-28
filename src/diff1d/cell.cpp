@@ -12,7 +12,8 @@ Workspace(*this,*this),
 t(0),
 dt(0),
 shrink(0),
-crew(),
+specs( size(), as_capacity ),
+crew(1,0),
 workers(crew.size,as_capacity),
 task_compute_fluxes( this, & Cell::ComputeFluxesCB),
 task_compute_increases( this, & Cell::ComputeIncreasesCB),
@@ -46,6 +47,9 @@ chrono()
         incr_total -= incr_count;
         incr_shift += incr_count;
     }
+    
+    for( library::iterator i = begin(); i != end(); ++i )
+        specs.push_back( & ( (**i).get<SpeciesData>() ) );
     
     chrono.start();
 }
@@ -85,17 +89,27 @@ void Cell:: initialize()
 void Cell:: ComputeFluxesCB(const Context &ctx) throw()
 {
     const Worker &worker = *workers[ ctx.indx ];
-    if(false)
-    {
-        scoped_lock guard(ctx.access);
-        std::cerr << "Worker Fluxes: " << worker.flux_shift << "," << worker.flux_count << std::endl;
-    }
     worker.compute_fluxes(dx);
 }
 
 void Cell:: compute_fluxes()
 {
-    crew.cycle( task_compute_fluxes );
+    //crew.cycle( task_compute_fluxes );
+    const size_t n = size();
+    for(unit_t i=vtop;i>=0;--i)
+    {
+        for( size_t j=n;j>0;--j)
+        {
+            SpeciesData   &sd = *specs[j];
+            assert(sd.U);
+            assert(sd.F);
+            const Array &U = *sd.U;
+            Array       &F = *sd.F;
+            assert(U[i+1]>=0);
+            assert(U[i]>=0);
+            F[i] = - sd.D * ( U[i+1] - U[i] )/dx;
+        }
+    }
 }
 
 void Cell:: ComputeIncreasesCB( const Context &ctx ) throw()
@@ -106,7 +120,20 @@ void Cell:: ComputeIncreasesCB( const Context &ctx ) throw()
 
 void Cell:: compute_increases()
 {
-    crew.cycle( task_compute_increases );
+    //crew.cycle( task_compute_increases );
+    const size_t n = size();
+    for( unit_t i=vtop;i>0;--i)
+    {
+        for( size_t j=n;j>0;--j )
+        {
+            SpeciesData   &sd = *specs[j];
+            assert(sd.F);
+            assert(sd.I);
+            const Array &F = *sd.F;
+            Array       &I = *sd.I;
+            I[i] = -dt * (F[i] - F[i-1]) /dx;
+        }
+    }
     
 }
 
@@ -118,10 +145,34 @@ void Cell:: ReduceCB(const Context &ctx ) throw()
 
 void Cell:: reduce()
 {
-    crew.cycle( task_reduce );
-    for(size_t i=crew.size;i>0;--i)
-        if( ! workers[i]->valid )
-            throw exception("Invalid Composition Found!");
+    /*
+     crew.cycle( task_reduce );
+     for(size_t i=crew.size;i>0;--i)
+     if( ! workers[i]->valid )
+     throw exception("Invalid Composition Found!");
+     */
+    chemsys     &cs = *workers[1];
+    const size_t n  = size();
+    for( unit_t i=vtop;i>0;--i)
+    {
+        for( size_t j=n;j>0;--j )
+        {
+            SpeciesData &sd = *specs[j];
+            assert(sd.U);
+            assert(sd.I);
+            const Array &U = *sd.U;
+            const Array &I = *sd.I;
+            cs.C[j]  = U[i];
+            cs.dC[j] = I[i];
+        }
+        cs.reduce(t);
+        for( size_t j=n;j>0;--j )
+        {
+            SpeciesData &sd = *specs[j];
+            Array       &I  = *sd.I;
+            I[i] = cs.dC[j];
+        }
+    }
 }
 
 void Cell:: UpdateCB( const Context &ctx ) throw()
@@ -131,7 +182,30 @@ void Cell:: UpdateCB( const Context &ctx ) throw()
 
 void Cell:: update()
 {
-    crew.cycle( task_update );
+    //crew.cycle( task_update );
+    chemsys     &cs = *workers[1];
+    const size_t n  = size();
+    for( unit_t i=vtop;i>0;--i)
+    {
+        for( size_t j=n;j>0;--j )
+        {
+            SpeciesData   &sd = *specs[j];
+            assert(sd.U);
+            assert(sd.I);
+            Array       &U = *sd.U;
+            const Array &I = *sd.I;
+            cs.C[j] = ( U[i] += I[i] );
+        }
+        cs.normalize(t);
+        for( size_t j=n;j>0;--j )
+        {
+            SpeciesData   &sd = *specs[j];
+            Array         &U = *sd.U;
+            U[i] = cs.C[j];
+        }
+    }
+    
+    
 }
 
 
@@ -142,7 +216,29 @@ void Cell:: PartialUpdateCB( const Context &ctx ) throw()
 
 void Cell:: partial_update()
 {
-    crew.cycle( task_partial_update );
+    //crew.cycle( task_partial_update );
+    chemsys     &cs = *workers[1];
+    const size_t n  = size();
+    for( unit_t i=vtop;i>0;--i)
+    {
+        for( size_t j=n;j>0;--j )
+        {
+            SpeciesData   &sd = *specs[j];
+            assert(sd.U);
+            assert(sd.I);
+            Array       &U = *sd.U;
+            const Array &I = *sd.I;
+            cs.C[j] = ( U[i] += shrink * I[i] );
+        }
+        cs.normalize(t);
+        for( size_t j=n;j>0;--j )
+        {
+            SpeciesData   &sd = *specs[j];
+            Array         &U = *sd.U;
+            U[i] = cs.C[j];
+        }
+    }
+    
 }
 
 void Cell:: FindShrinkCB(const Context &ctx ) throw()
@@ -154,6 +250,7 @@ void Cell:: FindShrinkCB(const Context &ctx ) throw()
 bool Cell:: found_shrink()
 {
     shrink = -1;
+#if 0
     crew.cycle( task_find_shrink );
     for(size_t i=crew.size;i>0;--i)
     {
@@ -166,6 +263,35 @@ bool Cell:: found_shrink()
                 if( ws < shrink ) shrink=ws;
         }
     }
+#endif
+    
+    const size_t n = size();
+    for( unit_t i=vtop;i>0;--i)
+    {
+        for( size_t j=n;j>0;--j)
+        {
+            SpeciesData   &sd = *specs[j];
+            assert(sd.U);
+            assert(sd.I);
+            const Array &U = *sd.U;
+            const Array &I = *sd.I;
+            assert(U[i]>=0);
+            
+            if( I[i] < -U[i] )
+            {
+                // increase is too negative
+                const double fac = -U[i] / I[i]; assert(fac>=0);
+                if( shrink < 0 )
+                    shrink=fac;
+                else
+                {
+                    if( fac < shrink )
+                        shrink=fac;
+                }
+            }
+        }
+    }
+    
     return shrink >= 0;
 }
 
@@ -173,7 +299,7 @@ bool Cell:: found_shrink()
 double Cell:: step(double t0, double dt0)
 {
     
-    chrono.start();
+    const double stamp = chrono.query();
     {
         //-- initialize
         t  = t0;
@@ -181,7 +307,6 @@ double Cell:: step(double t0, double dt0)
         
     STEP:
         dt = t_end - t;
-        //std::cerr << "step: " << t << " -> " << t_end << std::endl;
         //-- forward physics
         compute_fluxes();
         compute_increases();
@@ -199,7 +324,7 @@ double Cell:: step(double t0, double dt0)
         else
             update();
     }
-    return chrono.query();
+    return chrono.query() - stamp;
 }
 
 

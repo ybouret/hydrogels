@@ -41,5 +41,5 @@ ini_core =
 };
 
 
-volumes= 2000;
+volumes= 200;
 length = 2e-3;

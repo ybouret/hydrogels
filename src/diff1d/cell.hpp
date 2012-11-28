@@ -17,20 +17,21 @@ public:
     explicit Cell( lua_State *L );
     virtual ~Cell() throw();
     
-    double              t;      //!< current time
-    double              dt;     //!< current time step
-    double              shrink; //!< shrink factor
-    threading::team     crew;
-    vector<Worker::Ptr> workers;
-    Task                task_compute_fluxes;
-    Task                task_compute_increases;
-    Task                task_reduce;
-    Task                task_find_shrink;
-    Task                task_update;
-    Task                task_partial_update;
-    Initializer         iniBulk;
-    Initializer         iniCore;
-    wtime               chrono;
+    double               t;      //!< current time
+    double               dt;     //!< current time step
+    double               shrink; //!< shrink factor
+    vector<SpeciesData*> specs;
+    threading::team      crew;
+    vector<Worker::Ptr>  workers;
+    Task                 task_compute_fluxes;
+    Task                 task_compute_increases;
+    Task                 task_reduce;
+    Task                 task_find_shrink;
+    Task                 task_update;
+    Task                 task_partial_update;
+    Initializer          iniBulk;
+    Initializer          iniCore;
+    wtime                chrono;
     
     void   initialize();
     double max_dt() const;

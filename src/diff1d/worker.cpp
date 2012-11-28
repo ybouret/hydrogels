@@ -127,6 +127,7 @@ void Worker:: update(Cell &cell) throw()
     unit_t i = incr_shift;
     for(size_t n=incr_count;n>0;--n,++i)
     {
+        size_t k = 0;
         for( library::const_iterator j=lib.begin();j != end;++j)
         {
             const species &sp = **j;
@@ -135,9 +136,9 @@ void Worker:: update(Cell &cell) throw()
             assert(sd.I);
             Array       &U = *sd.U;
             const Array &I = *sd.I;
-            U[i] += I[i];
+            C[++k] = ( U[i] += I[i] );
         }
-        cell.loadC(C,i);
+        //cell.loadC(C,i);
         normalize(cell.t);
         cell.saveC(C,i);
     }
