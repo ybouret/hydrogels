@@ -28,7 +28,6 @@ public:
     Task                 task_reduce;
     Task                 task_find_shrink;
     Task                 task_update;
-    Task                 task_partial_update;
     Initializer          iniBulk;
     Initializer          iniCore;
     wtime                chrono;
@@ -41,7 +40,6 @@ public:
     void reduce();
     bool found_shrink();
     void update();
-    void partial_update(); //!< updated using shrink factor
     
     
     double step(double t0, double dt0);
@@ -53,7 +51,6 @@ private:
     void ReduceCB( const Context & ) throw();
     void UpdateCB( const Context & ) throw();
     void FindShrinkCB( const Context & ) throw();
-    void PartialUpdateCB(const Context &) throw();
     
     YOCTO_DISABLE_COPY_AND_ASSIGN(Cell);
 };
