@@ -20,7 +20,6 @@ task_compute_increases( this, & Cell::ComputeIncreasesCB),
 task_reduce( this, & Cell:: ReduceCB ),
 task_find_shrink( this, & Cell:: FindShrinkCB ),
 task_update( this, & Cell:: UpdateCB ),
-task_partial_update( this, &Cell::PartialUpdateCB),
 iniBulk( "ini_bulk", *this, L ),
 iniCore( "ini_core", *this, L ),
 chrono()
@@ -180,45 +179,15 @@ void Cell:: UpdateCB( const Context &ctx ) throw()
     workers[ctx.indx]->update(*this);
 }
 
+#include "yocto/code/utils.hpp"
+
 void Cell:: update()
 {
     //crew.cycle( task_update );
     chemsys     &cs = *workers[1];
     const size_t n  = size();
-    for( unit_t i=vtop;i>0;--i)
-    {
-        for( size_t j=n;j>0;--j )
-        {
-            SpeciesData   &sd = *specs[j];
-            assert(sd.U);
-            assert(sd.I);
-            Array       &U = *sd.U;
-            const Array &I = *sd.I;
-            cs.C[j] = ( U[i] += I[i] );
-        }
-        cs.normalize(t);
-        for( size_t j=n;j>0;--j )
-        {
-            SpeciesData   &sd = *specs[j];
-            Array         &U = *sd.U;
-            U[i] = cs.C[j];
-        }
-    }
     
-    
-}
-
-
-void Cell:: PartialUpdateCB( const Context &ctx ) throw()
-{
-    workers[ctx.indx]->partial_update(*this);
-}
-
-void Cell:: partial_update()
-{
-    //crew.cycle( task_partial_update );
-    chemsys     &cs = *workers[1];
-    const size_t n  = size();
+    // update core
     for( unit_t i=vtop;i>0;--i)
     {
         for( size_t j=n;j>0;--j )
@@ -239,7 +208,27 @@ void Cell:: partial_update()
         }
     }
     
+    // updated wall
+    for( size_t j=n;j>0;--j )
+    {
+        SpeciesData   &sd = *specs[j];
+        assert(sd.U);
+        assert(sd.I);
+        const Array &U = *sd.U;
+        cs.C[j] = (4*U[vtop] - U[vtop-1])/3.0;
+    }
+    cs.normalize(t);
+    for( size_t j=n;j>0;--j )
+    {
+        SpeciesData   &sd = *specs[j];
+        Array         &U = *sd.U;
+        U[volumes] = cs.C[j];
+    }
+
+    
 }
+
+
 
 void Cell:: FindShrinkCB(const Context &ctx ) throw()
 {
@@ -300,29 +289,30 @@ double Cell:: step(double t0, double dt0)
 {
     
     const double stamp = chrono.query();
+    //-- initialize
+    t  = t0;
+    const double t_end = t0 + dt0;
+    
+STEP:
+    dt = t_end - t;
+    //-- forward physics
+    compute_fluxes();
+    compute_increases();
+    
+    //-- apply chemistry
+    reduce();
+    if( found_shrink() )
     {
-        //-- initialize
-        t  = t0;
-        const double t_end = t0 + dt0;
-        
-    STEP:
-        dt = t_end - t;
-        //-- forward physics
-        compute_fluxes();
-        compute_increases();
-        
-        //-- apply chemistry
-        reduce();
-        if( found_shrink() )
-        {
-            shrink *= 0.5;
-            dt     *= shrink;
-            partial_update();
-            t += dt;
-            goto STEP;
-        }
-        else
-            update();
+        shrink *= 0.5;
+        dt     *= shrink;
+        update();
+        t += dt;
+        goto STEP;
+    }
+    else
+    {
+        shrink = 1;
+        update();
     }
     return chrono.query() - stamp;
 }
