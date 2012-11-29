@@ -35,5 +35,9 @@ Library:: Library( lua_State *L ) : library( sizeof(SpeciesData) )
 {
     _lua::species_ctor ctor( cfunctor2(SpeciesDataCtor) );
     _lua::load(L, *this, "species", &ctor);
+    
+    specs.reserve( size() );
+    for( library::iterator i = begin(); i != end(); ++i )
+        specs.push_back( & ( (**i).get<SpeciesData>() ) );
 }
 

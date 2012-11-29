@@ -41,5 +41,8 @@ ini_core =
 };
 
 
-volumes= 50;
-length = 2e-3;
+volumes = 500;
+length  = 2e-3;
+alpha   = 0.1;
+t_run   = 5;
+dt_save = 0.01;

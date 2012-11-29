@@ -5,6 +5,7 @@
 #include "yocto/string/vfs-utils.hpp"
 
 #include "yocto/ios/ocstream.hpp"
+#include "yocto/code/utils.hpp"
 
 static inline
 void save_h( const Cell &cell, const string &name )
@@ -29,6 +30,13 @@ double dt_round( double dt_max )
     const double dt_one = floor(dt_max * pow(10.0,-dt_log));
     //std::cerr << "dt_one=" << dt_one << std::endl;
     return dt_one * pow(10.0,dt_log);
+}
+
+static inline
+void save_front( const double pH, const Cell &cell, const double t)
+{
+    ios::ocstream fp( "front.dat", t>0 );
+    fp("%g %g\n", t, cell.locate(pH) );
 }
 
 int main( int argc, char *argv[] )
@@ -56,24 +64,50 @@ int main( int argc, char *argv[] )
         //
         //======================================================================
         Cell cell(L);
-        const double dt_max = cell.max_dt();
-        std::cerr << "dt_max=" << dt_max << std::endl;
-        double t=0;
-        double dt=dt_round(dt_max);
-        std::cerr << "dt=" << dt << std::endl;
         
+        //======================================================================
+        //
+        // Adjusting time step
+        //
+        //======================================================================
+        const double dt_max = cell.max_dt();
+        double dt=dt_round(dt_max);
+        const double pH_front = 6;
+        
+        //======================================================================
+        //
+        // Adjusting iterations
+        //
+        //======================================================================
+        const double t_run = Lua::Config::Get<double>(L,"t_run");
+        const size_t iter  = 1 + size_t(ceil(t_run/dt));
+        const double dt_save = Lua::Config::Get<double>(L,"dt_save");
+        const size_t every = clamp<size_t>(1,floor(dt_save/dt),iter);
+        std::cerr << "###  dt_max=" << dt_max << std::endl;
+        std::cerr << "###      dt=" << dt << std::endl;
+        std::cerr << "###   t_run=" << t_run << std::endl;
+        std::cerr << "###    iter=" << iter << std::endl;
+        std::cerr << "### dt_save=" << dt_save << std::endl;
+        std::cerr << "###   every=" << every << " / dt_out=" << every * dt << std::endl;
+        double t=0;
         cell.initialize();
         
         save_h(cell, "h0.dat");
+        save_front( pH_front, cell, t );
         
         
         double ell = 0;
         size_t nst = 0;
-        for( size_t i=1; i <= 1000; ++i )
+        for( size_t i=1; i <= iter; ++i )
         {
             ell += cell.step(t,dt);
             ++nst;
-            t += dt;
+            t = i * dt;
+            if( 0 == (i%every) )
+            {
+                save_front(pH_front, cell, t);
+            }
+            std::cerr << "t= " << t << "\r"; std::cerr.flush();
         }
         std::cerr << "<steps/s>=" << nst/ell << std::endl;
         
