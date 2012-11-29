@@ -3,6 +3,7 @@
 
 #include "types.hpp"
 #include "yocto/aqueous/lua.hpp"
+#include "yocto/sequence/vector.hpp"
 
 using namespace yocto;
 using namespace aqueous;
@@ -23,6 +24,8 @@ private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(SpeciesData);
 };
 
+typedef vector<SpeciesData*> Specs;
+
 
 //! auto-initalized library
 class Library : public library
@@ -30,7 +33,7 @@ class Library : public library
 public:
     explicit Library( lua_State *L );
     virtual ~Library() throw();
-    
+    Specs specs;
     
 private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(Library);

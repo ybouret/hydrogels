@@ -1,5 +1,6 @@
 #include "cell.hpp"
 #include "yocto/lua/lua-config.hpp"
+#include "yocto/code/utils.hpp"
 
 Cell:: ~Cell() throw()
 {
@@ -12,60 +13,37 @@ Workspace(*this,*this),
 t(0),
 dt(0),
 shrink(0),
-specs( size(), as_capacity ),
 crew(1,0),
+//crew(),
 workers(crew.size,as_capacity),
-task_compute_fluxes( this, & Cell::ComputeFluxesCB),
-task_compute_increases( this, & Cell::ComputeIncreasesCB),
 task_reduce( this, & Cell:: ReduceCB ),
-task_find_shrink( this, & Cell:: FindShrinkCB ),
-task_update( this, & Cell:: UpdateCB ),
 iniBulk( "ini_bulk", *this, L ),
 iniCore( "ini_core", *this, L ),
-chrono()
+chrono(),
+alpha( max_of<double>(0.5, Lua::Config::Get<LUA_NUMBER>(L, "alpha")) )
 {
     
     //--------------------------------------------------------------------------
     // prepare workers
     //--------------------------------------------------------------------------
-    size_t flux_total = volumes;
-    unit_t flux_shift = 0;
-    
-    size_t incr_total = volumes-1;
-    unit_t incr_shift = 1;
-    
     for( size_t rank=0; rank < crew.size; ++rank )
     {
-        const size_t flux_count = flux_total/(crew.size-rank);
-        const size_t incr_count = incr_total/(crew.size-rank);
-        Worker::Ptr p( new Worker(*this,L,flux_shift,flux_count,incr_shift,incr_count) );
+        const Worker::Ptr p( new Worker(*this,L) );
         workers.push_back(p);
-        flux_total -= flux_count;
-        flux_shift += flux_count;
-        
-        incr_total -= incr_count;
-        incr_shift += incr_count;
     }
     
-    for( library::iterator i = begin(); i != end(); ++i )
-        specs.push_back( & ( (**i).get<SpeciesData>() ) );
+    crew.dispatch< array<Worker::Ptr>, unit_t>( workers,1,volumes-1);
+    for(size_t i=1; i <= crew.size; ++i )
+    {
+        std::cerr << "Worker #" << i << ": " << workers[i]->start << " -> " << workers[i]->final << std::endl;
+    }
+    
+    
     
     chrono.start();
 }
 
 
-double Cell:: max_dt() const
-{
-    double Dmax = 0;
-    for( library::const_iterator i = begin(); i != end(); ++i )
-    {
-        const double D = (**i).get<SpeciesData>().D;
-        if( D > Dmax ) Dmax = D;
-    }
-    if( Dmax <= 0 )
-        throw exception("Invalid Diffusion Coefficients");
-    return 0.1 * (dx*dx) / Dmax;
-}
 
 void Cell:: initialize()
 {
@@ -85,11 +63,7 @@ void Cell:: initialize()
     }
 }
 
-void Cell:: ComputeFluxesCB(const Context &ctx) throw()
-{
-    const Worker &worker = *workers[ ctx.indx ];
-    worker.compute_fluxes(dx);
-}
+
 
 void Cell:: compute_fluxes()
 {
@@ -111,11 +85,7 @@ void Cell:: compute_fluxes()
     }
 }
 
-void Cell:: ComputeIncreasesCB( const Context &ctx ) throw()
-{
-    const Worker &worker = *workers[ ctx.indx ];
-    worker.compute_increases(dt,dx);
-}
+
 
 void Cell:: compute_increases()
 {
@@ -144,12 +114,12 @@ void Cell:: ReduceCB(const Context &ctx ) throw()
 
 void Cell:: reduce()
 {
-    /*
-     crew.cycle( task_reduce );
-     for(size_t i=crew.size;i>0;--i)
-     if( ! workers[i]->valid )
-     throw exception("Invalid Composition Found!");
-     */
+#if 0
+    crew.run( task_reduce );
+    for(size_t i=crew.size;i>0;--i)
+        if( ! workers[i]->valid )
+            throw exception("Invalid Composition Found!");
+#else
     chemsys     &cs = *workers[1];
     const size_t n  = size();
     for( unit_t i=vtop;i>0;--i)
@@ -172,12 +142,9 @@ void Cell:: reduce()
             I[i] = cs.dC[j];
         }
     }
+#endif
 }
 
-void Cell:: UpdateCB( const Context &ctx ) throw()
-{
-    workers[ctx.indx]->update(*this);
-}
 
 #include "yocto/code/utils.hpp"
 
@@ -224,17 +191,10 @@ void Cell:: update()
         Array         &U = *sd.U;
         U[volumes] = cs.C[j];
     }
-
+    
     
 }
 
-
-
-void Cell:: FindShrinkCB(const Context &ctx ) throw()
-{
-    workers[ctx.indx]->find_shrink();
-    
-}
 
 bool Cell:: found_shrink()
 {

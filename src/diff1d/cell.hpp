@@ -7,9 +7,9 @@
 #include "worker.hpp"
 #include "yocto/wtime.hpp"
 
-typedef threading::team Team;
-typedef Team::task      Task;
-typedef Team::context   Context;
+typedef threading::crew Crew;
+typedef Crew::task      Task;
+typedef Crew::context   Context;
 
 class Cell : public Library, public Parameters, public Workspace
 {
@@ -20,18 +20,13 @@ public:
     double               t;      //!< current time
     double               dt;     //!< current time step
     double               shrink; //!< shrink factor
-    vector<SpeciesData*> specs;
-    threading::team      crew;
+    Crew                 crew;
     vector<Worker::Ptr>  workers;
-    Task                 task_compute_fluxes;
-    Task                 task_compute_increases;
     Task                 task_reduce;
-    Task                 task_find_shrink;
-    Task                 task_update;
     Initializer          iniBulk;
     Initializer          iniCore;
     wtime                chrono;
-    
+    const double         alpha;  //!< time scaling
     void   initialize();
     double max_dt() const;
     
@@ -43,6 +38,8 @@ public:
     
     
     double step(double t0, double dt0);
+    
+    double locate( const double pH ) const;
     
 private:
     

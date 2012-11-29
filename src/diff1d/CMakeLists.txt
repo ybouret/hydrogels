@@ -21,7 +21,7 @@ initializer.cpp initializer.hpp
 param.hpp param.cpp
 workspace.hpp workspace.cpp
 worker.hpp    worker.cpp 
-cell.hpp      cell.cpp
+cell.hpp      cell.cpp cell-utils.cpp
 )
 TARGET_LINK_YOCTO(diff1d aqueous spade thr lua lua++ mk)
 
