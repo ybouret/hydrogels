@@ -79,9 +79,9 @@ int main( int argc, char *argv[] )
         fit::lsf<double>::callback  G( &diff, &diffusion::cb      );
         
         std::cerr << "-- Prepare the Fit Variables" << std::endl;
-        const size_t nv = 1;
-        const double D0 = 1e-9;
-        vector<double> aorg(nv,1e-9);
+        const size_t   nv = 1;
+        const double   D0 = 1e-9;
+        vector<double> aorg(nv,D0);
         vector<bool>   used(nv,true);
         vector<double> aerr(nv,-1);
         
@@ -102,9 +102,12 @@ int main( int argc, char *argv[] )
             {
                 const string outfile = filename + ".fit";
                 ios::ocstream fp( outfile, false );
+                fp("#t pos/m fit/m pos2/mm2 fit2/mm2\n");
                 for( size_t i=1; i <= n; ++i )
                 {
-                    fp("%.15g %.15g %.15g\n", t[i], y[i], z[i] );
+                    const double yi = y[i];
+                    const double zi = z[i];
+                    fp("%.15g %.15g %.15g %.15g %.15g\n", t[i], yi, zi, yi*yi*1e6, zi*zi*1e6 );
                 }
             }
             std::cerr << "-- Saving Log" << std::endl;

@@ -92,6 +92,7 @@ int main( int argc, char *argv[] )
         double t=0;
         cell.initialize();
         
+        
         save_h(cell, "h0.dat");
         save_front( pH_front, cell, t );
         

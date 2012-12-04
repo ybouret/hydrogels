@@ -47,13 +47,15 @@ alpha( max_of<double>(0.5, Lua::Config::Get<LUA_NUMBER>(L, "alpha")) )
 
 void Cell:: initialize()
 {
-    
+    solution S(*this);
     assert( workers.size() > 0 );
     Worker  &W = *workers.front();
     ChemSys &cs = W;
     std::cerr << "-- initialize bulk" << std::endl;
     iniBulk(cs,t);
     saveC(cs.C, X.lower);
+    S.get(cs.C);
+    std::cerr << "bulk=" << S << std::endl;
     
     std::cerr << "-- initialize core" << std::endl;
     iniCore(cs,t);
@@ -61,6 +63,8 @@ void Cell:: initialize()
     {
         saveC(cs.C,i);
     }
+    S.get(cs.C);
+    std::cerr << "core=" << S << std::endl;
 }
 
 
