@@ -12,37 +12,46 @@ D_Na = 1.3328e-09;
 D_K  = 1.9568e-09;
 D_Cl = 2.0313e-09;
 
+D_In = 1e-9;
+
 species =
 { 
     { "H+",   1, D_h  },
     { "HO-", -1, D_w  },
     { "Cl-", -1, D_Cl },
-    { "Na+",  1, D_Na }
+    { "Na+",  1, D_Na },
+    { "InH",  0, D_In },
+    { "In-", -1, D_Cl }
 };
 
 
-ftol = 1e-5;
+ftol = 1e-7;
 
 chemsys =
 {
-    { "water",  1e-14,     { 1, "H+" }, { 1, "HO-" } }
+    { "water",  1e-14,     { 1, "H+" }, { 1, "HO-" } },
+    { "indic",  10^(-3.5), { -1, "InH"}, { 1, "H+" }, { 1, "In-" } }
 };
+
+indic_total = { 1e-4, { 1, "InH" }, {1, "In-"} };
 
 ini_bulk =
 {
-    { 1e-5, { 1, "H+" } },
-    { 0, { 1, "Na+" } }
+    { 1e-2, { 1, "H+"  } },
+    { 0.1,  { 1, "Na+" } },
+    indic_total
 };
 
 ini_core = 
 {
     { 1e-8, { 1, "H+"} },
-    { 0, { 1, "Cl-"} }
+    { 0.1,  { 1, "Cl-"} },
+    indic_total
 };
 
 
 volumes = 500;
 length  = 2e-3;
 alpha   = 0.1;
-t_run   = 15;
+t_run   = 1;
 dt_save = 0.01;
