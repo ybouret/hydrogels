@@ -29,11 +29,12 @@ ftol = 1e-7;
 
 chemsys =
 {
-    { "water",  1e-14,     { 1, "H+" }, { 1, "HO-" } },
-    { "indic",  10^(-3.5), { -1, "InH"}, { 1, "H+" }, { 1, "In-" } }
+    { "water",  1e-14,     { 1,  "H+" }, { 1, "HO-" } },
+    { "indic",  10^(-3.5), { -1, "InH"}, { 1, "H+"  }, { 1, "In-" } }
 };
 
 indic_total = { 1e-4, { 1, "InH" }, {1, "In-"} };
+-- indic_total = { 0,    { 1, "InH" }, {1, "In-"} };
 
 ini_bulk =
 {
@@ -44,14 +45,18 @@ ini_bulk =
 
 ini_core = 
 {
-    { 1e-8, { 1, "H+"} },
-    { 0.1,  { 1, "Cl-"} },
+    { 1e-10, { 1, "H+"} },
+    { 0.1,   { 1, "Cl-"} },
     indic_total
 };
 
 
 volumes = 500;
 length  = 2e-3;
-alpha   = 0.1;
-t_run   = 1;
+alpha   = 0.02;
+t_run   = 5;
 dt_save = 0.01;
+
+-- pH_front = 3.39
+pH_front = 6
+
