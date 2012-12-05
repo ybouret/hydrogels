@@ -21,7 +21,7 @@ void save_h( const Cell &cell, const string &name )
     }
 }
 
-
+static inline
 double dt_round( double dt_max )
 {
     //std::cerr << "dt_max=" << dt_max << std::endl;
@@ -35,7 +35,8 @@ double dt_round( double dt_max )
 static inline
 void save_front( const double pH, const Cell &cell, const double t)
 {
-    ios::ocstream fp( "front.dat", t>0 );
+    const string fn = vformat("front%d.dat", int( pH*100) );
+    ios::ocstream fp( fn, t>0 );
     fp("%g %g\n", t, cell.locate(pH) );
 }
 
@@ -72,7 +73,18 @@ int main( int argc, char *argv[] )
         //======================================================================
         const double dt_max = cell.max_dt();
         double dt=dt_round(dt_max);
-        const double pH_front = 6;
+        double pH_front    = 7;
+        bool   build_front = false;
+        {
+            lua_getglobal(L, "pH_front");
+            if( lua_isnumber(L, -1))
+            {
+                build_front = true;
+                pH_front    = lua_tonumber(L, -1);
+                std::cerr << "Building Front @pH=" << pH_front << std::endl;
+            }
+        }
+        
         
         //======================================================================
         //
@@ -94,7 +106,8 @@ int main( int argc, char *argv[] )
         
         
         save_h(cell, "h0.dat");
-        save_front( pH_front, cell, t );
+        if( build_front )
+            save_front( pH_front, cell, t );
         
         
         double ell = 0;
@@ -106,10 +119,13 @@ int main( int argc, char *argv[] )
             t = i * dt;
             if( 0 == (i%every) )
             {
-                save_front(pH_front, cell, t);
+                std::cerr << "t= " << t << "\r"; std::cerr.flush();
+                if(build_front)
+                    save_front(pH_front, cell, t);
             }
-            std::cerr << "t= " << t << "\r"; std::cerr.flush();
         }
+        std::cerr << "t= " << t << "\r"; std::cerr.flush();
+        std::cerr << std::endl;
         std::cerr << "<steps/s>=" << nst/ell << std::endl;
         
         save_h(cell,"h1.dat");
