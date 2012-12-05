@@ -33,19 +33,19 @@ chemsys =
     { "indic",  10^(-3.5), { -1, "InH"}, { 1, "H+"  }, { 1, "In-" } }
 };
 
-indic_total = { 1e-4, { 1, "InH" }, {1, "In-"} };
--- indic_total = { 0,    { 1, "InH" }, {1, "In-"} };
+C_In = 1e-4;
+indic_total = { C_In, { 1, "InH" }, {1, "In-"} };
 
 ini_bulk =
 {
-    { 1e-2, { 1, "H+"  } },
+    { 1e-2, { 1, "H+"  } }, -- pH=2
     { 0.1,  { 1, "Na+" } },
     indic_total
 };
 
 ini_core = 
 {
-    { 1e-10, { 1, "H+"} },
+    { 1e-10, { 1, "H+"}  }, -- pH=10
     { 0.1,   { 1, "Cl-"} },
     indic_total
 };
