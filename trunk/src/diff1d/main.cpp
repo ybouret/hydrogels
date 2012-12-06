@@ -1,13 +1,18 @@
 #include "initializer.hpp"
 #include "cell.hpp"
+
 #include "yocto/lua/lua-state.hpp"
 #include "yocto/lua/lua-config.hpp"
+
 #include "yocto/string/vfs-utils.hpp"
+#include "yocto/filesys/local-fs.hpp"
 
 #include "yocto/ios/ocstream.hpp"
 #include "yocto/code/utils.hpp"
 
 #include "yocto/math/fit/lsf.hpp"
+
+using namespace filesys;
 
 static inline
 void save_h( const Cell &cell, const string &name )
@@ -59,10 +64,11 @@ int main( int argc, char *argv[] )
         // Loading Lua Parameters
         //
         //======================================================================
-        if( argc < 2 )
-            throw exception("Usage: %s config.lua", progname);
+        if( argc < 3 )
+            throw exception("Usage: %s config.lua output_dir", progname);
         
         const string cfg = argv[1];
+        string       outdir = argv[2];
         Lua::State   VM;
         lua_State   *L = VM();
         Lua::Config::DoFile(L, cfg);
@@ -136,18 +142,30 @@ int main( int argc, char *argv[] )
         std::cerr << "###   every=" << every << " / dt_out=" << every * dt << std::endl;
         std::cerr << "###   nsave=" << nsave << std::endl;
         double t=0;
+        
+        //======================================================================
+        //
+        // Start up
+        //
+        //======================================================================
         cell.initialize();
         
-        if( fit )
-        {
-            fX.reserve(nsave);
-            fY.reserve(nsave);
-            fZ.reserve(nsave);
-            coef.make(1,0);
-            used.make(1,true);
-            aerr.make(1,0);
-        }
         
+        fX.reserve(nsave);
+        fY.reserve(nsave);
+        fZ.reserve(nsave);
+        coef.make(1,0);
+        used.make(1,true);
+        aerr.make(1,0);
+        
+        //======================================================================
+        //
+        // Initialize database
+        //
+        //======================================================================
+        vfs & fs = local_fs::instance();
+        _vfs::as_directory(outdir);
+        fs.create_sub_dir(outdir);
         
         save_h(cell, "h0.dat");
         if( build_front )
@@ -167,11 +185,11 @@ int main( int argc, char *argv[] )
                 if(build_front)
                 {
                     const double x = save_front(pH_front, cell, t);
+                    fX.push_back(t);
+                    fY.push_back(x*x);
+                    fZ.push_back(0);
                     if(fit)
                     {
-                        fX.push_back(t);
-                        fY.push_back(x*x);
-                        fZ.push_back(0);
                         Fit(Sample,func,coef,used,aerr);
                         std::cerr << std::endl << "D=" << coef[1] * 1e8<< ", err=" << aerr[1]*1e8 << std::endl;
                     }
@@ -180,6 +198,10 @@ int main( int argc, char *argv[] )
         }
         std::cerr << std::endl;
         std::cerr << "<steps/s>=" << nst/ell << std::endl;
+        if(build_front && fit )
+        {
+            std::cerr << std::endl << "D=" << coef[1] * 1e8<< ", err=" << aerr[1]*1e8 << std::endl;
+        }
         
         save_h(cell,"h1.dat");
         return 0;
