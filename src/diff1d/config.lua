@@ -33,7 +33,7 @@ chemsys =
     { "indic",  10^(-3.5), { -1, "InH"}, { 1, "H+"  }, { 1, "In-" } }
 };
 
-C_In = 0;
+C_In = 1e-4;
 indic_total = { C_In, { 1, "InH" }, {1, "In-"} };
 
 ini_bulk =
@@ -59,5 +59,5 @@ dt_save = 0.01;
 
 -- pH_front = 3.39
 pH_front = 6
-fit      = true;
+fit      = false;
 

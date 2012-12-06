@@ -45,9 +45,9 @@ double dt_round( double dt_max )
 }
 
 static inline
-double save_front( const double pH, const Cell &cell, const double t)
+double save_front( const string &outdir, const double pH, const Cell &cell, const double t)
 {
-    const string fn = vformat("front%d.dat", int( pH*100) );
+    const string fn = outdir + vformat("front%d.dat", int( pH*100) );
     ios::ocstream fp( fn, t>0 );
     const double x = cell.locate(pH);
     fp("%g %g\n", t, x );
@@ -193,7 +193,6 @@ int main( int argc, char *argv[] )
                 old.pop_back();
             }
         }
-        return 0;
         
         size_t isave = 0;
         save_h(cell, outdir,isave,t);
@@ -212,11 +211,11 @@ int main( int argc, char *argv[] )
             t = i * dt;
             if( 0 == (i%every) )
             {
-                std::cerr << "t= " << t << "\r"; std::cerr.flush();
+                std::cerr << "t= " << t << "                \r"; std::cerr.flush();
                 save_h(cell, outdir, ++isave, t );
                 if(build_front)
                 {
-                    const double x = save_front(pH_front, cell, t);
+                    const double x = save_front(outdir,pH_front, cell, t);
                     fX.push_back(t);
                     fY.push_back(x*x);
                     fZ.push_back(0);
@@ -230,8 +229,9 @@ int main( int argc, char *argv[] )
         }
         std::cerr << std::endl;
         std::cerr << "<steps/s>=" << nst/ell << std::endl;
-        if(build_front && fit )
+        if(build_front )
         {
+            Fit(Sample,func,coef,used,aerr);
             std::cerr << std::endl << "D=" << coef[1] * 1e8<< ", err=" << aerr[1]*1e8 << std::endl;
         }
         
