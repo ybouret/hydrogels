@@ -7,6 +7,8 @@
 #include "yocto/ios/ocstream.hpp"
 #include "yocto/code/utils.hpp"
 
+#include "yocto/math/fit/lsf.hpp"
+
 static inline
 void save_h( const Cell &cell, const string &name )
 {
@@ -33,11 +35,18 @@ double dt_round( double dt_max )
 }
 
 static inline
-void save_front( const double pH, const Cell &cell, const double t)
+double save_front( const double pH, const Cell &cell, const double t)
 {
     const string fn = vformat("front%d.dat", int( pH*100) );
     ios::ocstream fp( fn, t>0 );
-    fp("%g %g\n", t, cell.locate(pH) );
+    const double x = cell.locate(pH);
+    fp("%g %g\n", t, x );
+    return x;
+}
+
+double FitFunction( double t, const array<double> &a )
+{
+    return a[1] * t;
 }
 
 int main( int argc, char *argv[] )
@@ -73,6 +82,12 @@ int main( int argc, char *argv[] )
         //======================================================================
         const double dt_max = cell.max_dt();
         double dt=dt_round(dt_max);
+        
+        //======================================================================
+        //
+        // Look up front ?
+        //
+        //======================================================================
         double pH_front    = 7;
         bool   build_front = false;
         {
@@ -85,6 +100,21 @@ int main( int argc, char *argv[] )
             }
         }
         
+        //======================================================================
+        //
+        // Fitting
+        //
+        //======================================================================
+        fit::lsf<double>    Fit;
+        vector<double>      fX,fY,fZ;
+        fit::sample<double> Sample(fX,fY,fZ);
+        vector<double>      coef;
+        vector<bool>        used;
+        vector<double>      aerr;
+        
+        const bool          fit = Lua::Config::Get<bool>(L,"fit");
+        std::cerr << ( fit ? "Fitting Enabled" : "Fitting Disabled") << std::endl;
+        fit::lsf<double>::field func = cfunctor2(FitFunction);
         
         //======================================================================
         //
@@ -92,17 +122,31 @@ int main( int argc, char *argv[] )
         //
         //======================================================================
         const double t_run = Lua::Config::Get<double>(L,"t_run");
-        const size_t iter  = 1 + size_t(ceil(t_run/dt));
+        size_t       iter  = 1 + size_t(ceil(t_run/dt));
         const double dt_save = Lua::Config::Get<double>(L,"dt_save");
         const size_t every = clamp<size_t>(1,floor(dt_save/dt),iter);
+        while( 0 != (iter%every) ) ++iter;
+        const size_t nsave = iter/every;
         std::cerr << "###  dt_max=" << dt_max << std::endl;
         std::cerr << "###      dt=" << dt << std::endl;
         std::cerr << "###   t_run=" << t_run << std::endl;
         std::cerr << "###    iter=" << iter << std::endl;
+        std::cerr << "###   t_run=" << iter * dt << std::endl;
         std::cerr << "### dt_save=" << dt_save << std::endl;
         std::cerr << "###   every=" << every << " / dt_out=" << every * dt << std::endl;
+        std::cerr << "###   nsave=" << nsave << std::endl;
         double t=0;
         cell.initialize();
+        
+        if( fit )
+        {
+            fX.reserve(nsave);
+            fY.reserve(nsave);
+            fZ.reserve(nsave);
+            coef.make(1,0);
+            used.make(1,true);
+            aerr.make(1,0);
+        }
         
         
         save_h(cell, "h0.dat");
@@ -121,10 +165,19 @@ int main( int argc, char *argv[] )
             {
                 std::cerr << "t= " << t << "\r"; std::cerr.flush();
                 if(build_front)
-                    save_front(pH_front, cell, t);
+                {
+                    const double x = save_front(pH_front, cell, t);
+                    if(fit)
+                    {
+                        fX.push_back(t);
+                        fY.push_back(x*x);
+                        fZ.push_back(0);
+                        Fit(Sample,func,coef,used,aerr);
+                        std::cerr << std::endl << "D=" << coef[1] * 1e8<< ", err=" << aerr[1]*1e8 << std::endl;
+                    }
+                }
             }
         }
-        std::cerr << "t= " << t << "\r"; std::cerr.flush();
         std::cerr << std::endl;
         std::cerr << "<steps/s>=" << nst/ell << std::endl;
         

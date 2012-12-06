@@ -59,4 +59,5 @@ dt_save = 0.01;
 
 -- pH_front = 3.39
 pH_front = 6
+fit      = true;
 
