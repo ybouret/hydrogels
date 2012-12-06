@@ -23,7 +23,7 @@ workspace.hpp workspace.cpp
 worker.hpp    worker.cpp 
 cell.hpp      cell.cpp cell-utils.cpp
 )
-TARGET_LINK_YOCTO(diff1d aqueous spade thr lua lua++ mk)
+TARGET_LINK_YOCTO(diff1d aqueous spade thr lua lua++ mk fs)
 
 IF(FLTK_FOUND)
 	TARGET_LINK_LIBRARIES(gel1d y-fltk)
