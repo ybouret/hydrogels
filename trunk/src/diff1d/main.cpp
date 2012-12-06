@@ -11,19 +11,24 @@
 #include "yocto/code/utils.hpp"
 
 #include "yocto/math/fit/lsf.hpp"
+#include "yocto/auto-ptr.hpp"
+#include "yocto/sequence/list.hpp"
 
 using namespace filesys;
 
+
+
 static inline
-void save_h( const Cell &cell, const string &name )
+void save_h( const Cell &cell, const string &outdir, size_t idx, double dt )
 {
-    ios::ocstream fp( name, false );
+    const string fn = outdir + vformat("h%08u.dat",unsigned(idx));
+    ios::ocstream fp( fn, false );
     const Workspace &W = cell;
     const Array     &h = W["H+"].as<Array>();
     const Array     &X = cell.X;
+    fp("#X(%g) pH\n", idx*dt);
     for( unit_t i=X.lower;i<=X.upper;++i)
     {
-        //fp("%g %g\n", X[i], (h[i]));
         fp("%g %g\n", X[i], -log10(h[i]));
     }
 }
@@ -166,12 +171,38 @@ int main( int argc, char *argv[] )
         vfs & fs = local_fs::instance();
         _vfs::as_directory(outdir);
         fs.create_sub_dir(outdir);
+        std::cerr << "Saving into " << outdir << std::endl;
+        {
+            auto_ptr<vfs::scanner> scan( fs.new_scanner(outdir) );
+            list<string>           old;
+            const vfs::entry *ep = 0;
+            while( 0 != (ep=scan->next()))
+            {
+                if( ep->is_reg )
+                {
+                    if( ep->extension && strcmp("dat",ep->extension)==0 )
+                    {
+                        std::cerr << ep->path << std::endl;
+                        old.push_back(ep->path);
+                    }
+                }
+            }
+            while( old.size() )
+            {
+                fs.remove_file( old.back() );
+                old.pop_back();
+            }
+        }
+        return 0;
         
-        save_h(cell, "h0.dat");
-        if( build_front )
-            save_front( pH_front, cell, t );
+        size_t isave = 0;
+        save_h(cell, outdir,isave,t);
         
-        
+        //======================================================================
+        //
+        // Run
+        //
+        //======================================================================
         double ell = 0;
         size_t nst = 0;
         for( size_t i=1; i <= iter; ++i )
@@ -182,13 +213,14 @@ int main( int argc, char *argv[] )
             if( 0 == (i%every) )
             {
                 std::cerr << "t= " << t << "\r"; std::cerr.flush();
+                save_h(cell, outdir, ++isave, t );
                 if(build_front)
                 {
                     const double x = save_front(pH_front, cell, t);
                     fX.push_back(t);
                     fY.push_back(x*x);
                     fZ.push_back(0);
-                    if(fit)
+                    if(fit && fX.size() > 1)
                     {
                         Fit(Sample,func,coef,used,aerr);
                         std::cerr << std::endl << "D=" << coef[1] * 1e8<< ", err=" << aerr[1]*1e8 << std::endl;
@@ -203,7 +235,6 @@ int main( int argc, char *argv[] )
             std::cerr << std::endl << "D=" << coef[1] * 1e8<< ", err=" << aerr[1]*1e8 << std::endl;
         }
         
-        save_h(cell,"h1.dat");
         return 0;
     }
     catch( const exception &e )
