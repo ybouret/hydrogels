@@ -3,7 +3,7 @@
 
 #include "yocto/string/vfs-utils.hpp"
 #include "yocto/exception.hpp"
-
+#include "yocto/ios/ocstream.hpp"
 
 using namespace yocto;
 
@@ -20,14 +20,17 @@ static double       w1  = Kw/h1;
 static double       s1  = h1+w1;
 static double       d1  = h1-w1;
 
-static double D = 1e-9;
+static double D = 5e-9;
 
 static inline double d(double t, double x)
 {
     if(x<=0)
         return d0;
     else
+    {
+		const double arg = x/sqrt(4*D*t);
         return d1 + (d0-d1) * math::qerfc( x/sqrt(4*D*t) );
+	}
 }
 
 static inline double s(double t, double x)
@@ -36,13 +39,14 @@ static inline double s(double t, double x)
         return s0;
     else
     {
-        return s1;
+		const double dtx =  d(t,x);
+        return sqrt(s1*s1 + dtx*dtx - d1*d1);
     }
 }
 
 static inline double h(double t, double x )
 {
-    
+    return 0.5 * ( d(t,x) + s(t,x) );
 }
 
 int main(int argc, char *argv[])
@@ -50,6 +54,16 @@ int main(int argc, char *argv[])
     const char *progname = _vfs::get_base_name(argv[0]);
     try
     {
+        
+        double t  = 5;
+        double dx = 0.00001;
+        {
+			ios::ocstream fp( "profil.dat", false );
+	        for( double x=dx; x <= 0.002; x += dx )
+	        {
+				fp("%g %g\n", x, -log10(h(t,x)) );
+			}
+		}
         
         return 0;
     }
