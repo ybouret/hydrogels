@@ -1,0 +1,7 @@
+PROJECT(approx)
+
+ADD_EXECUTABLE(approx main.cpp )
+TARGET_LINK_YOCTO(approx mk)
+
+INSTALL( TARGETS approx RUNTIME DESTINATION bin )
+
