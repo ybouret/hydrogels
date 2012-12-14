@@ -22,14 +22,19 @@ static double       d1  = h1-w1;
 
 static double D = 5e-9;
 
+static inline double get_arg(double t,double x )
+{
+    return x/sqrt(4*D*t);
+}
+
 static inline double d(double t, double x)
 {
     if(x<=0)
         return d0;
     else
     {
-		const double arg = x/sqrt(4*D*t);
-        return d1 + (d0-d1) * math::qerfc( x/sqrt(4*D*t) );
+		const double arg = get_arg(t,x);
+        return d1 + (d0-d1) * math::qerfc(arg);
 	}
 }
 
@@ -44,9 +49,21 @@ static inline double s(double t, double x)
     }
 }
 
-static inline double h(double t, double x )
+static inline double get_h(double t, double x )
 {
     return 0.5 * ( d(t,x) + s(t,x) );
+}
+
+static inline
+double get_alpha( double h )
+{
+    const double dd  = h - Kw/h;
+    const double rho = (dd - d1)/(d0-d1);
+    if( rho <=0 || rho >= 1)
+        throw exception("Invalid h=%g", h);
+    //std::cerr << "h=" << h << ", rho=" << rho << std::endl;
+    const double q   = math::iqerf(1.0-rho);
+    return 4*q*q;
 }
 
 int main(int argc, char *argv[])
@@ -61,9 +78,22 @@ int main(int argc, char *argv[])
 			ios::ocstream fp( "profil.dat", false );
 	        for( double x=dx; x <= 0.002; x += dx )
 	        {
-				fp("%g %g\n", x, -log10(h(t,x)) );
+				fp("%g %g\n", x, -log10(get_h(t,x)) );
 			}
 		}
+        
+        {
+            ios::ocstream fp( "Deff.dat", false);
+            const double dph = 0.01;
+            for( double pH = pH0+dph; pH < pH1-dph; pH += dph)
+            {
+                const double alpha = get_alpha( pow(10.0,-pH) );
+                fp("%g %g\n", pH, alpha );
+            }
+        }
+        
+        std::cerr << "Deff(pH=6)=" << get_alpha( pow(10.0,-6)) << std::endl;
+        
         
         return 0;
     }
