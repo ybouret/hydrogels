@@ -8,6 +8,7 @@
 #include "yocto/math/fcn/functions.hpp"
 #include "yocto/wtime.hpp"
 #include "yocto/math/ode/stiff-drvkr.hpp"
+#include "yocto/eta.hpp"
 
 #include <iostream>
 
@@ -81,7 +82,7 @@ public:
     dx(length/volumes),
     Dh(1e-8),
     Dw(1e-8),
-    ftol(1e-5),
+    ftol(1e-7),
     imaxm1(imax-1),
     imaxm2(imax-2),
     sim_layout(0,volumes),
@@ -263,14 +264,14 @@ public:
         {
             Y[1] = ( h[i] += scaling * Ih[i] );
             Y[2] = ( w[i] += scaling * Iw[i] );
-           
+            
             const Real rate = get_rate(Y[1], Y[2]);
             if(rate<0)
             {
-                const Real max_step = min_of( Y[1], Y[2] ) /  -rate;
+                const Real max_step = 0.9*min_of( Y[1], Y[2] ) /  -rate;
                 step[i] = min_of(step[i],max_step);
             }
-            ODE( drvs, djac, Y, 0, dt, step[i] );
+            //ODE( drvs, djac, Y, 0, dt, step[i] );
             
             h[i] = Y[1];
             w[i] = Y[2];
@@ -364,7 +365,7 @@ public:
             
             if( scaling > 0 )
             {
-                std::cerr << "scaling=" << scaling << std::endl;
+                //std::cerr << "scaling=" << scaling << std::endl;
                 scaling *= 0.5;
                 dt *= scaling;
                 ((*this).*(update_fields))(scaling,dt);
@@ -407,6 +408,18 @@ public:
         }
     }
     
+    Real get_error() const throw()
+    {
+        Real err = 0;
+        for( unit_t i=1; i < imax; ++i )
+        {
+            const Real Qw = h[i] * w[i];
+            const Real tmp = Fabs( Qw - Kw) / Kw;
+            if( tmp > err ) err = tmp;
+        }
+        return err;
+    }
+    
 private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(Simulation);
 };
@@ -420,6 +433,19 @@ double dt_round( double dt_max )
     return dt_one * pow(10.0,dt_log);
 }
 
+#include "yocto/duration.hpp"
+static
+void process( eta &ETA, const double ratio, const char *kind , Real t)
+{
+    ETA(ratio);
+    const string   percent = vformat("%7.1f%%", ratio*100 );
+    const duration done(ETA.time_done);
+    const duration left(ETA.time_left);
+    const string   sdone = vformat("%02d:%02d:%02d",done.h,done.m,int(done.s));
+    const string   sleft = vformat("%02d:%02d:%04.1f",left.h,left.m,left.s);
+    
+    std::cerr << kind << percent << " in " << sdone << " | ETA " << sleft << " @=t" << t << "  \r";
+}
 
 int main(int argc, char *argv[])
 {
@@ -428,14 +454,24 @@ int main(int argc, char *argv[])
     {
         const Real alpha = 0.1;
         Simulation sim(500,1e-2);
-        const Real dt_max = alpha * (sim.dx*sim.dx) / max_of(sim.Dh,sim.Dw);
-        const Real dt     = dt_round(dt_max);
-        const Real t_run  = 4;
-        Real       t      = 0;
-        size_t iter_max = 1+ceil(t_run/dt);
+        const Real dt_max   = alpha * (sim.dx*sim.dx) / max_of(sim.Dh,sim.Dw);
+        const Real dt       = dt_round(dt_max);
+        Real       dt_save  = 0.02;
+        const Real t_run    = 5;
+        Real       t        = 0;
+        size_t     iter_max = 1+ceil(t_run/dt);
+        size_t     every    = clamp<size_t>(1,dt_save/dt,iter_max);
+        dt_save  = every * dt;
+        while( 0 != (iter_max%every) ) ++iter_max;
+        const size_t num_out = iter_max / every;
         
         std::cerr << "dt=" << dt << std::endl;
         std::cerr << "iter_max=" << iter_max << std::endl;
+        std::cerr << "save every=" << every << ", dt_save=" << dt_save << std::endl;
+        
+        
+        
+        eta ETA;
         
         std::cerr << std::endl;
         std::cerr << "\t------------" << std::endl;
@@ -445,13 +481,18 @@ int main(int argc, char *argv[])
         
         sim.initialize();
         t=0;
+        ETA.reset();
         sim.save_profile("h0.dat",0);
         for(size_t iter=1;iter<=iter_max;++iter)
         {
-            std::cerr << "relaxed iter=" << iter << std::endl;
             sim.run_relaxed(t,dt);
             t = iter*dt;
+            if( 0 == (iter%every) )
+            {
+                process(ETA,double(iter)/iter_max,"relaxed",t);
+            }
         }
+        std::cerr << std::endl;
         sim.save_profile("h1.dat",t);
         
         
@@ -460,18 +501,29 @@ int main(int argc, char *argv[])
         std::cerr << "\tExplicit" << std::endl;
         std::cerr << "\t------------" << std::endl;
         std::cerr << std::endl;
-        std::cerr << "k2=" << k2 << ", kd=" << kd << ", Kw=" << Kw << std::endl << std::endl;
         
-        sim.initialize();
-        t=0;
-        for(size_t iter=1;iter<=iter_max;++iter)
         {
-            std::cerr << "explicit iter=" << iter << std::endl;
-            sim.run_explicit(t,dt);
-            t = iter*dt;
+            sim.initialize();
+            t=0;
+            ETA.reset();
+            for(size_t iter=1;iter<=iter_max;++iter)
+            {
+                sim.run_explicit(t,dt);
+                t = iter*dt;
+                if( 0 == (iter%every) )
+                {
+                    process(ETA,double(iter)/iter_max,"explicit",t);
+                }
+            }
+            std::cerr << std::endl;
+            sim.save_profile("h2.dat",t);
         }
-        sim.save_profile("h2.dat",t);
         
+        std::cerr << std::endl;
+        std::cerr << "\t------------" << std::endl;
+        std::cerr << "\tAll Done" << std::endl;
+        std::cerr << "\t------------" << std::endl;
+        std::cerr << std::endl;
         
         
         return 0;
