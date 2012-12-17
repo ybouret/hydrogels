@@ -119,6 +119,9 @@ private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(Parameters);
 };
 
+
+#define __CHRONO(tmx,CODE) do { const double __stamp = chrono.query(); { CODE; } tmx += chrono.query() - __stamp; } while(false)
+
 class Simulation : public Parameters, public Workspace
 {
 public:
@@ -137,7 +140,6 @@ public:
     Array       &X;
     double       t_diff;
     double       t_chem;
-    double       t_proj;
     
     explicit Simulation( size_t nv, Real len ) :
     Parameters(nv,len),
@@ -155,8 +157,7 @@ public:
     djac( this, & Simulation:: jacobn ),
     X( mesh.X() ),
     t_diff(0),
-    t_chem(0),
-    t_proj(0)
+    t_chem(0)
     {
         //-- initialiazing
         for(unit_t i=0; i < imax; ++i )
@@ -271,7 +272,7 @@ public:
                 const Real max_step = 0.9*min_of( Y[1], Y[2] ) /  -rate;
                 step[i] = min_of(step[i],max_step);
             }
-            //ODE( drvs, djac, Y, 0, dt, step[i] );
+            ODE( drvs, djac, Y, 0, dt, step[i] );
             
             h[i] = Y[1];
             w[i] = Y[2];
@@ -300,6 +301,11 @@ public:
     //--------------------------------------------------------------------------
     //-- initialize to a pH step
     //--------------------------------------------------------------------------
+    void reset_times() throw()
+    {
+        t_diff = t_chem = 0;
+    }
+    
     void initialize() throw()
     {
         chrono.start();
@@ -315,7 +321,7 @@ public:
         }
         
         for(unit_t i=0;i<=imax;++i) step[i] = 1e-6;
-        t_diff = t_chem = t_proj = 0;
+        reset_times();
     }
     
     //--------------------------------------------------------------------------
@@ -368,13 +374,13 @@ public:
                 //std::cerr << "scaling=" << scaling << std::endl;
                 scaling *= 0.5;
                 dt *= scaling;
-                ((*this).*(update_fields))(scaling,dt);
+                __CHRONO(t_chem,((*this).*(update_fields))(scaling,dt));
                 t += dt;
                 continue;
             }
             else
             {
-                ((*this).*(update_fields))(1,dt);
+                __CHRONO(t_chem,((*this).*(update_fields))(1,dt));
                 break; // was a full step
             }
         }
@@ -447,6 +453,44 @@ void process( eta &ETA, const double ratio, const char *kind , Real t)
     std::cerr << kind << percent << " in " << sdone << " | ETA " << sleft << " @=t" << t << "  \r";
 }
 
+
+static
+void perform( Simulation &sim,
+             void        (Simulation:: *proc)(Real,Real),
+             const char  *name,
+             const size_t iter_max,
+             const Real   dt,
+             const size_t every)
+{
+    assert( 0 == (iter_max%every) );
+    std::cerr << std::endl;
+    std::cerr << "\t------------------------" << std::endl;
+    std::cerr << "\trun " << name << std::endl;
+    std::cerr << "\t------------------------" << std::endl;
+    std::cerr << std::endl;
+    
+    eta ETA;
+    sim.initialize();
+    Real t=0;
+    ETA.reset();
+    sim.save_profile("h0.dat",0);
+    for(size_t iter=1,j=0;iter<=iter_max;++iter)
+    {
+        (sim.*proc) (t,dt);
+        t = iter*dt;
+        if( 0 == (iter%every) )
+        {
+            ++j;
+            //t_diff[j] = sim.t_diff / every;
+            //t_chem[j] = sim.t_chem / every;
+            sim.reset_times();
+            process(ETA,double(iter)/iter_max,"relaxed",t);
+        }
+    }
+    std::cerr << std::endl;
+    sim.save_profile("h1.dat",t);
+}
+
 int main(int argc, char *argv[])
 {
     const char *progname = _vfs::get_base_name( argv[0]);
@@ -458,66 +502,18 @@ int main(int argc, char *argv[])
         const Real dt       = dt_round(dt_max);
         Real       dt_save  = 0.02;
         const Real t_run    = 5;
-        Real       t        = 0;
         size_t     iter_max = 1+ceil(t_run/dt);
         size_t     every    = clamp<size_t>(1,dt_save/dt,iter_max);
         dt_save  = every * dt;
         while( 0 != (iter_max%every) ) ++iter_max;
-        const size_t num_out = iter_max / every;
         
         std::cerr << "dt=" << dt << std::endl;
         std::cerr << "iter_max=" << iter_max << std::endl;
         std::cerr << "save every=" << every << ", dt_save=" << dt_save << std::endl;
         
-        
-        
-        eta ETA;
-        
-        std::cerr << std::endl;
-        std::cerr << "\t------------" << std::endl;
-        std::cerr << "\tRelaxed" << std::endl;
-        std::cerr << "\t------------" << std::endl;
-        std::cerr << std::endl;
-        
-        sim.initialize();
-        t=0;
-        ETA.reset();
-        sim.save_profile("h0.dat",0);
-        for(size_t iter=1;iter<=iter_max;++iter)
-        {
-            sim.run_relaxed(t,dt);
-            t = iter*dt;
-            if( 0 == (iter%every) )
-            {
-                process(ETA,double(iter)/iter_max,"relaxed",t);
-            }
-        }
-        std::cerr << std::endl;
-        sim.save_profile("h1.dat",t);
-        
-        
-        std::cerr << std::endl;
-        std::cerr << "\t------------" << std::endl;
-        std::cerr << "\tExplicit" << std::endl;
-        std::cerr << "\t------------" << std::endl;
-        std::cerr << std::endl;
-        
-        {
-            sim.initialize();
-            t=0;
-            ETA.reset();
-            for(size_t iter=1;iter<=iter_max;++iter)
-            {
-                sim.run_explicit(t,dt);
-                t = iter*dt;
-                if( 0 == (iter%every) )
-                {
-                    process(ETA,double(iter)/iter_max,"explicit",t);
-                }
-            }
-            std::cerr << std::endl;
-            sim.save_profile("h2.dat",t);
-        }
+        perform(sim, & Simulation::run_relaxed,  "relaxed",  iter_max, dt, every);
+        perform(sim, & Simulation::run_explicit, "explicit", iter_max, dt, every);
+
         
         std::cerr << std::endl;
         std::cerr << "\t------------" << std::endl;
