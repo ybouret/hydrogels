@@ -6,6 +6,8 @@
 #include "yocto/code/utils.hpp"
 #include "yocto/ios/ocstream.hpp"
 #include "yocto/math/fcn/functions.hpp"
+#include "yocto/wtime.hpp"
+#include "yocto/math/ode/stiff-drvkr.hpp"
 
 #include <iostream>
 
@@ -13,18 +15,30 @@ using namespace yocto;
 using namespace spade;
 using namespace math;
 
-typedef double        Real;
-typedef array1D<Real> Array;
-typedef layout1D      Layout;
-typedef workspace<Layout,rmesh,Real> Workspace;
-
+typedef double                         Real;
+typedef array1D<Real>                  Array;
+typedef layout1D                       Layout;
+typedef workspace<Layout,rmesh,Real>   Workspace;
+typedef ode::stiff_drvkr<Real>::type   Solver;
+typedef ode::field<Real>::type         DiffEq;
+typedef ode::field<Real>::diff         Jacobn;
 
 static const Real Kw = 1e-14;
-const double      h0 = 1e-2;
-const double      h1 = 1e-10;
+const        Real h0 = 1e-2;
+const        Real h1 = 1e-10;
 
+const Real k2 = 1.40e11;
+const Real kd = Kw*k2;
 
+static Real get_rate( const Real h, const Real w )
+{
+    return kd-k2*h*w;
+}
 
+//! Newton step
+/**
+ \return #step
+ */
 static size_t normalize( Real &h, Real &w, const Real ftol )
 {
     size_t count = 0;
@@ -76,12 +90,13 @@ public:
     {
         
         //-- register fields to be build
-        Y_SPADE_FIELD(fields, "h", Array);
-        Y_SPADE_FIELD(fields, "w", Array);
-        Y_SPADE_FIELD(fields, "Fh", Array);
-        Y_SPADE_FIELD(fields, "Fw", Array);
-        Y_SPADE_FIELD(fields, "Ih", Array);
-        Y_SPADE_FIELD(fields, "Iw", Array);
+        Y_SPADE_FIELD(fields, "h",    Array);
+        Y_SPADE_FIELD(fields, "w",    Array);
+        Y_SPADE_FIELD(fields, "Fh",   Array);
+        Y_SPADE_FIELD(fields, "Fw",   Array);
+        Y_SPADE_FIELD(fields, "Ih",   Array);
+        Y_SPADE_FIELD(fields, "Iw",   Array);
+        Y_SPADE_FIELD(fields, "step", Array);
         
     }
     
@@ -106,37 +121,73 @@ private:
 class Simulation : public Parameters, public Workspace
 {
 public:
-    Array &h;
-    Array &w;
-    Array &Fh;
-    Array &Fw;
-    Array &Ih;
-    Array &Iw;
-    Array &X;
+    Array       &h;
+    Array       &w;
+    Array       &Fh;
+    Array       &Fw;
+    Array       &Ih;
+    Array       &Iw;
+    Array       &step; //!< for ODE
+    vector<Real> Y;
+    Solver       ODE;
+    DiffEq       drvs;
+    Jacobn       djac;
+    wtime        chrono;
+    Array       &X;
+    double       t_diff;
+    double       t_chem;
+    double       t_proj;
+    
     explicit Simulation( size_t nv, Real len ) :
     Parameters(nv,len),
     Workspace(sim_layout,fields,no_ghost),
-    h(  (*this)["h" ].as<Array>() ),
-    w(  (*this)["w" ].as<Array>() ),
-    Fh( (*this)["Fh"].as<Array>() ),
-    Fw( (*this)["Fw"].as<Array>() ),
-    Ih( (*this)["Ih"].as<Array>() ),
-    Iw( (*this)["Iw"].as<Array>() ),
-    X( mesh.X() )
+    h(    (*this)["h" ].as<Array>() ),
+    w(    (*this)["w" ].as<Array>() ),
+    Fh(   (*this)["Fh"].as<Array>() ),
+    Fw(   (*this)["Fw"].as<Array>() ),
+    Ih(   (*this)["Ih"].as<Array>() ),
+    Iw(   (*this)["Iw"].as<Array>() ),
+    step( (*this)["step"].as<Array>() ),
+    Y(2,0.0),
+    ODE(ftol),
+    drvs( this, & Simulation:: diffeq ),
+    djac( this, & Simulation:: jacobn ),
+    X( mesh.X() ),
+    t_diff(0),
+    t_chem(0),
+    t_proj(0)
     {
         //-- initialiazing
-        for(size_t i=0; i < imax; ++i )
+        for(unit_t i=0; i < imax; ++i )
         {
             X[i] = dx * i;
         }
         X[imax] = length;
+        
+        //--
+        ODE.start(2);
     }
     
     virtual ~Simulation() throw()
     {
     }
     
+    void diffeq( array<Real> &dYdt, Real t, const array<Real> &Y ) const throw()
+    {
+        const Real rate = get_rate(Y[1], Y[2]);
+        //std::cerr << "rate=" << rate << std::endl;
+        dYdt[1] = rate; //! F[1]
+        dYdt[2] = rate; //! F[2]
+    }
     
+    void jacobn( array<Real> &dFdt, matrix<Real> &dFdY, Real t, const array<Real> &Y ) const throw()
+    {
+        dFdt[1] = 0;
+        dFdt[2] = 0;
+        
+        dFdY[1][1] = dFdY[2][1] = -k2 * Y[2];
+        dFdY[1][2] = dFdY[2][2] = -k2 * Y[1];
+    }
     
     
     //--------------------------------------------------------------------------
@@ -167,9 +218,9 @@ public:
     }
     
     //--------------------------------------------------------------------------
-    //-- Compute constrained fluxes
+    //-- Compute relaxed fluxes
     //--------------------------------------------------------------------------
-    void compute_constrained_increases( const double dt ) throw()
+    void compute_relaxed_increases( const double dt ) throw()
     {
         for(unit_t i=1;i<imax;++i)
         {
@@ -188,11 +239,10 @@ public:
     
     
     
-    
     //--------------------------------------------------------------------------
-    //-- Updated explicit step with scaling
+    //-- Straight explicit update
     //--------------------------------------------------------------------------
-    void update_explicit( const Real scaling ) throw()
+    inline void add_increases( const Real scaling ) throw()
     {
         for(unit_t i=1;i<imax;++i)
         {
@@ -203,16 +253,47 @@ public:
         w[imax] = (4*w[imaxm1] - w[imaxm2])/3;
     }
     
+    
+    //--------------------------------------------------------------------------
+    //-- Updated explicit step with scaling
+    //--------------------------------------------------------------------------
+    inline void update_explicit( const Real scaling, const Real dt )
+    {
+        for(unit_t i=1;i<imax;++i)
+        {
+            Y[1] = ( h[i] += scaling * Ih[i] );
+            Y[2] = ( w[i] += scaling * Iw[i] );
+           
+            const Real rate = get_rate(Y[1], Y[2]);
+            if(rate<0)
+            {
+                const Real max_step = min_of( Y[1], Y[2] ) /  -rate;
+                step[i] = min_of(step[i],max_step);
+            }
+            ODE( drvs, djac, Y, 0, dt, step[i] );
+            
+            h[i] = Y[1];
+            w[i] = Y[2];
+        }
+        h[imax] = (4*h[imaxm1] - h[imaxm2])/3;
+        w[imax] = (4*w[imaxm1] - w[imaxm2])/3;
+    }
+    
     //--------------------------------------------------------------------------
     //-- Updated constraint step with scaling
     //--------------------------------------------------------------------------
-    void update_constrained( const Real scaling ) throw()
+    inline void update_relaxed( const Real scaling, const Real dt) throw()
     {
-        update_explicit(scaling);
-        for(unit_t i=imax;i>0;--i)
-            normalize(h[i], w[i], ftol);
+        
+        for( unit_t i=1;i<imax;++i)
+        {
+            h[i] += scaling * Ih[i];
+            w[i] += scaling * Iw[i];
+        }
+        h[imax] = (4*h[imaxm1] - h[imaxm2])/3;
+        w[imax] = (4*w[imaxm1] - w[imaxm2])/3;
+        normalize(h[imax], w[imax], ftol);
     }
-    
     
     
     //--------------------------------------------------------------------------
@@ -220,6 +301,7 @@ public:
     //--------------------------------------------------------------------------
     void initialize() throw()
     {
+        chrono.start();
         h[0] = h0;
         w[0] = Kw/h[0];
         
@@ -230,8 +312,14 @@ public:
             h[i] = h[1];
             w[i] = w[1];
         }
+        
+        for(unit_t i=0;i<=imax;++i) step[i] = 1e-6;
+        t_diff = t_chem = t_proj = 0;
     }
     
+    //--------------------------------------------------------------------------
+    //-- find the minimum scaling factor in case of overshoot
+    //--------------------------------------------------------------------------
     void find( Real &scaling, const Array &u, const Array &du ) throw()
     {
         for( unit_t i=1; i < imax; ++i )
@@ -254,49 +342,59 @@ public:
         }
     }
     
-    void step(Real t,
-              Real dt,
-              void (Simulation::*compute_increases)(Real),
-              void (Simulation::*update_fields)(Real) )
+    void run(Real t,
+             Real dt,
+             void (Simulation::*compute_increases)(Real),
+             void (Simulation::*update_fields)(Real,Real)
+             )
     {
         assert(compute_increases);
         assert(update_fields);
-        
         Real t_end = t + dt;
         while(t<t_end)
         {
             dt = t_end - t;
+            const double t_enter = chrono.query();
             compute_fluxes();
             ((*this).*(compute_increases))(dt);
+            t_diff += t_enter - chrono.query();
             Real scaling = -1;
             find(scaling,h,Ih);
             find(scaling,w,Iw);
+            
             if( scaling > 0 )
             {
                 std::cerr << "scaling=" << scaling << std::endl;
                 scaling *= 0.5;
                 dt *= scaling;
+                ((*this).*(update_fields))(scaling,dt);
                 t += dt;
-                ((*this).*(update_fields))(scaling);
                 continue;
             }
             else
             {
-                std::cerr << "full" << std::endl;
-                ((*this).*(update_fields))(1);
+                ((*this).*(update_fields))(1,dt);
                 break; // was a full step
             }
         }
+        
     }
     
-    void step_explicit(Real t, Real dt)
+    
+    inline void run_explicit(Real t, Real dt)
     {
-        step(t,dt,&Simulation::compute_explicit_increases,&Simulation::update_explicit);
+        run(t,
+            dt,
+            &Simulation::compute_explicit_increases,
+            &Simulation::update_explicit);
     }
     
-    void step_constrained(Real t, Real dt )
+    inline void run_relaxed(Real t, Real dt )
     {
-        step(t,dt,&Simulation::compute_constrained_increases,&Simulation::update_constrained);
+        run(t,
+            dt,
+            &Simulation::compute_relaxed_increases,
+            &Simulation::update_relaxed);
     }
     
     
@@ -305,7 +403,7 @@ public:
         ios::ocstream fp( fn, false);
         for(unit_t i=0; i <= imax; ++i )
         {
-            fp("%g %g %g %g\n", X[i], h[i], -log10(h[i]), -log10( Kernel(t,X[i])));
+            fp("%g %g %g %g %g\n", X[i], h[i], w[i], -log10(h[i]), -log10( Kernel(t,X[i])));
         }
     }
     
@@ -317,11 +415,8 @@ private:
 static inline
 double dt_round( double dt_max )
 {
-    //std::cerr << "dt_max=" << dt_max << std::endl;
     const double dt_log = floor( log10(dt_max) );
-    //std::cerr << "dt_log=" << dt_log << std::endl;
     const double dt_one = floor(dt_max * pow(10.0,-dt_log));
-    //std::cerr << "dt_one=" << dt_one << std::endl;
     return dt_one * pow(10.0,dt_log);
 }
 
@@ -332,36 +427,63 @@ int main(int argc, char *argv[])
     try
     {
         const Real alpha = 0.1;
-        Simulation sim(1000,1e-2);
+        Simulation sim(500,1e-2);
         const Real dt_max = alpha * (sim.dx*sim.dx) / max_of(sim.Dh,sim.Dw);
         const Real dt     = dt_round(dt_max);
-        std::cerr << "dt=" << dt << std::endl;
         const Real t_run  = 4;
         Real       t      = 0;
         size_t iter_max = 1+ceil(t_run/dt);
+        
+        std::cerr << "dt=" << dt << std::endl;
         std::cerr << "iter_max=" << iter_max << std::endl;
         
+        std::cerr << std::endl;
+        std::cerr << "\t------------" << std::endl;
+        std::cerr << "\tRelaxed" << std::endl;
+        std::cerr << "\t------------" << std::endl;
+        std::cerr << std::endl;
+        
         sim.initialize();
+        t=0;
         sim.save_profile("h0.dat",0);
         for(size_t iter=1;iter<=iter_max;++iter)
         {
-            std::cerr << "iter=" << iter << std::endl;
-            sim.step_constrained(t,dt);
+            std::cerr << "relaxed iter=" << iter << std::endl;
+            sim.run_relaxed(t,dt);
             t = iter*dt;
         }
         sim.save_profile("h1.dat",t);
+        
+        
+        std::cerr << std::endl;
+        std::cerr << "\t------------" << std::endl;
+        std::cerr << "\tExplicit" << std::endl;
+        std::cerr << "\t------------" << std::endl;
+        std::cerr << std::endl;
+        std::cerr << "k2=" << k2 << ", kd=" << kd << ", Kw=" << Kw << std::endl << std::endl;
+        
+        sim.initialize();
+        t=0;
+        for(size_t iter=1;iter<=iter_max;++iter)
+        {
+            std::cerr << "explicit iter=" << iter << std::endl;
+            sim.run_explicit(t,dt);
+            t = iter*dt;
+        }
+        sim.save_profile("h2.dat",t);
+        
         
         
         return 0;
     }
     catch( const exception &e )
     {
-        std::cerr << e.what() << std::endl;
-        std::cerr << e.when() << std::endl;
+        std::cerr << "******** " << e.what() << std::endl;
+        std::cerr << "******** " << e.when() << std::endl;
     }
     catch(...)
     {
-        std::cerr << "Unhandled Exception in " << progname << "!" << std::endl;
+        std::cerr << "******** Unhandled Exception in " << progname << "!" << std::endl;
     }
     
     return 1;
