@@ -419,7 +419,7 @@ public:
         Real err = 0;
         for( unit_t i=1; i < imax; ++i )
         {
-            const Real Qw = h[i] * w[i];
+            const Real Qw  = h[i] * w[i];
             const Real tmp = Fabs( Qw - Kw) / Kw;
             if( tmp > err ) err = tmp;
         }
@@ -457,7 +457,7 @@ void process( eta &ETA, const double ratio, const char *kind , Real t)
 static
 void perform( Simulation &sim,
              void        (Simulation:: *proc)(Real,Real),
-             const char  *name,
+             const string &name,
              const size_t iter_max,
              const Real   dt,
              const size_t every)
@@ -468,6 +468,9 @@ void perform( Simulation &sim,
     std::cerr << "\trun " << name << std::endl;
     std::cerr << "\t------------------------" << std::endl;
     std::cerr << std::endl;
+    
+    const string errfn = name + "-err.dat";
+    ios::ocstream::overwrite( errfn );
     
     eta ETA;
     sim.initialize();
@@ -488,7 +491,8 @@ void perform( Simulation &sim,
         }
     }
     std::cerr << std::endl;
-    sim.save_profile("h1.dat",t);
+    const string fn = name + ".dat";
+    sim.save_profile(fn,t);
 }
 
 int main(int argc, char *argv[])
