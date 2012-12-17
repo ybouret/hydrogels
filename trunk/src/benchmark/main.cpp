@@ -57,6 +57,7 @@ static size_t normalize( Real &h, Real &w, const Real ftol )
         if( Fabs(dw) > Fabs(ftol*w) ) continue;
         break;
     }
+    //std::cerr << "hw=" << h*w << std::endl;
     return count;
 }
 
@@ -291,6 +292,7 @@ public:
         {
             h[i] += scaling * Ih[i];
             w[i] += scaling * Iw[i];
+            normalize(h[i],w[i],ftol);
         }
         h[imax] = (4*h[imaxm1] - h[imaxm2])/3;
         w[imax] = (4*w[imaxm1] - w[imaxm2])/3;
@@ -421,7 +423,10 @@ public:
         {
             const Real Qw  = h[i] * w[i];
             const Real tmp = Fabs( Qw - Kw) / Kw;
-            if( tmp > err ) err = tmp;
+            if( tmp > err )
+            {
+                err = tmp;
+            }
         }
         return err;
     }
@@ -486,6 +491,10 @@ void perform( Simulation &sim,
             ++j;
             //t_diff[j] = sim.t_diff / every;
             //t_chem[j] = sim.t_chem / every;
+            {
+                ios::ocstream fp( errfn, true);
+                fp("%g %g\n", t, sim.get_error());
+            }
             sim.reset_times();
             process(ETA,double(iter)/iter_max,"relaxed",t);
         }
