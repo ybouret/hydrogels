@@ -33,4 +33,4 @@ intel:
 
 codeblocks:
 	@bash ${CREATE} src codeblocks ${BUILD_TYPE}
-	
+

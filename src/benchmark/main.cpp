@@ -9,6 +9,7 @@
 #include "yocto/wtime.hpp"
 #include "yocto/math/ode/stiff-drvkr.hpp"
 #include "yocto/eta.hpp"
+#include "yocto/math/kernel/matrix.hpp"
 
 #include <iostream>
 
@@ -83,7 +84,7 @@ public:
     dx(length/volumes),
     Dh(1e-8),
     Dw(1e-8),
-    ftol(1e-7),
+    ftol(1e-3),
     imaxm1(imax-1),
     imaxm2(imax-2),
     sim_layout(0,volumes),
@@ -112,7 +113,7 @@ public:
         const Real d0   = h0 - Kw/h0;
         const Real d1   = h1 - Kw/h1;
         const Real d    = d1 + (d0-d1) * qerfc(args);
-        return 0.5* ( d + Sqrt( d*d + 4.0 * Kw ) );
+        return 0.5 * ( d + Sqrt( d*d + 4.0 * Kw ) );
     }
     
     
@@ -366,14 +367,13 @@ public:
             const double t_enter = chrono.query();
             compute_fluxes();
             ((*this).*(compute_increases))(dt);
-            t_diff += t_enter - chrono.query();
+            t_diff += chrono.query() - t_enter;
             Real scaling = -1;
             find(scaling,h,Ih);
             find(scaling,w,Iw);
             
             if( scaling > 0 )
             {
-                //std::cerr << "scaling=" << scaling << std::endl;
                 scaling *= 0.5;
                 dt *= scaling;
                 __CHRONO(t_chem,((*this).*(update_fields))(scaling,dt));
@@ -446,7 +446,7 @@ double dt_round( double dt_max )
 
 #include "yocto/duration.hpp"
 static
-void process( eta &ETA, const double ratio, const char *kind , Real t)
+void process( eta &ETA, const double ratio, const string &kind , Real t)
 {
     ETA(ratio);
     const string   percent = vformat("%7.1f%%", ratio*100 );
@@ -459,15 +459,102 @@ void process( eta &ETA, const double ratio, const char *kind , Real t)
 }
 
 
+class timings
+{
+public:
+    explicit timings( size_t num_acc, size_t num_out ) :
+    t_diff(num_acc,num_out),
+    t_chem(num_acc,num_out),
+    t_step(num_acc,num_out),
+    ave_diff(num_out,0),
+    err_diff(num_out,0),
+    ave_chem(num_out,0),
+    err_chem(num_out,0),
+    ave_step(num_out,0),
+    err_step(num_out,0),
+    t(num_out,0)
+    {
+    }
+    
+    virtual ~timings() throw()
+    {
+    }
+    
+    
+    matrix<double> t_diff;
+    matrix<double> t_chem;
+    matrix<double> t_step;
+    
+    vector<double> ave_diff;
+    vector<double> err_diff;
+    
+    vector<double> ave_chem;
+    vector<double> err_chem;
+    
+    vector<double> ave_step;
+    vector<double> err_step;
+    vector<double> t;
+    
+    void stats()
+    {
+        const size_t M = ave_diff.size();
+        const size_t N = t_diff.rows;
+        for(size_t j=1;j<=M;++j)
+        {
+            ave_diff[j] = 0;
+            ave_chem[j] = 0;
+            ave_step[j] = 0;
+            for( size_t i=1;i<=N;++i)
+            {
+                ave_diff[j] += t_diff[i][j];
+                ave_chem[j] += t_chem[i][j];
+                ave_step[j] += t_step[i][j];
+            }
+            ave_diff[j] /= N;
+            ave_chem[j] /= N;
+            ave_step[j] /= N;
+        }
+        
+        for(size_t j=1;j<=M;++j)
+        {
+            err_diff[j] = 0;
+            err_chem[j] = 0;
+            err_step[j] = 0;
+            for( size_t i=1;i<=N;++i)
+            {
+                { const double d = ave_diff[j] - t_diff[i][j]; err_diff[i] += d*d; }
+                { const double d = ave_chem[j] - t_chem[i][j]; err_chem[i] += d*d; }
+                { const double d = ave_step[j] - t_step[i][j]; err_step[i] += d*d; }
+            }
+            //-- make the SEM
+            err_diff[j] = sqrt( err_diff[j] / (N-1) ) / sqrt(N);
+            err_chem[j] = sqrt( err_chem[j] / (N-1) ) / sqrt(N);
+            err_step[j] = sqrt( err_step[j] / (N-1) ) / sqrt(N);            
+        }
+        
+        
+        
+    }
+    
+private:
+    YOCTO_DISABLE_COPY_AND_ASSIGN(timings);
+};
+
 static
-void perform( Simulation &sim,
+void perform(size_t       acc,
+             Simulation  &sim,
              void        (Simulation:: *proc)(Real,Real),
              const string &name,
              const size_t iter_max,
              const Real   dt,
-             const size_t every)
+             const size_t every,
+             timings     &perf)
 {
     assert( 0 == (iter_max%every) );
+    array<double> &t_diff = perf.t_diff[acc];
+    array<double> &t_chem = perf.t_chem[acc];
+    array<double> &t_step = perf.t_step[acc];
+    const bool     first  = 1 == acc;
     std::cerr << std::endl;
     std::cerr << "\t------------------------" << std::endl;
     std::cerr << "\trun " << name << std::endl;
@@ -475,13 +562,15 @@ void perform( Simulation &sim,
     std::cerr << std::endl;
     
     const string errfn = name + "-err.dat";
-    ios::ocstream::overwrite( errfn );
+    if(first)
+        ios::ocstream::overwrite( errfn );
     
     eta ETA;
     sim.initialize();
     Real t=0;
     ETA.reset();
     sim.save_profile("h0.dat",0);
+    sim.reset_times();
     for(size_t iter=1,j=0;iter<=iter_max;++iter)
     {
         (sim.*proc) (t,dt);
@@ -489,19 +578,27 @@ void perform( Simulation &sim,
         if( 0 == (iter%every) )
         {
             ++j;
-            //t_diff[j] = sim.t_diff / every;
-            //t_chem[j] = sim.t_chem / every;
+            t_diff[j] = sim.t_diff / every;
+            t_chem[j] = sim.t_chem / every;
+            t_step[j] = t_diff[j] + t_chem[j];
+            perf.t[j] = t;
+            if(first)
             {
                 ios::ocstream fp( errfn, true);
-                fp("%g %g\n", t, sim.get_error());
+                const Real err = sim.get_error();
+                if( err > 0)
+                fp("%g %g\n", t, log10(err) );
             }
             sim.reset_times();
-            process(ETA,double(iter)/iter_max,"relaxed",t);
+            process(ETA,double(iter)/iter_max,name,t);
         }
     }
     std::cerr << std::endl;
-    const string fn = name + ".dat";
-    sim.save_profile(fn,t);
+    if(first)
+    {
+        const string fn = name + ".dat";
+        sim.save_profile(fn,t);
+    }
 }
 
 int main(int argc, char *argv[])
@@ -513,20 +610,53 @@ int main(int argc, char *argv[])
         Simulation sim(500,1e-2);
         const Real dt_max   = alpha * (sim.dx*sim.dx) / max_of(sim.Dh,sim.Dw);
         const Real dt       = dt_round(dt_max);
-        Real       dt_save  = 0.02;
-        const Real t_run    = 5;
+        Real       dt_save  = 0.05;
+        const Real t_run    = 4;
         size_t     iter_max = 1+ceil(t_run/dt);
         size_t     every    = clamp<size_t>(1,dt_save/dt,iter_max);
         dt_save  = every * dt;
         while( 0 != (iter_max%every) ) ++iter_max;
+        const size_t num_acc = 10;
+        const size_t num_out = iter_max / every;
+        
+        timings perf_rel(num_acc,num_out);
+        timings perf_exp(num_acc,num_out);
+        
         
         std::cerr << "dt=" << dt << std::endl;
         std::cerr << "iter_max=" << iter_max << std::endl;
         std::cerr << "save every=" << every << ", dt_save=" << dt_save << std::endl;
         
-        perform(sim, & Simulation::run_relaxed,  "relaxed",  iter_max, dt, every);
-        perform(sim, & Simulation::run_explicit, "explicit", iter_max, dt, every);
-
+        for(size_t acc=1;acc<=num_acc;++acc)
+        {
+            perform(acc,sim, & Simulation::run_relaxed,  "relaxed",  iter_max, dt, every, perf_rel );
+            perform(acc,sim, & Simulation::run_explicit, "explicit", iter_max, dt, every, perf_exp );
+        }
+        
+        std::cerr << std::endl;
+        std::cerr << "\t------------" << std::endl;
+        std::cerr << "\tPostProcess" << std::endl;
+        std::cerr << "\t------------" << std::endl;
+        std::cerr << std::endl;
+        
+        perf_rel.stats();
+        perf_exp.stats();
+        
+        {
+            ios::ocstream fp("perf.dat",false);
+            fp("#t step_explicit step_relaxed diff_explicit diff_relaxed chem_explicit chem_relaxed\n");
+            for(size_t j=1;j<=num_out;++j)
+            {
+                fp("%g",  perf_rel.t[j]);
+                fp(" %g", perf_exp.ave_step[j]);
+                fp(" %g", perf_rel.ave_step[j]);
+                fp(" %g", perf_exp.ave_diff[j]);
+                fp(" %g", perf_rel.ave_diff[j]);
+                fp(" %g", perf_exp.ave_chem[j]);
+                fp(" %g", perf_rel.ave_chem[j]);
+                fp("\n");
+            }
+        }
         
         std::cerr << std::endl;
         std::cerr << "\t------------" << std::endl;
