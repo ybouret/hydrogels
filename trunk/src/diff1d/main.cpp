@@ -19,14 +19,14 @@ using namespace filesys;
 
 
 static inline
-void save_h( const Cell &cell, const string &outdir, size_t idx, double dt )
+void save_h( const Cell &cell, const string &outdir, size_t idx, double t )
 {
     const string fn = outdir + vformat("h%08u.dat",unsigned(idx));
     ios::ocstream fp( fn, false );
     const Workspace &W = cell;
     const Array     &h = W["H+"].as<Array>();
     const Array     &X = cell.X;
-    fp("#X(%g) pH\n", idx*dt);
+    fp("#X(%g) pH\n", t);
     for( unit_t i=X.lower;i<=X.upper;++i)
     {
         fp("%g %g\n", X[i], -log10(h[i]));
