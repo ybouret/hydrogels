@@ -157,6 +157,7 @@ public:
     ODE(ftol),
     drvs( this, & Simulation:: diffeq ),
     djac( this, & Simulation:: jacobn ),
+    chrono(),
     X( mesh.X() ),
     t_diff(0),
     t_chem(0)
@@ -170,6 +171,9 @@ public:
         
         //--
         ODE.start(2);
+        
+        //--
+        chrono.start();
     }
     
     virtual ~Simulation() throw()
@@ -607,11 +611,11 @@ int main(int argc, char *argv[])
     try
     {
         const Real alpha = 0.1;
-        Simulation sim(500,1e-2);
+        Simulation sim(600,1e-2);
         const Real dt_max   = alpha * (sim.dx*sim.dx) / max_of(sim.Dh,sim.Dw);
         const Real dt       = dt_round(dt_max);
-        Real       dt_save  = 0.05;
-        const Real t_run    = 4;
+        Real       dt_save  = 0.2;
+        const Real t_run    = 10;
         size_t     iter_max = 1+ceil(t_run/dt);
         size_t     every    = clamp<size_t>(1,dt_save/dt,iter_max);
         dt_save  = every * dt;
