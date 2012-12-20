@@ -367,10 +367,10 @@ public:
             const double t_enter = chrono.query();
             compute_fluxes();
             ((*this).*(compute_increases))(dt);
-            t_diff += chrono.query() - t_enter;
             Real scaling = -1;
             find(scaling,h,Ih);
             find(scaling,w,Iw);
+            t_diff += chrono.query() - t_enter;
             
             if( scaling > 0 )
             {
@@ -529,7 +529,7 @@ public:
             //-- make the SEM
             err_diff[j] = sqrt( err_diff[j] / (N-1) ) / sqrt(N);
             err_chem[j] = sqrt( err_chem[j] / (N-1) ) / sqrt(N);
-            err_step[j] = sqrt( err_step[j] / (N-1) ) / sqrt(N);            
+            err_step[j] = sqrt( err_step[j] / (N-1) ) / sqrt(N);
         }
         
         
@@ -557,7 +557,7 @@ void perform(size_t       acc,
     const bool     first  = 1 == acc;
     std::cerr << std::endl;
     std::cerr << "\t------------------------" << std::endl;
-    std::cerr << "\trun " << name << std::endl;
+    std::cerr << "\trun " << name << " #" << acc << std::endl;
     std::cerr << "\t------------------------" << std::endl;
     std::cerr << std::endl;
     
@@ -587,7 +587,7 @@ void perform(size_t       acc,
                 ios::ocstream fp( errfn, true);
                 const Real err = sim.get_error();
                 if( err > 0)
-                fp("%g %g\n", t, log10(err) );
+                    fp("%g %g\n", t, log10(err) );
             }
             sim.reset_times();
             process(ETA,double(iter)/iter_max,name,t);
@@ -650,8 +650,10 @@ int main(int argc, char *argv[])
                 fp("%g",  perf_rel.t[j]);
                 fp(" %g", perf_exp.ave_step[j]);
                 fp(" %g", perf_rel.ave_step[j]);
+                
                 fp(" %g", perf_exp.ave_diff[j]);
                 fp(" %g", perf_rel.ave_diff[j]);
+                
                 fp(" %g", perf_exp.ave_chem[j]);
                 fp(" %g", perf_rel.ave_chem[j]);
                 fp("\n");
