@@ -1,2 +1,2 @@
 #!bash
-TARGETS=install BUILD_TYPE=Release make clang
+TARGETS="clean install" BUILD_TYPE=Release make clang
