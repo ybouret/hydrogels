@@ -54,10 +54,10 @@ ini_core =
 volumes = 1000;
 length  = 2e-3;
 alpha   = 0.02;
-t_run   = 10;
+t_run   = 5;
 dt_save = 0.05;
 
 -- pH_front = 3.39
-pH_front = 6
+pH_front = 3.424
 fit      = true;
 
