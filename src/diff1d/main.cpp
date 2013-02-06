@@ -17,7 +17,11 @@
 using namespace filesys;
 
 
-
+//==============================================================================
+//
+// saving one profile
+//
+//==============================================================================
 static inline
 void save_h( const Cell &cell, const string &outdir, size_t idx, double t )
 {
@@ -92,7 +96,7 @@ int main( int argc, char *argv[] )
         //
         //======================================================================
         const double dt_max = cell.max_dt();
-        double dt=dt_round(dt_max);
+        const double dt     = dt_round(dt_max);
         
         //======================================================================
         //
@@ -173,6 +177,7 @@ int main( int argc, char *argv[] )
         fs.create_sub_dir(outdir);
         std::cerr << "Saving into " << outdir << std::endl;
         {
+            std::cerr << "\t cleaning:";
             auto_ptr<vfs::scanner> scan( fs.new_scanner(outdir) );
             list<string>           old;
             const vfs::entry *ep = 0;
@@ -182,7 +187,7 @@ int main( int argc, char *argv[] )
                 {
                     if( ep->extension && strcmp("dat",ep->extension)==0 )
                     {
-                        std::cerr << ep->path << std::endl;
+                        std::cerr << "."; std::cerr.flush();
                         old.push_back(ep->path);
                     }
                 }
@@ -193,7 +198,13 @@ int main( int argc, char *argv[] )
                 old.pop_back();
             }
         }
+        std::cerr << std::endl;
         
+        //======================================================================
+        //
+        // First frame
+        //
+        //======================================================================
         size_t isave = 0;
         save_h(cell, outdir,isave,t);
         
@@ -232,7 +243,7 @@ int main( int argc, char *argv[] )
         if(build_front )
         {
             Fit(Sample,func,coef,used,aerr);
-            std::cerr << std::endl << "D=" << coef[1] * 1e8<< ", err=" << aerr[1]*1e8 << std::endl;
+            std::cerr << std::endl << "D=" << coef[1] * 1e8 << ", err=" << aerr[1]*1e8 << std::endl;
         }
         
         return 0;
