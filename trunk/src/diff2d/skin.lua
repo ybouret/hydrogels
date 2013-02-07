@@ -12,14 +12,16 @@ D_Na = 1.3328e-09;
 D_K  = 1.9568e-09;
 D_Cl = 2.0313e-09;
 
-D_In = 1e-9;
 
 species =
 { 
     { "H+",   1, D_h  },
     { "HO-", -1, D_w  },
     { "Cl-", -1, D_Cl },
-    { "Na+",  1, D_Na }
+    { "Na+",  1, D_Na },
+    { "CO2",  0, D_CO2 },
+    { "HCO3-", -1, D_Bicarb },
+    { "CO3--", -2, D_Carbonate}
 };
 
 
@@ -27,13 +29,17 @@ ftol = 1e-7;
 
 chemsys =
 {
-    { "water",  1e-14,     {  1, "H+" }, { 1, "HO-" } }
+    { "water",  1e-14,     {  1, "H+" }, { 1, "HO-" } },
+    { "K1",     4.6e-7,    {  1, "H+" }, { 1, "HCO3-" }, { -1, "CO2" } },
+    { "K2",     4.69e-11,  {  1, "H+" }, { 1, "CO3--" }, { -1, "HCO3-" }}
 };
+
+
 
 xvolumes = 30;
 yvolumes = 20;
 Lx       = 5e-3;
 Ly       = 10e-3;
-alpha   = 0.02;
-t_run   = 5;
-dt_save = 0.05;
+alpha    = 0.02;
+t_run    = 5;
+dt_save  = 0.05;
