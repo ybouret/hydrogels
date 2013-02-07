@@ -23,7 +23,7 @@ vtop(vlayout.upper.x-1,vlayout.upper.y-1),
 length( __check_length( Lua::Config::Get<LUA_NUMBER>(L,"Lx") ), __check_length( Lua::Config::Get<LUA_NUMBER>(L,"Ly")) ),
 delta( length.x/vlayout.upper.x, length.y/vlayout.upper.y),
 noghost(),
-fields( l.size() * 3 )
+fields( 5+l.size() * 3 )
 {
     std::cerr << "*** Registering fields" << std::endl;
     //--------------------------------------------------------------------------
@@ -38,7 +38,11 @@ fields( l.size() * 3 )
         Y_SPADE_FIELD(fields, spf.c_str(),      VertexArray);
         Y_SPADE_FIELD(fields, spi.c_str(),      Array);
     }
+    
+    Y_SPADE_FIELD(fields, "porosity", Array);
 }
+
+
 
 Parameters:: ~Parameters() throw()
 {

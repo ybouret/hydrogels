@@ -1,5 +1,5 @@
 #include "chemsys.hpp"
-#include "param.hpp"
+#include "workspace.hpp"
 #include "yocto/lua/lua-state.hpp"
 #include "yocto/lua/lua-config.hpp"
 
@@ -38,6 +38,8 @@ int main( int argc, char *argv[] )
         Library      lib(L);
         ChemSys      cs(lib,L);
         Parameters   param(lib,L);
+        Workspace    w(param,lib);
+        
         
         return 0;
     }
