@@ -34,6 +34,7 @@ chemsys =
 };
 
 C_In = 1e-4;
+-- C_In = 0;
 indic_total = { C_In, { 1, "InH" }, {1, "In-"} };
 
 ini_bulk =
@@ -45,19 +46,19 @@ ini_bulk =
 
 ini_core = 
 {
-    { 1e-10, { 1, "H+"}  }, -- pH=10
+    { 1e-10, { 1, "H+" } }, -- pH=10
     { 0.1,   { 1, "Cl-"} },
     indic_total
 };
 
 
 volumes = 1000;
-length  = 2e-3;
+length  = 2e-2;
 alpha   = 0.02;
 t_run   = 5;
 dt_save = 0.05;
 
 -- pH_front = 3.39
-pH_front = 3.424
+pH_front = 6.0
 fit      = true;
 

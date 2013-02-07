@@ -76,7 +76,7 @@ int main( int argc, char *argv[] )
         if( argc < 3 )
             throw exception("Usage: %s config.lua output_dir", progname);
         
-        const string cfg = argv[1];
+        const string cfg    = argv[1];
         string       outdir = argv[2];
         Lua::State   VM;
         lua_State   *L = VM();

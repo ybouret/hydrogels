@@ -30,7 +30,7 @@ fields( l.size() * 3 )
     //--------------------------------------------------------------------------
     for( library::const_iterator i = l.begin(); i != l.end(); ++i )
     {
-        const species &sp = **i;
+        const species &sp  = **i;
         const string   spf = sp.name + "F";
         const string   spi = sp.name + "I";
         Y_SPADE_FIELD(fields, sp.name.c_str(),  Array);

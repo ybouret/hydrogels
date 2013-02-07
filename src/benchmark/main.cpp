@@ -627,9 +627,9 @@ int main(int argc, char *argv[])
         timings perf_exp(num_acc,num_out);
         
         
-        std::cerr << "dt=" << dt << std::endl;
-        std::cerr << "iter_max=" << iter_max << std::endl;
-        std::cerr << "save every=" << every << ", dt_save=" << dt_save << std::endl;
+        std::cerr << "dt         = " << dt << std::endl;
+        std::cerr << "iter_max   = " << iter_max << std::endl;
+        std::cerr << "save every = " << every << ", dt_save=" << dt_save << std::endl;
         
         for(size_t acc=1;acc<=num_acc;++acc)
         {
