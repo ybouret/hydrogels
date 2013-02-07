@@ -1,5 +1,7 @@
 #include "chemsys.hpp"
 #include "workspace.hpp"
+#include "initializer.hpp"
+
 #include "yocto/lua/lua-state.hpp"
 #include "yocto/lua/lua-config.hpp"
 

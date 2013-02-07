@@ -14,15 +14,26 @@ handles(l.size())
     //--------------------------------------------------------------------------
     // construct auxiliary fields
     //--------------------------------------------------------------------------
-    const unit_t den = X.upper - X.lower;
-    for(unit_t i=X.lower;i<=X.upper;++i)
     {
-        mesh.X()[i] = ( (i-X.lower) * param.length.x ) / den;
+        const unit_t den = X.upper - X.lower;
+        for(unit_t i=X.lower;i<=X.upper;++i)
+        {
+            mesh.X()[i] = ( (i-X.lower) * param.length.x ) / den;
+        }
+        mesh.X()[X.upper] = param.length.x;
+        std::cerr << "X=" << X << std::endl;
     }
-    mesh.X()[X.upper] = param.length.x;
-    std::cerr << "X=" << X << std::endl;
-    std::cerr << "Y=" << X << std::endl;
-
+    
+    {
+        const unit_t den = Y.upper - Y.lower;
+        for(unit_t i=Y.lower;i<=Y.upper;++i)
+        {
+            mesh.Y()[i] = ( (i-Y.lower) * param.length.y ) / den;
+        }
+        mesh.Y()[Y.upper] = param.length.y;
+        std::cerr << "Y=" << Y << std::endl;
+    }
+    
     //--------------------------------------------------------------------------
     // link arrays to species
     //--------------------------------------------------------------------------
