@@ -1,4 +1,4 @@
-ADD_EXECUTABLE(diff2d main.cpp 
+ADD_EXECUTABLE(diff2d main.cpp skin.lua
 	types.hpp	types.cpp
 	library.hpp	library.cpp
 	chemsys.hpp	chemsys.cpp
