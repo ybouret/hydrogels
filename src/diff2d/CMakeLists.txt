@@ -3,6 +3,7 @@ ADD_EXECUTABLE(diff2d main.cpp skin.lua
 	library.hpp	library.cpp
 	chemsys.hpp	chemsys.cpp
 	param.hpp	param.cpp
+	workspace.hpp	workspace.cpp
 )
 TARGET_LINK_YOCTO(diff2d aqueous spade thr lua lua++ mk fs)
 
