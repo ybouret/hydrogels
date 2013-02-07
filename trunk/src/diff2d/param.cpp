@@ -25,6 +25,7 @@ delta( length.x/vlayout.upper.x, length.y/vlayout.upper.y),
 noghost(),
 fields( l.size() * 3 )
 {
+    std::cerr << "*** Registering fields" << std::endl;
     //--------------------------------------------------------------------------
     // Register Fields
     //--------------------------------------------------------------------------

@@ -1,4 +1,5 @@
 #include "chemsys.hpp"
+#include "param.hpp"
 #include "yocto/lua/lua-state.hpp"
 #include "yocto/lua/lua-config.hpp"
 
@@ -34,8 +35,9 @@ int main( int argc, char *argv[] )
         // Loading Simulation Parameters
         //
         //======================================================================
-        Library lib(L);
-        ChemSys cs(lib,L);
+        Library      lib(L);
+        ChemSys      cs(lib,L);
+        Parameters   param(lib,L);
         
         return 0;
     }
