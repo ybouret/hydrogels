@@ -9,6 +9,7 @@ using namespace yocto;
 using namespace spade;
 
 typedef vertex2D<double>::type           Vertex;
+typedef coord2D                          Coord;
 typedef array2D<double>                  Array;
 typedef array2D<Vertex>                  VertexArray;
 typedef layout2D                         Layout;
