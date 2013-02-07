@@ -1,5 +1,8 @@
 ADD_EXECUTABLE(diff2d main.cpp 
 	types.hpp	types.cpp
+	library.hpp	library.cpp
+	chemsys.hpp	chemsys.cpp
+	param.hpp	param.cpp
 )
 TARGET_LINK_YOCTO(diff2d aqueous spade thr lua lua++ mk fs)
 
