@@ -2,6 +2,7 @@
 #define WORKSPACE_INCLUDED 1
 
 #include "param.hpp"
+#include "yocto/spade/variables.hpp"
 
 typedef array1D<double> Axis;
 
@@ -13,6 +14,12 @@ public:
     const Axis &X;
     const Axis &Y;
     Array      &porosity;
+    
+    void loadC( array<double> &C, const Coord &u ) const;
+    void saveC( const array<double> &C, const Coord &u );
+    
+    variables      var;
+    variables      dvar;
     
 private:
     linear_handles handles;

@@ -1,6 +1,4 @@
-#include "chemsys.hpp"
-#include "workspace.hpp"
-#include "initializer.hpp"
+#include "cell.hpp"
 
 #include "yocto/lua/lua-state.hpp"
 #include "yocto/lua/lua-config.hpp"
@@ -31,24 +29,19 @@ int main( int argc, char *argv[] )
         lua_State   *L = VM();
         Lua::Config::DoFile(L, cfg);
         
-        
         //======================================================================
         //
         // Loading Simulation Parameters
         //
         //======================================================================
-        Library      lib(L);
-        ChemSys      cs(lib,L);
-        Parameters   param(lib,L);
-        Workspace    w(param,lib);
-        Initializer  ini_plasma("ini_plasma", lib, L);
-        
-        ini_plasma( cs, 0.0 );
-        solution S(lib);
-        S.get( cs.C );
-        std::cerr << "plasma=" << std::endl << S << std::endl;
-        
-        
+        Cell sim(L);
+
+        const double dt = 0.1;
+        sim.compute_fluxes();
+        sim.compute_increases(0,dt);
+        sim.vtk.save("increase.vtk", "increase", sim, sim.dvar, sim.vlayout);
+        sim.update_fields(0.0);
+        sim.vtk.save("v1.vtk","v1",sim,sim.var,sim.vlayout);
         return 0;
     }
     catch( const exception &e )

@@ -39,9 +39,17 @@ ini_K  = { 5e-3,   { 1, "K+"  } }
 ini_Na = { 140e-3, { 1, "Na+" } }
 ini_Cl = { 100e-3, { 1, "Cl-" } }
 
-ini_plasma =
+ini_skin =
 {
     { 10^(-7.4), { 1, "H+" } },
+    ini_K,
+    ini_Na,
+    ini_Cl
+}
+
+ini_bath =
+{
+    { 10^(-6), { 1, "H+" } },
     ini_K,
     ini_Na,
     ini_Cl
