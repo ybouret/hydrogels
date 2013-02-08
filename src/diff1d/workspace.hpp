@@ -16,7 +16,7 @@ public:
     void saveC( const array<double> &C, unit_t x );
     
     void load_dC( array<double> &dC, unit_t x ) const;
-    void save_dC( const array<double> &dC, unit_t x );;
+    void save_dC( const array<double> &dC, unit_t x );
 
 private:
     linear_handles handles;
