@@ -41,6 +41,12 @@ int main( int argc, char *argv[] )
         ChemSys      cs(lib,L);
         Parameters   param(lib,L);
         Workspace    w(param,lib);
+        Initializer  ini_plasma("ini_plasma", lib, L);
+        
+        ini_plasma( cs, 0.0 );
+        solution S(lib);
+        S.get( cs.C );
+        std::cerr << "plasma=" << std::endl << S << std::endl;
         
         
         return 0;
