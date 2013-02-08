@@ -14,6 +14,7 @@ public:
     const Coord        vtop;    //!< vlayout.upper-1
     const Vertex       length;  //!< space is [0:length];
     const Vertex       delta;   //!< length/volumes
+    const Vertex       twodel;  //!< 2*delta
     const ghosts_setup noghost;
     Fields             fields;
     

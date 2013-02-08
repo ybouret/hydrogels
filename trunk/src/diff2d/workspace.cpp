@@ -37,8 +37,6 @@ handles(l.size())
     //--------------------------------------------------------------------------
     // link arrays to species
     //--------------------------------------------------------------------------
-    variables var;
-    variables dvar;
     for( library::iterator i=l.begin();i != l.end(); ++i )
     {
         species     &sp = **i;
@@ -62,3 +60,17 @@ handles(l.size())
     query(handles,var);
     query(handles_dC,dvar);
 }
+
+
+void Workspace:: loadC( array<double> &C, const Coord &u ) const
+{
+    assert( C.size() >= handles.size() );
+    load<double>(C, handles, offset_of(u) );
+}
+
+void Workspace:: saveC( const array<double> &C, const Coord &u )
+{
+    assert( C.size() >= handles.size() );
+    save<double>(handles, C, offset_of(u) );
+}
+
