@@ -15,11 +15,12 @@ D_Cl = 2.0313e-09;
 
 species =
 { 
-    { "H+",   1, D_h  },
-    { "HO-", -1, D_w  },
-    { "Cl-", -1, D_Cl },
-    { "Na+",  1, D_Na },
-    { "CO2",  0, D_CO2 },
+    { "H+",     1, D_h  },
+    { "HO-",   -1, D_w  },
+    { "Cl-",   -1, D_Cl },
+    { "Na+",    1, D_Na },
+    { "K+",     1, D_K  },
+    { "CO2",    0, D_CO2 },
     { "HCO3-", -1, D_Bicarb },
     { "CO3--", -2, D_Carbonate}
 };
@@ -34,7 +35,19 @@ chemsys =
     { "K2",     4.69e-11,  {  1, "H+" }, { 1, "CO3--" }, { -1, "HCO3-" }}
 };
 
+ini_K  = { 5e-3,   { 1, "K+"  } }
+ini_Na = { 140e-3, { 1, "Na+" } }
+ini_Cl = { 100e-3, { 1, "Cl-" } }
 
+ini_plasma =
+{
+    { 10^(-7.4), { 1, "H+" } },
+    ini_K,
+    ini_Na,
+    ini_Cl
+}
+
+-- Geometry
 
 xvolumes = 30;
 yvolumes = 20;
