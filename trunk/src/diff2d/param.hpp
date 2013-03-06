@@ -15,6 +15,8 @@ public:
     const Vertex       length;  //!< space is [0:length];
     const Vertex       delta;   //!< length/volumes
     const Vertex       twodel;  //!< 2*delta
+    const Vertex       del_sq;  //!< dx^2, dy^2
+    const Vertex       inv_sq;  //!< 1/dx^2,1/dy^2
     const ghosts_setup noghost;
     Fields             fields;
     

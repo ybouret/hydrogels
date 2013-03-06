@@ -23,6 +23,8 @@ vtop(vlayout.upper.x-1,vlayout.upper.y-1),
 length( __check_length( Lua::Config::Get<LUA_NUMBER>(L,"Lx") ), __check_length( Lua::Config::Get<LUA_NUMBER>(L,"Ly")) ),
 delta( length.x/vlayout.upper.x, length.y/vlayout.upper.y),
 twodel( 2.0*delta ),
+del_sq( delta.x*delta.x, delta.y*delta.y),
+inv_sq( 1.0 / del_sq.x, 1.0 / del_sq.y ),
 noghost(),
 fields( 5+l.size() * 3 )
 {

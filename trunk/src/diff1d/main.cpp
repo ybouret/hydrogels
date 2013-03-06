@@ -63,6 +63,12 @@ double FitFunction( double t, const array<double> &a )
     return a[1] * t;
 }
 
+static inline
+bool is_data_file( const vfs::entry &ep )
+{
+    return ep.is_reg && ep.extension != NULL && 0 == strcmp( ep.extension, "dat" );
+}
+
 int main( int argc, char *argv[] )
 {
     const char *progname = _vfs::get_base_name( argv[0]);
@@ -176,6 +182,7 @@ int main( int argc, char *argv[] )
         _vfs::as_directory(outdir);
         fs.create_sub_dir(outdir);
         std::cerr << "Saving into " << outdir << std::endl;
+#if 0
         {
             std::cerr << "\t cleaning:";
             auto_ptr<vfs::scanner> scan( fs.new_scanner(outdir) );
@@ -199,6 +206,9 @@ int main( int argc, char *argv[] )
             }
         }
         std::cerr << std::endl;
+#endif
+        vfs::entry::callback data_files( cfunctor(is_data_file) );
+        fs.remove_files(outdir, data_files );
         
         //======================================================================
         //

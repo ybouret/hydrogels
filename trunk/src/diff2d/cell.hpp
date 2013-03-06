@@ -20,7 +20,6 @@ public:
     
     vtk_writer  vtk;
     
-    void compute_fluxes();
     void compute_increases(double t, double dt);
     void update_fields(double t);
     

@@ -53,7 +53,7 @@ Cell:: ~Cell() throw()
     
 }
 
-
+#if 0
 void Cell:: compute_fluxes()
 {
     //size_t q = 0;
@@ -79,9 +79,11 @@ void Cell:: compute_fluxes()
         F[volumes.y][0].ldz(); F[volumes.y][volumes.x].ldz();
     }
 }
+#endif
 
 void Cell:: compute_increases(double t, double dt)
 {
+#if 0
     for( unit_t j=vtop.y;j>0;--j)
     {
         for( unit_t i=vtop.x;i>0;--i)
@@ -104,6 +106,48 @@ void Cell:: compute_increases(double t, double dt)
             }
         }
     }
+#endif
+    for( unit_t j=vtop.y;j>0;--j)
+    {
+        const unit_t jm = j-1;
+        const unit_t jp = j+1;
+        
+        for( unit_t i=vtop.x;i>0;--i)
+        {
+            const unit_t im = i-1;
+            const unit_t ip = i+1;
+            size_t q = 0;
+            for( Specs::iterator p = specs.begin(); p != specs.end(); ++p )
+            {
+                ++q;
+                SpeciesData        &sd = **p;
+                const Array        &U  = *(sd.U);
+                //const VertexArray  &F  = *(sd.F);
+                Array              &I  = *(sd.I);
+                const double U0 = C[q] = U[j][i];
+                
+                const double D0 = sd.D * porosity[j][i];
+                
+                const double Dyp = 0.5 * ( D0 + sd.D * porosity[jp][i]);
+                const double Dym = 0.5 * ( D0 + sd.D * porosity[jm][i]);
+                const double Iy  = inv_sq.y * (Dyp * ( U[jp][i] - U0 ) - Dym * (U0 - U[jm][i]) );
+                
+                const double Dxp = 0.5 * ( D0 + sd.D * porosity[j][ip]);
+                const double Dxm = 0.5 * ( D0 + sd.D * porosity[j][im]);
+                const double Ix  = inv_sq.x * (Dxp * ( U[j][ip] - U0 ) - Dxm * (U0 - U[j][im]) );
+                
+                //-- local increase
+                dC[q] = dt * ( Iy + Ix );
+                
+                //-- chemistry
+                reduce(t);
+                
+                //-- store increase
+                I[j][i] = dC[q];
+            }
+        }
+    }
+
 }
 
 void Cell:: update_fields(double t)
@@ -177,11 +221,7 @@ void Cell:: update_fields(double t)
                 U[j][im0] = C[q];
             }
         }
-
-        
-        
-        
-        
         
     }
 }
+

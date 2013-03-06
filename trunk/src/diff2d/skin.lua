@@ -57,10 +57,10 @@ ini_bath =
 
 -- Geometry
 
-xvolumes = 30;
+xvolumes = 40;
 yvolumes = 20;
-Lx       = 5e-3;
-Ly       = 10e-3;
+Lx       = 10e-3;
+Ly       = 5e-3;
 alpha    = 0.02;
-t_run    = 5;
-dt_save  = 0.05;
+t_run    = 3600;
+dt_save  = 5;
