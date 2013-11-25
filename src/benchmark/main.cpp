@@ -610,7 +610,15 @@ int main(int argc, char *argv[])
     const char *progname = _vfs::get_base_name( argv[0]);
     try
     {
-        const Real alpha = 0.1;
+        
+        ////////////////////////////////////////////////////////////////////////
+        // Parsing arguments: N, alpha, Tmax, dt_save
+        ////////////////////////////////////////////////////////////////////////
+        
+        ////////////////////////////////////////////////////////////////////////
+        // Computing remaining constants
+        ////////////////////////////////////////////////////////////////////////        
+        const Real alpha    = 0.02;
         Simulation sim(600,1e-2);
         const Real dt_max   = alpha * (sim.dx*sim.dx) / max_of(sim.Dh,sim.Dw);
         const Real dt       = dt_round(dt_max);

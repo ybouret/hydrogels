@@ -1,5 +1,5 @@
 #include "calc.h"
-#include "yocto/string/vfs-utils.hpp"
+#include "yocto/fs/vfs.hpp"
 #include "yocto/string/conv.hpp"
 
 using namespace aqueous;
@@ -79,7 +79,7 @@ void compute_pH()
 int main( int argc, char *argv[] )
 {
 	
-	const char *progname = _vfs::get_base_name(argv[0]);
+	const char *progname = vfs::get_base_name(argv[0]);
 	try
 	{
 		makeCalcWindow()->show();
