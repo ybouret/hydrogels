@@ -30,6 +30,9 @@ public:
     vector<Array1D *> pIncr;
     vector<double>    D;
     
+    // fill side/core
+    void initialize(void) throw();
+    
 private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(Cell);
 };
