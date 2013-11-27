@@ -61,3 +61,17 @@ pConc()
     
 }
 
+
+void Cell:: initialize() throw()
+{
+    const size_t M = Collection::size();
+    for(size_t k=1;k<=M;++k)
+    {
+        Array1D &c = *pConc[k];
+        c[0] = on_side[k];
+        const double value = in_core[k];
+        for(size_t i=1;i<=volumes;++i)
+            c[i] = value;
+    }
+}
+
