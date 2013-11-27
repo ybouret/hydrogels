@@ -1,7 +1,7 @@
 #ifndef INITIALIZER_INCLUDED
 #define INITIALIZER_INCLUDED 1
 
-#include "yocto/aqueous/initializer.hpp"
+#include "yocto/chemical/initializer.hpp"
 #include "chemsys.hpp"
 
 //! initalizer with built-in electroneutrality

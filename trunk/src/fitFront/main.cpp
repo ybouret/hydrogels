@@ -1,4 +1,4 @@
-#include "yocto/string/vfs-utils.hpp"
+#include "yocto/fs/vfs.hpp"
 #include "yocto/string/conv.hpp"
 #include "yocto/exception.hpp"
 #include "yocto/math/io/data-set.hpp"
@@ -37,7 +37,7 @@ struct diffusion
 
 int main( int argc, char *argv[] )
 {
-    const char *progname = _vfs::get_base_name(argv[0]);
+    const char *progname = vfs::get_base_name(argv[0]);
     try
     {
         

@@ -2,11 +2,11 @@
 #define LIBRARY_INCLUDED 1
 
 #include "types.hpp"
-#include "yocto/aqueous/lua.hpp"
+#include "yocto/chemical/lua/io.hpp"
 #include "yocto/sequence/vector.hpp"
 
 using namespace yocto;
-using namespace aqueous;
+using namespace chemical;
 
 //! extraneous data for each species
 class SpeciesData
@@ -28,7 +28,7 @@ typedef vector<SpeciesData*> Specs;
 
 
 //! auto-initalized library
-class Library : public library
+class Library : public collection
 {
 public:
     explicit Library( lua_State *L );

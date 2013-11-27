@@ -1,13 +1,14 @@
 #include "calc.h"
 #include "yocto/fs/vfs.hpp"
 #include "yocto/string/conv.hpp"
+#include "yocto/chemical/solution.hpp"
 
-using namespace aqueous;
+using namespace chemical;
 
 void compute_pH()
 {
     
-    library lib;
+    collection lib;
     lib.add("H+",1);
     lib.add("HO-",-1);
     lib.add("Na+",1);
@@ -15,51 +16,56 @@ void compute_pH()
     lib.add("AH",0);
     lib.add("A-",-1);
     
-    chemsys cs(lib,1e-7);
+    equilibria cs;
     
-    equilibrium &water = cs.create( "water", pow(10,-strconv::to_real<double>( input_pKw->value(), "pKw") ) );    
-    water.add("H+", 1);
-    water.add("HO-",1);
+    equilibrium &water = cs.add( "water", pow(10,-strconv::to_real<double>( input_pKw->value(), "pKw") ) );
+    water.add( lib["H+"],  1);
+    water.add( lib["HO-"], 1);
     //std::cerr << water << std::endl;
     
     
     const double Ka = pow(10, -strconv::to_real<double>( input_pKa->value(),"pKa") );
-    equilibrium &Ac = cs.create("AH",  Ka); 
-    Ac.add("H+",1);
-    Ac.add("A-",1);
-    Ac.add("AH",-1);
+    equilibrium &Ac = cs.add("AH",  Ka);
+    Ac.add( lib["H+"], 1);
+    Ac.add( lib["A-"], 1);
+    Ac.add( lib["AH"],-1);
     //std::cerr << Ac << std::endl;
     
     
-    cs.build();
+    //cs.build();
     
-    initializer ini(lib);
+    initializer ini;
     
     //! add electroneutrality
-    ini.electroneutrality();
+    ini.electroneutrality(lib);
     
     //! add acid conservation
     {
         constraint &cn = ini.create( strconv::to_real<double>( input_Ca->value(),"Ca") );
-        cn.add("AH", 1);
-        cn.add("A-", 1);
+        cn["AH"] = 1;
+        cn["A-"]= 1;
     }
     
     //! chloride
     {
         constraint &cn = ini.create( strconv::to_real<double>( input_HCl->value(),"HCl") );
-        cn.add("Cl-", 1);
+        cn["Cl-"] = 1;
     }
     
     //! sodium
     {
         constraint &cn = ini.create( strconv::to_real<double>( input_NaOH->value(),"NaOH") );
-        cn.add("Na+", 1);
+        cn["Na+"] = 1;
     }
     
-    //! initialize it
-    ini(cs,0.0);
+    std::cerr << "ini=" << std::endl << ini << std::endl;
     
+    //! initialize it
+    ini(cs,lib,0.0);
+    
+    chemical::solution S(lib);
+    S.load(cs.C);
+    std::cerr << "S=" << S << std::endl;
     const double h  = cs.C[1];
     const double pH = -log10(h);
     

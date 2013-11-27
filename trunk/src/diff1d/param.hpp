@@ -6,7 +6,7 @@
 class Parameters
 {
 public:
-    explicit Parameters(const library &l, lua_State *L);
+    explicit Parameters(const collection &l, lua_State *L);
     virtual ~Parameters() throw();
     
     const size_t       volumes; //!< finite volumes
