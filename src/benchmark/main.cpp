@@ -1,4 +1,4 @@
-#include "yocto/string/vfs-utils.hpp"
+#include "yocto/fs/vfs.hpp"
 #include "yocto/exception.hpp"
 #include "yocto/spade/workspace.hpp"
 #include "yocto/spade/rmesh.hpp"
@@ -6,7 +6,7 @@
 #include "yocto/code/utils.hpp"
 #include "yocto/ios/ocstream.hpp"
 #include "yocto/math/fcn/functions.hpp"
-#include "yocto/wtime.hpp"
+#include "yocto/sys/wtime.hpp"
 #include "yocto/math/ode/stiff-drvkr.hpp"
 #include "yocto/eta.hpp"
 #include "yocto/math/kernel/matrix.hpp"
@@ -607,7 +607,7 @@ void perform(size_t       acc,
 
 int main(int argc, char *argv[])
 {
-    const char *progname = _vfs::get_base_name( argv[0]);
+    const char *progname = vfs::get_base_name( argv[0]);
     try
     {
         

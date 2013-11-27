@@ -2,12 +2,12 @@
 #define CHEMSYS_INCLUDED 1
 
 #include "library.hpp"
-#include "yocto/aqueous/chemsys.hpp"
+#include "yocto/chemical/equilibria.hpp"
 
-class ChemSys : public chemsys
+class ChemSys : public equilibria
 {
 public:
-    explicit ChemSys( const library &l, lua_State *L );
+    explicit ChemSys( const collection &l, lua_State *L );
     virtual ~ChemSys() throw();
     
 private:

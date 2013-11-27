@@ -1,13 +1,13 @@
 #include "yocto/math/fcn/zfind.hpp"
 #include "yocto/math/fcn/functions.hpp"
 
-#include "yocto/string/vfs-utils.hpp"
+#include "yocto/fs/vfs.hpp"
 #include "yocto/exception.hpp"
 #include "yocto/ios/ocstream.hpp"
 
 using namespace yocto;
 
-static const double Kw  =  1e-14;
+static const double Kw  = 1e-14;
 static double       pH0 = 2;
 static double       h0  = pow(10,-pH0);
 static double       w0  = Kw/h0;
@@ -68,7 +68,7 @@ double get_alpha( double h )
 
 int main(int argc, char *argv[])
 {
-    const char *progname = _vfs::get_base_name(argv[0]);
+    const char *progname = vfs::get_base_name(argv[0]);
     try
     {
         
