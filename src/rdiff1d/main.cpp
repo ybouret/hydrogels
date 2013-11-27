@@ -34,6 +34,8 @@ int  main(int argc, char *argv[] )
         
         Cell cell(L);
         
+        cell.initialize();
+        
         return 0;
     }
     catch(const exception &e)
