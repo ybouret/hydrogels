@@ -1,4 +1,4 @@
-#include "collection.hpp"
+#include "initializer.hpp"
 #include "yocto/fs/vfs.hpp"
 #include "yocto/exception.hpp"
 
@@ -18,7 +18,11 @@ int  main(int argc, char *argv[] )
         lua_State *L = VM();
         Lua::Config::DoFile(L, argv[1]);
         
-        Collection lib(L);
+        Collection  lib(L);
+        ChemSys     cs(L,lib);
+        std::cerr << cs << std::endl;
+        Initializer iniSide(L,"iniSide");
+        std::cerr << iniSide << std::endl;
         
         return 0;
     }
