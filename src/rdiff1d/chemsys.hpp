@@ -2,6 +2,7 @@
 #define CHEMSYS_INCLUDED 1
 
 #include "collection.hpp"
+#include "yocto/chemical/solution.hpp"
 
 class ChemSys : public equilibria
 {

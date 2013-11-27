@@ -8,7 +8,7 @@
 class Initializer : public initializer
 {
 public:
-    explicit Initializer(lua_State *L, const char *name);
+    explicit Initializer(lua_State *L, const char *name, const collection &lib);
     virtual ~Initializer() throw();
     
 private:
