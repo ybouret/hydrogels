@@ -19,11 +19,23 @@ int  main(int argc, char *argv[] )
         Lua::Config::DoFile(L, argv[1]);
         
         Collection  lib(L);
+        
         ChemSys     cs(L,lib);
         std::cerr << cs << std::endl;
-        Initializer iniSide(L,"iniSide");
-        std::cerr << iniSide << std::endl;
         
+        Initializer ini_side(L,"ini_side",lib);
+        std::cerr << "ini@side=" << std::endl << ini_side << std::endl;
+       
+        Initializer ini_core(L,"ini_core",lib);
+        std::cerr << "ini@core=" << std::endl << ini_core << std::endl;
+        
+        
+        ini_side(cs,lib,0.0);
+        
+        chemical::solution S(lib);
+        S.load(cs.C);
+        std::cerr << "side=" << S << std::endl;
+        std::cerr << "pH=" << S.pH() << std::endl;
         return 0;
     }
     catch(const exception &e)
