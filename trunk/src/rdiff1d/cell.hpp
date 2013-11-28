@@ -50,6 +50,9 @@ public:
     
     void save_xy(const string &filename) const; //!< VTK xy file
     
+    double dx_min() const throw();
+    double D_max() const throw();
+    
 private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(Cell);
 };
