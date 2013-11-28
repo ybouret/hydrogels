@@ -30,8 +30,8 @@ Cl    = { 0.1, {1,"Cl-" } };
 Indic = { 0, {1,"InH"}, {1,"In-" } };
 
 -- boundary/initial conditions
-pH_side = 10;
-pH_core = 2;
+pH_side = 5;
+pH_core = 9;
 
 -- initialize: set of side constraints
 

@@ -15,6 +15,7 @@ ini_core(L,"ini_core", *this),
 on_side(*this),
 in_core(*this),
 X( mesh.X() ),
+pH( static_cast<Workspace&>(*this)["pH"].as<Array1D>() ),
 pConc(M,as_capacity),
 pFlux(M,as_capacity),
 pIncr(M,as_capacity)
@@ -105,6 +106,14 @@ void Cell:: norm_all( double t )
             c[i] = C[k];
         }
     }
+    
+    const Workspace &self = *this;
+    const Array1D   &h    = self["H+"].as<Array1D>();
+    for(size_t i=0;i<=volumes;++i)
+    {
+        pH[i] = -log10(h[i]);
+    }
+    
 }
 
 void Cell:: compute_fluxes()
@@ -187,6 +196,7 @@ void Cell:: save_xy(const string &filename) const
         }
         fp("\n");
         
+#if 0
         const Array1D &f = *pFlux[k];
         
         fp("#{%s}\n", sp.flux.c_str());
@@ -203,8 +213,16 @@ void Cell:: save_xy(const string &filename) const
             fp("%g %g\n", X[i], I[i]);
         }
         fp("\n");
-
+#endif
     }
+    
+    fp("#pH\n");
+    for(size_t i=0;i<=volumes;++i)
+    {
+        fp("%g %g\n", X[i], pH[i]);
+    }
+
+    
 }
 
 
