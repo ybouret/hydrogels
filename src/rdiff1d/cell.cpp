@@ -69,7 +69,7 @@ pIncr(M,as_capacity)
 
 void Cell:: init_all() throw()
 {
-    std::cerr << "-- init all" << std::endl;
+    //std::cerr << "-- init all" << std::endl;
     for(size_t k=M;k>0;--k)
     {
         Array1D &c = *pConc[k];
@@ -84,7 +84,7 @@ void Cell:: init_all() throw()
 
 void Cell:: norm_all( double t )
 {
-    std::cerr << "-- norm all" << std::endl;
+    //std::cerr << "-- norm all" << std::endl;
     // assuming side is/sides are OK
     for(size_t i=1;i<=volumes;++i)
     {
@@ -109,11 +109,8 @@ void Cell:: norm_all( double t )
 
 void Cell:: compute_fluxes()
 {
-    std::cerr << "-- fluxes" << std::endl;
+    //std::cerr << "-- fluxes" << std::endl;
     
-    // set sides fluxes
-    
-    // core fluxes
     for(size_t k=M;k>0;--k)
     {
         const Array1D &c  = *pConc[k];
@@ -123,6 +120,7 @@ void Cell:: compute_fluxes()
         {
             f[i] = -Dk*(c[i+1]-c[i])/(X[i+1]-X[i]);
         }
+        f[volumes]  = 0;
     }
     
 }
@@ -131,7 +129,7 @@ void Cell:: compute_fluxes()
 
 double Cell:: compute_increases( double dt, double t)
 {
-    std::cerr << "-- increases " << std::endl;
+    //std::cerr << "-- increases " << std::endl;
     double shrink = -1;
     
     // core increases only
@@ -268,5 +266,26 @@ void Cell::  step(double dt, double t)
     
 }
 
+double Cell:: dx_min() const throw()
+{
+    double ans = fabs(X[1] - X[0]);
+    
+    for(size_t i=2;i<=volumes;++i)
+    {
+        const double tmp = fabs(X[i]-X[i-1]);
+        if(tmp<ans) ans = tmp;
+    }
+    
+    return ans;
+}
 
+double Cell:: D_max() const throw()
+{
+    double ans = 0;
+    for(size_t i=1;i<=D.size(); ++i )
+    {
+        if(D[i]>ans) ans = D[i];
+    }
+    return ans;
+}
 
