@@ -16,9 +16,9 @@ public Workspace
 public:
     explicit Cell(lua_State *L);
     virtual ~Cell() throw();
-    
-    Initializer ini_side;
-    Initializer ini_core;
+    const size_t M; //!< Collection::size()
+    Initializer  ini_side;
+    Initializer  ini_core;
     
     solution on_side;
     solution in_core;
@@ -31,7 +31,24 @@ public:
     vector<double>    D;
     
     // fill side/core
-    void initialize(void) throw();
+    void init_all(void) throw();
+    
+    // normalize all volumes
+    void norm_all(double t);
+    
+    // First Pass
+    void compute_fluxes();
+    
+    // Second Pass: return shrink factor
+    double compute_increases(double dt, double t);
+    
+    // update with factor fac
+    void   update_all(double factor);
+    
+    // Adaptive Step
+    void step(double dt, double t);
+    
+    void save_xy(const string &filename) const; //!< VTK xy file
     
 private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(Cell);
