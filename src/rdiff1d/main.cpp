@@ -55,28 +55,27 @@ int  main(int argc, char *argv[] )
         
         Cell cell(L);
         
-        const double alpha = 0.1;
+        const double alpha  = 0.1;
         const double dx_min = cell.dx_min();
-        const double D_max = cell.D_max();
+        const double D_max  = cell.D_max();
         if(D_max<=0)
             throw exception("No Diffusion!");
         
         const double dt_max = alpha * dx_min * dx_min/D_max;
         std::cerr << "dt_max=" << dt_max << std::endl;
         
-        
-        
-        double dt = dt_round(dt_max);
+        const double dt = dt_round(dt_max);
         std::cerr << "dt=" << dt << std::endl;
         double t  = 0.0;
         
         cell.init_all();
         cell.save_xy("data/v0.curve");
         
-        for(int cycle=1;t<=10;++cycle)
+        for(int cycle=1;t<=60;++cycle)
         {
             cell.step(dt,t);
             t = cycle * dt;
+            
             cell.save_xy("data/" + vformat("v%d.curve",cycle));
             std::cerr << "t=" << t << std::endl;
         }

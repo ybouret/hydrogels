@@ -44,4 +44,6 @@ F(0)
         Y_SPADE_FIELD(F, ptr->flux.c_str(), Array1D);
         Y_SPADE_FIELD(F, ptr->incr.c_str(), Array1D);
     }
+    
+    Y_SPADE_FIELD(F, "pH", Array1D);
 }

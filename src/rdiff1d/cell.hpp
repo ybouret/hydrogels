@@ -24,6 +24,7 @@ public:
     solution in_core;
     
     const Array1D &X;
+    Array1D       &pH;
     
     vector<Array1D *> pConc;
     vector<Array1D *> pFlux;
@@ -33,7 +34,7 @@ public:
     // fill side/core
     void init_all(void) throw();
     
-    // normalize all volumes
+    // normalize all volumes, compute pH
     void norm_all(double t);
     
     // First Pass
