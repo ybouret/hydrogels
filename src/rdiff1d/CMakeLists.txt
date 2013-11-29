@@ -1,6 +1,6 @@
 PROJECT(rdiff1d)
 
-ADD_EXECUTABLE(rdiff1d main.cpp config.lua geometry.lua
+ADD_EXECUTABLE(rdiff1d main.cpp config.lua boum.lua
 	collection.hpp collection.cpp
 	chemsys.hpp    chemsys.cpp
 	initializer.hpp initializer.cpp

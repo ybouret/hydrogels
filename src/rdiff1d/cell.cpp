@@ -36,18 +36,22 @@ weight2(0)
     //
     // extra initialization: initializers
     //__________________________________________________________________________
+    std::cerr << "Initializing Left" << std::endl;
     ini_left(*this,*this,0);
     on_left.load(C);
     std::cerr << "on_left=" << on_left << std::endl;
+    std::cerr << "pH_left=" << on_left.pH() << std::endl;
     
+    std::cerr << "Initializing Core" << std::endl;
     ini_core(*this,*this,0);
     in_core.load(C);
     std::cerr << "in_core=" << in_core << std::endl;
+    std::cerr << "pH_core=" << in_core.pH() << std::endl;
     
     ini_right(*this,*this,0);
     on_right.load(C);
     std::cerr << "on_right=" << on_right << std::endl;
-    
+    std::cerr << "pH_right=" << on_right.pH() << std::endl;
     
     //__________________________________________________________________________
     //
@@ -96,6 +100,9 @@ weight2(0)
         D.push_back( sD );
         Z.push_back( sp.z );
     }
+    
+    std::cerr << "D=" << D << std::endl;
+    std::cerr << "Z=" << Z << std::endl;
     
     //__________________________________________________________________________
     //
@@ -174,7 +181,7 @@ void Cell:: compute_fluxes()
     {
         const Array1D &c  = *pConc[k];
         Array1D       &f  = *pFlux[k];
-        const double   Dk = D[k];
+        const double   Dk =  D[k];
         for(size_t i=0;i<volumes;++i)
         {
             f[i] = -Dk*(c[i+1]-c[i])/(X[i+1]-X[i]);
@@ -192,16 +199,15 @@ double Cell:: compute_increases( double dt, double t)
     double shrink = -1;
     
     // core increases only
-    const double fac = 2*dt;
     for(size_t i=1;i<volumes;++i)
     {
         
         for(size_t k=M;k>0;--k)
         {
             const Array1D &f  = *pFlux[k];
-            Array1D       &I  = *pIncr[k];
-            I[i]  = - fac * ( f[i]-f[i-1] )/(X[i+1]-X[i-1]);
-            dC[k] = I[i];
+            const Array1D &c  = *pConc[k];
+            C[k]  = c[i];
+            dC[k] = - dt * ( f[i]-f[i-1] )/(X[i]-X[i-1]);
         }
         
         legalize_dC(t);
@@ -209,19 +215,44 @@ double Cell:: compute_increases( double dt, double t)
         for(size_t k=M;k>0;--k)
         {
             Array1D       &I  = *pIncr[k];
-            const Array1D &c  =  *pConc[k];
-            const double   CC = c[i];
+            I[i] = dC[k];
+        }
+        
+        const collection &lib = *this;
+        for(size_t k=M;k>0;--k)
+        {
+            Array1D &I  = *pIncr[k];
+            Array1D &c  = *pConc[k];
+            const double   CC = c[i]; assert(c[i]>=0);
             const double   DD = I[i] = dC[k];
-            if( DD<0 && -DD > CC)
+            if( DD<0 )
             {
-                const double slower = CC/(-DD);
-                if(shrink<0)
+                if(CC<=0)
                 {
-                    shrink = slower;
+                    c[i] = 0;
+                    I[i] = 0;
                 }
                 else
                 {
-                    shrink = min_of(shrink,slower);
+                    if(-DD>CC)
+                    {
+                        const double slower = CC/(-DD);
+                        if(slower<=0)
+                            throw exception("slower=0 for [%s]=%e, I=%e, @X=%g, ", lib(k)->name.c_str(), CC, DD, X[i]);
+                        if(shrink<0)
+                        {
+                            shrink = slower;
+                            //std::cerr << "[" << lib(k)->name << "](@X[" << i << "]=" << X[i] << ")= " << CC << "/ I=" << DD << std::endl;
+                        }
+                        else
+                        {
+                            if(slower<shrink)
+                            {
+                                shrink = slower;
+                                //std::cerr << "[" << lib(k)->name << "](@X[" << i << "]=" << X[i] << ")= " << CC << "/ I=" << DD << std::endl;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -292,7 +323,9 @@ void Cell:: update_all(double factor)
         {
             const Array1D &I  = *pIncr[k];
             Array1D       &c  = *pConc[k];
+            assert(c[i]>=0);
             c[i] += factor * I[i];
+            assert(c[i]>=0);
         }
         
     }
@@ -310,27 +343,60 @@ void Cell:: update_all(double factor)
     
 }
 
+#include "yocto/code/utils.hpp"
+#include "yocto/fs/local-fs.hpp"
+
+static inline
+bool is_curve( const vfs::entry &ep ) throw()
+{
+    return ep.has_extension("curve");
+}
+
 void Cell::  step(double dt, double t)
 {
-    // we start from a valid conc
+    //unsigned nsub = 0;
+    
+    //vfs &fs = local_fs::instance();
+    //fs.create_sub_dir("sub");
+    //fs.remove_files("data", is_curve);
+    
+    
+    // we start from a valid conc we want to reach t_end
     const double t_end = t+dt;
     for(;;)
     {
+        //______________________________________________________________________
+        //
+        // First Pass, compute fluxes
+        //______________________________________________________________________
         compute_fluxes();
-        double shrink = compute_increases(dt, t);
+        
+        //______________________________________________________________________
+        //
+        // Second Pass, compute increases with current dt and time
+        //______________________________________________________________________
+        const double shrink = compute_increases(dt, t);
+        
+        
         if(shrink>0)
         {
-            const double fac = shrink/2;
+            //const string subname =  "sub/" + vformat("sub%u.curve",nsub++);
+            //save_xy(subname);
+            
+            const double fac = 0.5*shrink;
+            //std::cerr << "@t=" << t << ", shrink=" << shrink << " of dt=" << dt << std::endl;
             update_all(fac);
             dt *= fac;      // effective dt
             t += dt;        // where we are now
-            dt = t_end - t; // what is left to do
+            dt = max_of<double>(0,t_end-t); // what is left to do
+            //std::cerr << "now t=" << t << " and dt=" << dt << std::endl;
             norm_all(t);    // partial normalisation
         }
         else
         {
             if(shrink<0)
             {
+                //std::cerr << "ok @t=" << t_end << std::endl;
                 update_all(1.0);
                 norm_all(t_end); // final normalisation
                 return;

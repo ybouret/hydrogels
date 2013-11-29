@@ -31,8 +31,8 @@ Cl    = { Csalt, {1,"Cl-" } };
 Indic = { 0, {1,"InH"}, {1,"In-" } };
 
 -- boundary/initial conditions
-pH_left  = 5;
-pH_core  = 9;
+pH_left  = 2;
+pH_core  = 10;
 pH_right = 6;
 
 -- initialize: set of side constraints
@@ -64,11 +64,11 @@ ini_right =
 }
 
 
-volumes = 50;
-length  = 0.001; -- in meters
+volumes = 100;
+length  = 0.01; -- in meters
 
 alpha = 0.4;  -- dt Dmax/dx_min^2
 Tmax  = 100;  -- run time in seconds
-dt    = 0.01; -- required dt
+dt    = 0.05; -- required dt
 save  = 0.1;  -- in seconds
 
