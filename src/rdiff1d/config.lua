@@ -10,8 +10,8 @@ species =
 {
     { "H+",   1, Dh },
     { "HO-", -1, Dw },
-    { "InH",  0, 0  },
-    { "In-", -1, 0  },
+    --{ "InH",  0, 0  },
+    --{ "In-", -1, 0  },
     { "Na+",  1, DNa},
     { "Cl-", -1, DCl}
 };
@@ -20,7 +20,7 @@ species =
 eqs =
 {
     { "water",  1e-14,     { 1, "H+"}, { 1, "HO-" } },
-    { "color", 10^(-4.8),  { 1, "H+"}, { 1, "In-" }, { -1, "InH" } },
+    --{ "color", 10^(-4.8),  { 1, "H+"}, { 1, "In-" }, { -1, "InH" } },
 };
 
 Csalt = 0.0;
@@ -31,24 +31,44 @@ Cl    = { Csalt, {1,"Cl-" } };
 Indic = { 0, {1,"InH"}, {1,"In-" } };
 
 -- boundary/initial conditions
-pH_side = 5;
-pH_core = 9;
+pH_left  = 5;
+pH_core  = 9;
+pH_right = 6;
 
 -- initialize: set of side constraints
 
 -- corrected by HCl => Na is given, Cl- is variable
-ini_side =
+ini_left =
 {
-    Indic,
+   -- Indic,
     Na,
-    { 10^(-pH_side), {1, "H+" } }
+    { 10^(-pH_left), {1, "H+" } }
 };
 
 -- initialize: set of core constraints
 -- corrected by NaOH => Cl- is given, Na+ is variable
 ini_core =
 {
-    Indic,
+   -- Indic,
     Cl,
     { 10^(-pH_core), {1, "H+" } }
 };
+
+
+right_wall = 1;
+
+ini_right =
+{
+    Na,
+    { 10^(-pH_right), {1,"H+"} }
+}
+
+
+volumes = 50;
+length  = 0.001; -- in meters
+
+alpha = 0.4;  -- dt Dmax/dx_min^2
+Tmax  = 100;  -- run time in seconds
+dt    = 0.01; -- required dt
+save  = 0.1;  -- in seconds
+

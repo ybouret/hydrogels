@@ -1,5 +1,6 @@
 #include "cell.hpp"
 #include "yocto/math/kernel/lu.hpp"
+#include "yocto/lua/lua-config.hpp"
 
 using namespace math;
 
@@ -13,10 +14,13 @@ ChemSys(L,*this),
 Params(L,*this),
 Workspace(vlayout,F,noghost),
 M( Collection::size() ),
-ini_side(L,"ini_side", *this),
+ini_left(L,"ini_left", *this),
 ini_core(L,"ini_core", *this),
-on_side(*this),
+right_wall( int(Lua::Config::Get<lua_Number>(L,"right_wall")) != 0 ),
+ini_right(L,right_wall ? "ini_core" : "ini_right", *this),
+on_left(*this),
 in_core(*this),
+on_right(*this),
 X( mesh.X() ),
 pH( static_cast<Workspace&>(*this)["pH"].as<Array1D>() ),
 Q(  static_cast<Workspace&>(*this)["Q"].as<Array1D>() ),
@@ -32,19 +36,24 @@ weight2(0)
     //
     // extra initialization: initializers
     //__________________________________________________________________________
-    ini_side(*this,*this,0);
-    on_side.load(C);
-    std::cerr << "on_side=" << on_side << std::endl;
+    ini_left(*this,*this,0);
+    on_left.load(C);
+    std::cerr << "on_left=" << on_left << std::endl;
     
     ini_core(*this,*this,0);
     in_core.load(C);
     std::cerr << "in_core=" << in_core << std::endl;
     
+    ini_right(*this,*this,0);
+    on_right.load(C);
+    std::cerr << "on_right=" << on_right << std::endl;
+    
+    
     //__________________________________________________________________________
     //
     // mesh
     //__________________________________________________________________________
-
+    
     for(size_t i=0; i <= volumes;++i)
     {
         mesh.X()[i] = (i * length)/volumes;
@@ -54,7 +63,7 @@ weight2(0)
     //
     // fields
     //__________________________________________________________________________
-
+    
     Workspace &W = *this;
     for( Params::iterator i= Params::begin(); i != Params::end(); ++i )
     {
@@ -92,7 +101,7 @@ weight2(0)
     //
     // coefs
     //__________________________________________________________________________
-    const double a1 = X[volumes-1] - X[volumes]; 
+    const double a1 = X[volumes-1] - X[volumes];
     const double a2 = X[volumes-2] - X[volumes];
     const double w1 = a2*a2;
     const double w2 = a1*a1;
@@ -108,10 +117,11 @@ void Cell:: init_all() throw()
     for(size_t k=M;k>0;--k)
     {
         Array1D &c = *pConc[k];
-        c[0] = on_side[k];
+        c[0] = on_left[k];
         const double value = in_core[k];
-        for(size_t i=1;i<=volumes;++i)
+        for(size_t i=1;i<volumes;++i)
             c[i] = value;
+        c[volumes] = on_right[k];
     }
     norm_all(0.0);
 }
@@ -120,8 +130,7 @@ void Cell:: init_all() throw()
 void Cell:: norm_all( double t )
 {
     //std::cerr << "-- norm all" << std::endl;
-    // assuming side is/sides are OK
-    for(size_t i=1;i<=volumes;++i)
+    for(size_t i=0;i<=volumes;++i)
     {
         // fill in ChemSys.C
         for(size_t k=M;k>0;--k)
@@ -233,7 +242,7 @@ void Cell:: save_xy(const string &filename) const
         fp("#[%s]\n", sp.name.c_str());
         for(size_t i=0;i<=volumes;++i)
         {
-            fp("%g %.8g\n", X[i], c[i]);
+            fp("%g %g\n", X[i], c[i]);
         }
         fp("\n");
         
@@ -262,14 +271,14 @@ void Cell:: save_xy(const string &filename) const
     {
         fp("%g %.8g\n", X[i], pH[i]);
     }
-
+    
     fp("#Q\n");
     for(size_t i=0;i<=volumes;++i)
     {
-        fp("%g %.8g\n", X[i], Q[i]);
+        fp("%g %g\n", X[i], Q[i]);
     }
     
-
+    
     
 }
 
@@ -289,12 +298,15 @@ void Cell:: update_all(double factor)
     }
     
     // side
-    for(size_t k=M;k>0;--k)
+    if(right_wall)
     {
-        Array1D       &c  = *pConc[k];
-        c[volumes] = weight1*c[volumes-1]+weight2*c[volumes-2];
+        for(size_t k=M;k>0;--k)
+        {
+            Array1D       &c  = *pConc[k];
+            c[volumes] = weight1*c[volumes-1]+weight2*c[volumes-2];
+        }
     }
-
+    
     
 }
 

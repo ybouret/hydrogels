@@ -17,11 +17,14 @@ public:
     explicit Cell(lua_State *L);
     virtual ~Cell() throw();
     const size_t M; //!< Collection::size()
-    Initializer  ini_side;
+    Initializer  ini_left;
     Initializer  ini_core;
+    const bool   right_wall;
+    Initializer  ini_right;
     
-    solution on_side;
+    solution on_left;
     solution in_core;
+    solution on_right;
     
     const Array1D &X;
     Array1D       &pH;
