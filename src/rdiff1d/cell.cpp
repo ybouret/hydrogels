@@ -1,4 +1,7 @@
 #include "cell.hpp"
+#include "yocto/math/kernel/lu.hpp"
+
+using namespace math;
 
 Cell:: ~Cell() throw()
 {
@@ -16,13 +19,18 @@ on_side(*this),
 in_core(*this),
 X( mesh.X() ),
 pH( static_cast<Workspace&>(*this)["pH"].as<Array1D>() ),
+Q(  static_cast<Workspace&>(*this)["Q"].as<Array1D>() ),
 pConc(M,as_capacity),
 pFlux(M,as_capacity),
-pIncr(M,as_capacity)
+pIncr(M,as_capacity),
+D(M,as_capacity),
+Z(M,as_capacity),
+weight1(0),
+weight2(0)
 {
     //__________________________________________________________________________
     //
-    // extra initialization
+    // extra initialization: initializers
     //__________________________________________________________________________
     ini_side(*this,*this,0);
     on_side.load(C);
@@ -32,11 +40,21 @@ pIncr(M,as_capacity)
     in_core.load(C);
     std::cerr << "in_core=" << in_core << std::endl;
     
+    //__________________________________________________________________________
+    //
+    // mesh
+    //__________________________________________________________________________
+
     for(size_t i=0; i <= volumes;++i)
     {
         mesh.X()[i] = (i * length)/volumes;
     }
     
+    //__________________________________________________________________________
+    //
+    // fields
+    //__________________________________________________________________________
+
     Workspace &W = *this;
     for( Params::iterator i= Params::begin(); i != Params::end(); ++i )
     {
@@ -57,14 +75,30 @@ pIncr(M,as_capacity)
         }
     }
     
+    //__________________________________________________________________________
+    //
+    // data
+    //__________________________________________________________________________
     for( collection::iterator i = Collection::begin(); i != Collection::end(); ++i )
     {
         const species &sp = **i;
         const double   sD = sp.data.as<SpeciesData>().D;
         std::cerr << "D_" << sp.name << " = " << sD << std::endl;
         D.push_back( sD );
+        Z.push_back( sp.z );
     }
     
+    //__________________________________________________________________________
+    //
+    // coefs
+    //__________________________________________________________________________
+    const double a1 = X[volumes-1] - X[volumes]; 
+    const double a2 = X[volumes-2] - X[volumes];
+    const double w1 = a2*a2;
+    const double w2 = a1*a1;
+    const double sw = w1-w2;
+    weight1 =  w1/sw;
+    weight2 = -w2/sw;
 }
 
 
@@ -112,6 +146,13 @@ void Cell:: norm_all( double t )
     for(size_t i=0;i<=volumes;++i)
     {
         pH[i] = -log10(h[i]);
+        double zs = 0;
+        for(size_t k=M;k>0;--k)
+        {
+            Array1D &c = *pConc[k];
+            zs += Z[k] * c[i];
+        }
+        Q[i] = zs;
     }
     
 }
@@ -192,7 +233,7 @@ void Cell:: save_xy(const string &filename) const
         fp("#[%s]\n", sp.name.c_str());
         for(size_t i=0;i<=volumes;++i)
         {
-            fp("%g %g\n", X[i], c[i]);
+            fp("%g %.8g\n", X[i], c[i]);
         }
         fp("\n");
         
@@ -219,8 +260,15 @@ void Cell:: save_xy(const string &filename) const
     fp("#pH\n");
     for(size_t i=0;i<=volumes;++i)
     {
-        fp("%g %g\n", X[i], pH[i]);
+        fp("%g %.8g\n", X[i], pH[i]);
     }
+
+    fp("#Q\n");
+    for(size_t i=0;i<=volumes;++i)
+    {
+        fp("%g %.8g\n", X[i], Q[i]);
+    }
+    
 
     
 }
@@ -244,7 +292,7 @@ void Cell:: update_all(double factor)
     for(size_t k=M;k>0;--k)
     {
         Array1D       &c  = *pConc[k];
-        c[volumes] = c[volumes-1];
+        c[volumes] = weight1*c[volumes-1]+weight2*c[volumes-2];
     }
 
     
@@ -262,17 +310,17 @@ void Cell::  step(double dt, double t)
         {
             const double fac = shrink/2;
             update_all(fac);
-            dt *= fac;
-            t += dt;
-            dt = t_end - t;
-            norm_all(t);
+            dt *= fac;      // effective dt
+            t += dt;        // where we are now
+            dt = t_end - t; // what is left to do
+            norm_all(t);    // partial normalisation
         }
         else
         {
             if(shrink<0)
             {
                 update_all(1.0);
-                norm_all(t_end);
+                norm_all(t_end); // final normalisation
                 return;
             }
             else

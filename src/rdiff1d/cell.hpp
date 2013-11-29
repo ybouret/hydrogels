@@ -25,11 +25,13 @@ public:
     
     const Array1D &X;
     Array1D       &pH;
-    
+    Array1D       &Q;
+
     vector<Array1D *> pConc;
     vector<Array1D *> pFlux;
     vector<Array1D *> pIncr;
     vector<double>    D;
+    vector<int>       Z;
     
     // fill side/core
     void init_all(void) throw();
@@ -56,6 +58,8 @@ public:
     
 private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(Cell);
+    double weight1;
+    double weight2;
 };
 
 

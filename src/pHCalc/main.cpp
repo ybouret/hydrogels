@@ -41,20 +41,20 @@ void compute_pH()
     
     //! add acid conservation
     {
-        constraint &cn = ini.create( strconv::to_real<double>( input_Ca->value(),"Ca") );
+        constraint &cn = ini.equals( strconv::to_real<double>( input_Ca->value(),"Ca") );
         cn["AH"] = 1;
-        cn["A-"]= 1;
+        cn["A-"] = 1;
     }
     
     //! chloride
     {
-        constraint &cn = ini.create( strconv::to_real<double>( input_HCl->value(),"HCl") );
+        constraint &cn = ini.equals( strconv::to_real<double>( input_HCl->value(),"HCl") );
         cn["Cl-"] = 1;
     }
     
     //! sodium
     {
-        constraint &cn = ini.create( strconv::to_real<double>( input_NaOH->value(),"NaOH") );
+        constraint &cn = ini.equals( strconv::to_real<double>( input_NaOH->value(),"NaOH") );
         cn["Na+"] = 1;
     }
     
