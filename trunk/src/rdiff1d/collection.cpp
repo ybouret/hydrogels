@@ -40,7 +40,7 @@ void Collection:: OnLoad( lua_State *L, species &sp )
     std::cerr << "\t...loading parameters for '" << sp.name << "'" << std::endl;
     if(lua_gettop(L)<=0)
         throw exception("OnLoad shouldn't be called");
-    const char *tid = lua_typename(L, lua_type(L,-1));
+    //const char *tid = lua_typename(L, lua_type(L,-1));
     //std::cerr << "parameter is '" << tid << "'" << std::endl;
     if(!lua_isnumber(L, -1))
         throw exception("Expecting a diffusion coefficient!");

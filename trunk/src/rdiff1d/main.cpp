@@ -6,6 +6,10 @@
 #include "yocto/lua/lua-state.hpp"
 #include "yocto/lua/lua-config.hpp"
 
+#include "yocto/code/utils.hpp"
+#include "yocto/eta.hpp"
+#include "yocto/duration.hpp"
+
 static inline
 bool is_curve( const vfs::entry &ep ) throw()
 {
@@ -25,11 +29,11 @@ double dt_round( double dt_max )
 
 int  main(int argc, char *argv[] )
 {
-    const char *prog = vfs::get_base_name(argv[0]);
+    const char *progname = vfs::get_base_name(argv[0]);
     try
     {
         if( argc <= 1 )
-            throw exception("usage: %s file1.lua [file2.lua ...]",prog);
+            throw exception("usage: %s file1.lua [file2.lua ...]",progname);
         
         vfs &fs = local_fs::instance();
         fs.create_sub_dir("data");
@@ -55,42 +59,79 @@ int  main(int argc, char *argv[] )
         
         Cell cell(L);
         
-        const double alpha  = 0.1;
+        //______________________________________________________________________
+        //
+        // time control parameters
+        //______________________________________________________________________
+        const double alpha  = clamp<double>(0,Lua::Config::Get<lua_Number>(L, "alpha"),0.5);
         const double dx_min = cell.dx_min();
         const double D_max  = cell.D_max();
         if(D_max<=0)
             throw exception("No Diffusion!");
         
-        const double dt_max = alpha * dx_min * dx_min/D_max;
-        std::cerr << "dt_max=" << dt_max << std::endl;
+        const double Tmax = Lua::Config::Get<lua_Number>(L, "Tmax");
         
-        const double dt = dt_round(dt_max);
+        
+        const double dt_alpha = dt_round(alpha * dx_min * dx_min/D_max);
+        std::cerr << "dt_alpha=" << dt_alpha << std::endl;
+        
+        const double dt_user = Lua::Config::Get<lua_Number>(L, "dt" );
+        std::cerr << "dt_user=" << dt_user << std::endl;
+        const double dt = min_of(dt_user,dt_alpha);
+        
         std::cerr << "dt=" << dt << std::endl;
+        
+        const double   dt_sav = max_of<double>(0,Lua::Config::Get<lua_Number>(L, "save"));
+        const unsigned every  = max_of<unsigned>(1,ceil(dt_sav/dt));
+        std::cerr << "saving every " << every << " steps= " << dt * every << " / " << dt_sav << std::endl;
+        //______________________________________________________________________
+        //
+        // Let us go
+        //______________________________________________________________________
+        eta    prog;
         double t  = 0.0;
         
+        std::cerr.flush();
+        prog.reset();
         cell.init_all();
-        cell.save_xy("data/v0.curve");
-        
-        for(int cycle=1;t<=60;++cycle)
+        int cycle = 0;
+        int isave = 0;
+        double old_tmx = prog.now();
+        for(;t<=Tmax;++cycle)
         {
+            t=cycle*dt;
+            if( 0 ==( cycle % every) )
+            {
+                cell.save_xy("data/" + vformat("v%d.curve",isave++));
+                prog(t/Tmax);
+                const duration tmx_done( prog.time_done );
+                const duration tmx_left( prog.time_left );
+                const double   new_tmx = prog.now();
+                const double   fps = every / (new_tmx - old_tmx);
+                old_tmx = new_tmx;
+                fprintf(stderr,"Time: %02uD%02uH%02uM%04.1fs | ETA:  %02uD%02uH%02uM%04.1fs | sim= %.1fs @ %.1f fps  \r",
+                        tmx_done.d, tmx_done.h, tmx_done.m, tmx_done.s,
+                        tmx_left.d, tmx_left.h, tmx_left.m, tmx_left.s,
+                        t,
+                        fps
+                        );
+                
+                fflush(stderr);
+            }
             cell.step(dt,t);
-            t = cycle * dt;
-            
-            cell.save_xy("data/" + vformat("v%d.curve",cycle));
-            std::cerr << "t=" << t << std::endl;
         }
-        
+        std::cerr << std::endl;
         return 0;
     }
     catch(const exception &e)
     {
-        std::cerr << "*** in " << prog  << std::endl;
+        std::cerr << "*** in " << progname  << std::endl;
         std::cerr << "*** "    << e.what() << std::endl;
         std::cerr << "*** "    << e.when() << std::endl;
     }
     catch(...)
     {
-        std::cerr << "*** in " << prog << std::endl;
+        std::cerr << "*** in " << progname << std::endl;
         std::cerr << "unhandled exception" << std::endl;
     }
     return 1;

@@ -23,10 +23,11 @@ eqs =
     { "color", 10^(-4.8),  { 1, "H+"}, { 1, "In-" }, { -1, "InH" } },
 };
 
+Csalt = 0.0;
 
 -- some constraints
-Na    = { 0.1, {1,"Na+"} };
-Cl    = { 0.1, {1,"Cl-" } };
+Na    = { Csalt, {1,"Na+"} };
+Cl    = { Csalt, {1,"Cl-" } };
 Indic = { 0, {1,"InH"}, {1,"In-" } };
 
 -- boundary/initial conditions
