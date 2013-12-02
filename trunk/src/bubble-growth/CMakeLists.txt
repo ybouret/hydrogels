@@ -1,0 +1,6 @@
+ADD_EXECUTABLE(probe probe.cpp)
+TARGET_LINK_YOCTO(probe mk)
+
+INSTALL( TARGETS probe RUNTIME DESTINATION bin )
+
+
