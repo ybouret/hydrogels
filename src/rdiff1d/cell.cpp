@@ -57,7 +57,6 @@ weight2(0)
     //
     // mesh
     //__________________________________________________________________________
-    
     for(size_t i=0; i <= volumes;++i)
     {
         mesh.X()[i] = (i * length)/volumes;
@@ -354,12 +353,6 @@ bool is_curve( const vfs::entry &ep ) throw()
 
 void Cell::  step(double dt, double t)
 {
-    //unsigned nsub = 0;
-    
-    //vfs &fs = local_fs::instance();
-    //fs.create_sub_dir("sub");
-    //fs.remove_files("data", is_curve);
-    
     
     // we start from a valid conc we want to reach t_end
     const double t_end = t+dt;
@@ -380,30 +373,25 @@ void Cell::  step(double dt, double t)
         
         if(shrink>0)
         {
-            //const string subname =  "sub/" + vformat("sub%u.curve",nsub++);
-            //save_xy(subname);
             
             const double fac = 0.5*shrink;
-            //std::cerr << "@t=" << t << ", shrink=" << shrink << " of dt=" << dt << std::endl;
             update_all(fac);
-            dt *= fac;      // effective dt
-            t += dt;        // where we are now
+            dt *= fac;                      // effective dt
+            t += dt;                        // where we are now
             dt = max_of<double>(0,t_end-t); // what is left to do
-            //std::cerr << "now t=" << t << " and dt=" << dt << std::endl;
-            norm_all(t);    // partial normalisation
+            norm_all(t);                    // partial normalisation
         }
         else
         {
             if(shrink<0)
             {
-                //std::cerr << "ok @t=" << t_end << std::endl;
-                update_all(1.0);
+                update_all(1.0); // full step
                 norm_all(t_end); // final normalisation
                 return;
             }
             else
             {
-                throw exception("Invalid increases !");
+                throw exception("invalid increases !");
             }
         }
     }
