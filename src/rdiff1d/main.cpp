@@ -10,6 +10,8 @@
 #include "yocto/eta.hpp"
 #include "yocto/duration.hpp"
 
+#include "yocto/ios/ocstream.hpp"
+
 static inline
 bool is_curve( const vfs::entry &ep ) throw()
 {
@@ -58,7 +60,14 @@ int  main(int argc, char *argv[] )
         //______________________________________________________________________
         
         Cell cell(L);
-        
+        if(cell.search_front)
+        {
+            ios::ocstream::overwrite("front.dat");
+        }
+        else
+        {
+            try { fs.remove_file("front.dat"); } catch(...) {}
+        }
         //______________________________________________________________________
         //
         // time control parameters
@@ -117,6 +126,15 @@ int  main(int argc, char *argv[] )
                         );
                 
                 fflush(stderr);
+                if(cell.search_front)
+                {
+                    double pos = 0;
+                    if( cell.find_front(pos) )
+                    {
+                        ios::ocstream fp("front.dat",true);
+                        fp("%g %.15e\n",t,pos);
+                    }
+                }
             }
             cell.step(dt,t);
         }

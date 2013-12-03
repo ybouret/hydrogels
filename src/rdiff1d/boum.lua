@@ -73,3 +73,6 @@ dt      = 0.1;
 save    = 1;
 length  = 0.01;
 
+search_front = 0;
+
+

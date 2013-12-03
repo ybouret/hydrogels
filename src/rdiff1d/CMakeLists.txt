@@ -7,7 +7,7 @@ ADD_EXECUTABLE(rdiff1d main.cpp
 	initializer.hpp initializer.cpp
 	
 	params.hpp params.cpp
-	cell.hpp   cell.cpp
+	cell.hpp   cell.cpp cell-front.cpp
 )
 
 TARGET_LINK_YOCTO(rdiff1d chemical spade thr lua++ lua mk)
