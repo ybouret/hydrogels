@@ -36,6 +36,10 @@ public:
     vector<double>    D;
     vector<int>       Z;
     
+    const bool        search_front;
+    const double      search_value;
+    const string      search_field;
+    
     // fill side/core
     void init_all(void) throw();
     
@@ -58,6 +62,8 @@ public:
     
     double dx_min() const throw();
     double D_max() const throw();
+    
+    bool find_front(double &pos ) const;
     
 private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(Cell);

@@ -22,10 +22,14 @@ ini_core =
 
 right_wall = 1;
 
-volumes = 100;
-length  = 0.01; -- in meters
+volumes = 400;
+length  = 0.02; -- in meters
 
 alpha = 0.4;  -- dt Dmax/dx_min^2
-Tmax  = 10;  -- run time in seconds
+Tmax  = 20;   -- run time in seconds
 dt    = 0.05; -- required dt
 save  = 0.1;  -- in seconds
+
+search_front = 1;
+search_field = "H+";
+search_value = 1.5;

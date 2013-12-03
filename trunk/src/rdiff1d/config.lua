@@ -33,7 +33,7 @@ Indic = { 0, {1,"InH"}, {1,"In-" } };
 -- boundary/initial conditions
 pH_left  = 2;
 pH_core  = 10;
-pH_right = 6;
+pH_right = pH_core;
 
 -- initialize: set of side constraints
 
@@ -64,11 +64,16 @@ ini_right =
 }
 
 
-volumes = 100;
+volumes = 200;
 length  = 0.01; -- in meters
 
 alpha = 0.4;  -- dt Dmax/dx_min^2
-Tmax  = 100;  -- run time in seconds
+Tmax  = 20;   -- run time in seconds
 dt    = 0.05; -- required dt
 save  = 0.1;  -- in seconds
+
+search_front = 1;
+search_field = "H+";
+search_value = 10^(-4);
+
 

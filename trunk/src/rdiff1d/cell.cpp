@@ -29,6 +29,9 @@ pFlux(M,as_capacity),
 pIncr(M,as_capacity),
 D(M,as_capacity),
 Z(M,as_capacity),
+search_front( int(Lua::Config::Get<lua_Number>(L,"search_front")) != 0 ),
+search_value( search_front ? Lua::Config::Get<lua_Number>(L,"search_value") : 0 ),
+search_field( search_front ? Lua::Config::Get<string>(L,"search_field") : "" ),
 weight1(0),
 weight2(0)
 {
