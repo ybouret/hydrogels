@@ -5,13 +5,16 @@ DNa = 1.3328e-9;
 DCl = 2.0313e-9;
 DK  = 1.9568e-9;
 
+DInH  = 1.2100e-9;
+DInm  = DInH;
+
 -- database of species
 species =
 {
     { "H+",   1, Dh },
     { "HO-", -1, Dw },
-    --{ "InH",  0, 0  },
-    --{ "In-", -1, 0  },
+    { "InH",  0, DInH  },
+    { "In-", -1, DInm  },
     { "Na+",  1, DNa},
     { "Cl-", -1, DCl}
 };
@@ -19,8 +22,8 @@ species =
 -- equations at stake
 eqs =
 {
-    { "water",  1e-14,     { 1, "H+"}, { 1, "HO-" } },
-    --{ "color", 10^(-4.8),  { 1, "H+"}, { 1, "In-" }, { -1, "InH" } },
+    { "water",  1e-14,      { 1, "H+"}, { 1, "HO-" } },
+    { "color", 10^(-3.39),  { 1, "H+"}, { 1, "In-" }, { -1, "InH" } },
 };
 
 Csalt = 0.0;
@@ -28,7 +31,7 @@ Csalt = 0.0;
 -- some constraints
 Na    = { Csalt, {1,"Na+"} };
 Cl    = { Csalt, {1,"Cl-" } };
-Indic = { 0, {1,"InH"}, {1,"In-" } };
+Indic = { 1e-4, {1,"InH"}, {1,"In-" } };
 
 -- boundary/initial conditions
 pH_left  = 2;
@@ -40,7 +43,7 @@ pH_right = pH_core;
 -- corrected by HCl => Na is given, Cl- is variable
 ini_left =
 {
-   -- Indic,
+    Indic,
     Na,
     { 10^(-pH_left), {1, "H+" } }
 };
@@ -49,7 +52,7 @@ ini_left =
 -- corrected by NaOH => Cl- is given, Na+ is variable
 ini_core =
 {
-   -- Indic,
+    Indic,
     Cl,
     { 10^(-pH_core), {1, "H+" } }
 };
