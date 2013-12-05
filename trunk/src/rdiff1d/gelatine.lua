@@ -5,7 +5,7 @@ DNa = 1.3328e-9;
 DCl = 2.0313e-9;
 DK  = 1.9568e-9;
 
-DInH  = 1.2100e-9;
+DInH  = 0.6140e-9;
 DInm  = DInH;
 
 -- database of species
