@@ -66,7 +66,7 @@ ini_right =
     { C_bicarb, {1, "CO2"}, {1,"HCO3-"} }
 }
 
-volumes = 100;
+volumes = 200;
 Tmax    = 800;
 alpha   = 0.1;
 dt      = 0.1;

@@ -24,7 +24,7 @@ ini_core =
 
 right_wall = 1;
 
-volumes = 500;
+volumes = 800;
 length  = 0.02; -- in meters
 
 alpha = 0.4;  -- dt Dmax/dx_min^2

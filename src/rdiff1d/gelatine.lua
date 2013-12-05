@@ -11,12 +11,14 @@ DInm  = DInH;
 -- database of species
 species =
 {
-    { "H+",   1, Dh },
-    { "HO-", -1, Dw },
-    { "InH",  0, DInH  },
-    { "In-", -1, DInm  },
-    { "Na+",  1, DNa},
-    { "Cl-", -1, DCl}
+    { "H+",    1, Dh    },
+    { "HO-",  -1, Dw    },
+    { "InH",   0, DInH  },
+    { "In-",  -1, DInm  },
+    { "Na+",   1, DNa   },
+    { "Cl-",  -1, DCl   },
+    { "GelH",  0, 0     },
+    { "Gel-", -1, 0     }
 };
 
 -- equations at stake
@@ -24,14 +26,16 @@ eqs =
 {
     { "water",  1e-14,      { 1, "H+"}, { 1, "HO-" } },
     { "color", 10^(-3.39),  { 1, "H+"}, { 1, "In-" }, { -1, "InH" } },
+    { "gelatine", 10^(-4.7),  { 1, "H+"}, { 1, "Gel-"}, { -1, "GelH" } }
 };
 
-Csalt = 0.0;
+Csalt = 0.1;
 
 -- some constraints
-Na    = { Csalt, {1,"Na+"} };
-Cl    = { Csalt, {1,"Cl-" } };
-Indic = { 1e-5, {1,"InH"}, {1,"In-" } };
+Na       = { Csalt, {1,"Na+"} };
+Cl       = { Csalt, {1,"Cl-" } };
+Indic    = { 1e-4,  {1,"InH"}, {1,"In-" } };
+Gelatine = { 0.01,  {1,"GelH"}, {1,"Gel-"} };
 
 -- boundary/initial conditions
 pH_left  = 2;
@@ -45,7 +49,8 @@ ini_left =
 {
     Indic,
     Na,
-    { 10^(-pH_left), {1, "H+" } }
+    { 10^(-pH_left), {1, "H+" } },
+    Gelatine
 };
 
 -- initialize: set of core constraints
@@ -54,7 +59,8 @@ ini_core =
 {
     Indic,
     Cl,
-    { 10^(-pH_core), {1, "H+" } }
+    { 10^(-pH_core), {1, "H+" } },
+    Gelatine
 };
 
 
@@ -65,18 +71,5 @@ ini_right =
     Na,
     { 10^(-pH_right), {1,"H+"} }
 }
-
-
-volumes = 500;
-length  = 0.02; -- in meters
-
-alpha = 0.4;  -- dt Dmax/dx_min^2
-Tmax  = 30;   -- run time in seconds
-dt    = 0.05; -- required dt
-save  = 0.1;  -- in seconds
-
-search_front = 1;
-search_field = "H+";
-search_value = 1e-5; -- 0.5*( 10^(-pH_left) + 10^(-pH_core) );
 
 
