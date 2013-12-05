@@ -31,7 +31,7 @@ Csalt = 0.0;
 -- some constraints
 Na    = { Csalt, {1,"Na+"} };
 Cl    = { Csalt, {1,"Cl-" } };
-Indic = { 1e-4, {1,"InH"}, {1,"In-" } };
+Indic = { 1e-5, {1,"InH"}, {1,"In-" } };
 
 -- boundary/initial conditions
 pH_left  = 2;
@@ -67,16 +67,16 @@ ini_right =
 }
 
 
-volumes = 200;
-length  = 0.01; -- in meters
+volumes = 500;
+length  = 0.02; -- in meters
 
 alpha = 0.4;  -- dt Dmax/dx_min^2
-Tmax  = 20;   -- run time in seconds
+Tmax  = 30;   -- run time in seconds
 dt    = 0.05; -- required dt
 save  = 0.1;  -- in seconds
 
 search_front = 1;
 search_field = "H+";
-search_value = 10^(-4);
+search_value = 1e-5; -- 0.5*( 10^(-pH_left) + 10^(-pH_core) );
 
 
