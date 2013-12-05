@@ -1,3 +1,5 @@
+-- Generate an uncoupled H+ diffusion profile
+
 Dh  = 9.3046e-9;
 
 species =
@@ -22,11 +24,11 @@ ini_core =
 
 right_wall = 1;
 
-volumes = 400;
+volumes = 500;
 length  = 0.02; -- in meters
 
 alpha = 0.4;  -- dt Dmax/dx_min^2
-Tmax  = 20;   -- run time in seconds
+Tmax  = 300;  -- run time in seconds
 dt    = 0.05; -- required dt
 save  = 0.1;  -- in seconds
 

@@ -4,7 +4,7 @@ all:
 
 clean:
 	@echo "-- removing MacOSX Finder info" && find . -name '.DS_Store' | xargs rm -f
-	@echo "-- removing .dat, .ppm, .vtk, .png, .bin  and .dot" && rm -f *.dat *.ppm *.vtk *.png *.dot *.bin
+	@echo "-- removing .dat, .ppm, .vtk, .png, .bin  and .dot" && rm -f *.dat *.ppm *.vtk *.png *.dot *.bin *.dat.log *.dat.fit
 	@echo "-- cleaning auxiliary files"
 
 preclean:
