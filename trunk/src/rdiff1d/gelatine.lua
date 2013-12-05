@@ -11,22 +11,33 @@ DInm  = DInH;
 -- database of species
 species =
 {
-    { "H+",    1, Dh    },
-    { "HO-",  -1, Dw    },
-    { "InH",   0, DInH  },
-    { "In-",  -1, DInm  },
-    { "Na+",   1, DNa   },
-    { "Cl-",  -1, DCl   },
-    { "GelH",  0, 0     },
-    { "Gel-", -1, 0     }
+    { "H+",     1, Dh    },
+    { "HO-",   -1, Dw    },
+    { "InH",    0, DInH  },
+    { "In-",   -1, DInm  },
+    { "Na+",    1, DNa   },
+    { "Cl-",   -1, DCl   },
+    { "GelH2+", 1, 0     },
+    { "GelH",   0, 0     },
+    { "Gel-",  -1, 0     }
 };
 
 -- equations at stake
+
+-- type A Gelatine
+pKa1 = 5.2;
+pKa2 = 11.5;
+
+--type B Gelatine
+-- pKa1 = 3.6
+-- pKa2 = 7.8
+
 eqs =
 {
-    { "water",  1e-14,      { 1, "H+"}, { 1, "HO-" } },
-    { "color", 10^(-3.39),  { 1, "H+"}, { 1, "In-" }, { -1, "InH" } },
-    { "gelatine", 10^(-4.7),  { 1, "H+"}, { 1, "Gel-"}, { -1, "GelH" } }
+    { "water",     1e-14,       { 1, "H+"}, { 1, "HO-" } },
+    { "color",     10^(-3.39),  { 1, "H+"}, { 1, "In-" }, { -1, "InH" } },
+    { "gelatine1", 10^(-pKa1),  { 1, "H+"}, { 1, "GelH"}, { -1, "GelH2+" } },
+    { "gelatine2", 10^(-pKa2),  { 1, "H+"}, { 1, "Gel-"}, { -1, "GelH"   } }
 };
 
 Csalt = 0.1;
@@ -35,7 +46,7 @@ Csalt = 0.1;
 Na       = { Csalt, {1,"Na+"} };
 Cl       = { Csalt, {1,"Cl-" } };
 Indic    = { 1e-4,  {1,"InH"}, {1,"In-" } };
-Gelatine = { 0.01,  {1,"GelH"}, {1,"Gel-"} };
+Gelatine = { 0.01,  {1, "GelH2+"}, {1,"GelH"}, {1,"Gel-"} };
 
 -- boundary/initial conditions
 pH_left  = 2;
