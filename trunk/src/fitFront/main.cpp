@@ -8,6 +8,8 @@
 #include "yocto/code/utils.hpp"
 #include "yocto/ios/ocstream.hpp"
 #include "yocto/math/stat/descr.hpp"
+#include "yocto/sort/quick.hpp"
+#include "yocto/math/fcn/functions.hpp"
 
 #include <iostream>
 
@@ -22,7 +24,7 @@ struct diffusion
         return sqrt( a[1] * max_of<double>(0,x) );
     }
     
-    bool cb(const fit::sample<double>     &s, 
+    bool cb(const fit::sample<double>     &s,
             const fit::lsf<double>::field &f,
             const array<double>           &a )
 	{
@@ -40,12 +42,13 @@ int main( int argc, char *argv[] )
     const char *progname = vfs::get_base_name(argv[0]);
     try
     {
+        const double erfc_value  = iqerfc(0.5);
+        const double free_coeff  = 1.0/(4.0*erfc_value*erfc_value);
         
-        if(argc<=3)
-            throw exception("usage: %s data_file factor cut", progname);
+        if(argc<=2)
+            throw exception("usage: %s data_file max_length (<=0 for no cut)", progname);
         const string filename = argv[1];
-        const double factor   = strconv::to_double( argv[2], "factor" );
-        const double cut      = strconv::to_double( argv[3], "cut" );
+        const double max_length = strconv::to_double( argv[2], "max_length" );
         vector<double> t;
         vector<double> y;
         std::cerr << "-- Loading Data" << std::endl;
@@ -55,15 +58,15 @@ int main( int argc, char *argv[] )
             ds.use(2,y);
             ios::icstream fp( filename );
             ds.load(fp);
-            for( size_t i=y.size();i>0;--i) 
-                y[i] *= factor;
-            if( cut > 0 )
+        }
+        
+        co_qsort(t, y);
+        if( max_length > 0 )
+        {
+            while( (y.size() > 0) && (y.back() > max_length) )
             {
-                while( (y.size() > 0) && (y.back() > cut) )
-                {
-                    y.pop_back();
-                    t.pop_back();
-                }
+                y.pop_back();
+                t.pop_back();
             }
         }
         
@@ -96,8 +99,11 @@ int main( int argc, char *argv[] )
         {
             std::cerr << std::endl;
             std::cerr << "\tD    = " << aorg[1] << " +/- " << aerr[1]/2 << " m^2/s" << std::endl;
+            std::cerr << "\tDfree= " << aorg[1]*free_coeff << " +/- " << aerr[1]*free_coeff/2 << " m^2/s" << std::endl;
             const double R = compute_correlation(y, z);
             std::cerr << "\tcorr = " << R << std::endl;
+            
+            
             std::cerr << "-- Saving Data" << std::endl;
             {
                 const string outfile = filename + ".fit";
@@ -110,18 +116,19 @@ int main( int argc, char *argv[] )
                     fp("%.15g %.15g %.15g %.15g %.15g\n", t[i], yi, zi, yi*yi*1e6, zi*zi*1e6 );
                 }
             }
+            
             std::cerr << "-- Saving Log" << std::endl;
             {
                 const string outfile = filename + ".log";
                 ios::ocstream fp( outfile, false );
                 fp("D      = %.15g +/- %.15g m^2/s\n", aorg[1], aerr[1]/2);
                 fp("corr   = %.8f\n", R );
-                fp("factor = %.15g\n", factor);
-                fp("Cut at = %.15g m\n", cut);
+                //fp("factor = %.15g\n", factor);
+                fp("Cut at = %.15g m\n", max_length);
             }
             
         }
-        else 
+        else
         {
             std::cerr << "Failure" << std::endl;
         }
