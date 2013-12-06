@@ -4,6 +4,8 @@
 #include "params.hpp"
 #include "initializer.hpp"
 #include "yocto/spade/rmesh.hpp"
+#include "yocto/math/dat/interpolate.hpp"
+using namespace math;
 
 typedef workspace<Layout,rmesh,double> Workspace;
 
@@ -27,6 +29,7 @@ public:
     solution on_right;
     
     const Array1D &X;
+    const Array1D &idX;
     Array1D       &pH;
     Array1D       &Q;
 
@@ -69,6 +72,9 @@ private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(Cell);
     double weight1;
     double weight2;
+    mutable interpolator<double>      front_ip;
+    mutable numeric<double>::function front_fn;
+    double zfront(double) throw();
 };
 
 

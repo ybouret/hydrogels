@@ -9,7 +9,7 @@ species =
 
 eqs =
 {
-    
+    -- no equation
 }
 
 ini_left =
@@ -35,3 +35,5 @@ save  = 0.1;  -- in seconds
 search_front = 1;
 search_field = "H+";
 search_value = 1.5;
+
+front_file = "front0.dat";

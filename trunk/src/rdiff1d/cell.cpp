@@ -22,8 +22,9 @@ on_left(*this),
 in_core(*this),
 on_right(*this),
 X( mesh.X() ),
-pH( static_cast<Workspace&>(*this)["pH"].as<Array1D>() ),
-Q(  static_cast<Workspace&>(*this)["Q"].as<Array1D>() ),
+idX( static_cast<Workspace&>(*this)["idX"].as<Array1D>() ),
+pH(  static_cast<Workspace&>(*this)["pH"].as<Array1D>()  ),
+Q(   static_cast<Workspace&>(*this)["Q"].as<Array1D>()   ),
 pConc(M,as_capacity),
 pFlux(M,as_capacity),
 pIncr(M,as_capacity),
@@ -33,7 +34,9 @@ search_front( int(Lua::Config::Get<lua_Number>(L,"search_front")) != 0 ),
 search_value( search_front ? Lua::Config::Get<lua_Number>(L,"search_value") : 0 ),
 search_field( search_front ? Lua::Config::Get<string>(L,"search_field") : "" ),
 weight1(0),
-weight2(0)
+weight2(0),
+front_ip(4),
+front_fn( this, &Cell:: zfront )
 {
     //__________________________________________________________________________
     //
@@ -64,6 +67,16 @@ weight2(0)
     {
         mesh.X()[i] = (i * length)/volumes;
     }
+    
+    //__________________________________________________________________________
+    //
+    // 1/volumes
+    //__________________________________________________________________________
+    for(size_t i=0;i<volumes;++i)
+    {
+        ((Array1D &)idX)[i] = 1.0/(X[i+1] - X[i]);
+    }
+    
     
     //__________________________________________________________________________
     //
@@ -186,7 +199,7 @@ void Cell:: compute_fluxes()
         const double   Dk =  D[k];
         for(size_t i=0;i<volumes;++i)
         {
-            f[i] = -Dk*(c[i+1]-c[i])/(X[i+1]-X[i]);
+            f[i] = -Dk*(c[i+1]-c[i])*idX[i];
         }
         f[volumes]  = 0;
     }
@@ -209,7 +222,7 @@ double Cell:: compute_increases( double dt, double t)
             const Array1D &f  = *pFlux[k];
             const Array1D &c  = *pConc[k];
             C[k]  = c[i];
-            dC[k] = - dt * ( f[i]-f[i-1] )/(X[i]-X[i-1]);
+            dC[k] = - dt * ( f[i]-f[i-1] )*idX[i-1];
         }
         
         legalize_dC(t);
@@ -346,13 +359,7 @@ void Cell:: update_all(double factor)
 }
 
 #include "yocto/code/utils.hpp"
-#include "yocto/fs/local-fs.hpp"
 
-static inline
-bool is_curve( const vfs::entry &ep ) throw()
-{
-    return ep.has_extension("curve");
-}
 
 void Cell::  step(double dt, double t)
 {
