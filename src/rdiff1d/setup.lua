@@ -8,5 +8,5 @@ dt    = 0.01; -- required dt
 save  = 0.1;  -- in seconds
 
 search_front = 1;
-search_field = "H+";
-search_value = 10^(-5.5);
+search_field = "pH";
+search_value = 9;

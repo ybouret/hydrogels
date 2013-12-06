@@ -12,11 +12,6 @@
 
 #include "yocto/ios/ocstream.hpp"
 
-static inline
-bool is_curve( const vfs::entry &ep ) throw()
-{
-    return ep.has_extension("curve");
-}
 
 static inline
 double dt_round( double dt_max )
@@ -39,7 +34,7 @@ int  main(int argc, char *argv[] )
         
         vfs &fs = local_fs::instance();
         fs.create_sub_dir("data");
-        fs.remove_files("data", is_curve);
+        fs.remove_files_with_extensions("data", "curve");
         
         //______________________________________________________________________
         //

@@ -45,7 +45,8 @@ F(0)
         Y_SPADE_FIELD(F, ptr->incr.c_str(), Array1D);
     }
     
-    Y_SPADE_FIELD(F, "pH", Array1D);
-    Y_SPADE_FIELD(F, "Q",  Array1D);
+    Y_SPADE_FIELD(F, "pH",   Array1D);
+    Y_SPADE_FIELD(F, "Q",    Array1D);
+    Y_SPADE_FIELD(F, "idX",  Array1D);
 
 }
