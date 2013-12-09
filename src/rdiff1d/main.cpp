@@ -30,7 +30,7 @@ int  main(int argc, char *argv[] )
     try
     {
         if( argc <= 1 )
-            throw exception("usage: %s file1.lua [file2.lua ...]",progname);
+            throw exception("usage: %s file1.lua [file2.lua| -f \"code\"]",progname);
         
         vfs &fs = local_fs::instance();
         fs.create_sub_dir("data");
@@ -45,8 +45,21 @@ int  main(int argc, char *argv[] )
         lua_State *L = VM();
         for(int i=1;i<argc;++i)
         {
-            std::cerr << "... loading file '" << argv[1] << "'" << std::endl;
-            Lua::Config::DoFile(L, argv[i]);
+            const string args = argv[i];
+            if( args == "-f" )
+            {
+                if(++i>=argc)
+                    throw exception("missing code after flag!!!");
+                const string code = argv[i];
+                std::cerr << "... compiling code '" << code << "'" << std::endl;
+                Lua::Config::DoString(L, code);
+            }
+            else
+            {
+                std::cerr << "... loading file '" << args << "'" << std::endl;
+                Lua::Config::DoFile(L, argv[i]);
+            }
+            
         }
         
         //______________________________________________________________________
