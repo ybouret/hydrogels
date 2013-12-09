@@ -13,6 +13,7 @@ using namespace yocto;
 using namespace math;
 
 
+
 int main(int argc, char *argv[])
 {
     
@@ -83,46 +84,17 @@ int main(int argc, char *argv[])
             //______________________________________________________________________
             extend<double> xtd(extend_odd);
             
-#if 0
-            vector<double> rms_t;
-            vector<double> rms_v;
-            
-            
-            xtd.build_rms(rms_t, rms_v, t, A, degree);
-            {
-                ios::ocstream fp("rmsA.dat",false);
-                for(size_t i=1; i <= rms_t.size();++i)
-                {
-                    fp("%g %g\n", rms_t[i], rms_v[i]);
-                }
-            }
-            
-            xtd.build_rms(rms_t, rms_v, t, P, degree);
-            {
-                ios::ocstream fp("rmsP.dat",false);
-                for(size_t i=1; i <= rms_t.size();++i)
-                {
-                    fp("%g %g\n", rms_t[i], rms_v[i]);
-                }
-            }
-            
-            xtd.build_rms(rms_t, rms_v, t, AP, degree);
-            {
-                ios::ocstream fp("rmsAP.dat",false);
-                for(size_t i=1; i <= rms_t.size();++i)
-                {
-                    fp("%g %g\n", rms_t[i], rms_v[i]);
-                }
-            }
-#endif
             
             
             vector<double> smA(N,0);
             vector<double> smdAdt(N,0);
             vector<double> smP(N,0);
+            vector<double> smdPdt(N,0);
+            vector<double> smAP(N,0);
+            vector<double> smdAPdt(N,0);
             xtd(smA,t,A,sm_dt,sm_dg,&smdAdt);
-            xtd(smP,t,P,sm_dt,sm_dg,0);
-            
+            xtd(smP,t,P,sm_dt,sm_dg,&smdPdt);
+            xtd(smAP,t,AP,sm_dt,sm_dg,&smdAPdt);
             
             //______________________________________________________________________
             //
@@ -132,9 +104,11 @@ int main(int argc, char *argv[])
             std::cerr << "Loaded " << N  << " points" << std::endl;
             {
                 ios::ocstream fp("bubble.dat",false);
+                fp << "#t A P AP smA smdAdt smP smdPdt smAP smdAPdt\n";
                 for(size_t i=1;i<=N;++i)
                 {
-                    fp("%g %g %g %g %g %g %g\n", t[i], A[i], P[i], AP[i], smA[i], smdAdt[i], smP[i]);
+                    //                                    1     2     3     4      5       6          7       8          9        10
+                    fp("%g %g %g %g %g %g %g %g %g %g\n", t[i], A[i], P[i], AP[i], smA[i], smdAdt[i], smP[i], smdPdt[i], smAP[i], smdAPdt[i] );
                 }
             }
             

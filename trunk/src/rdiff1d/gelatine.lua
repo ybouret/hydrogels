@@ -8,15 +8,17 @@ DK  = 1.9568e-9;
 DInH  = 0.6140e-9;
 DInm  = DInH;
 
+rescale = 1.0
+
 -- database of species
 species =
 {
-    { "H+",     1, Dh    },
-    { "HO-",   -1, Dw    },
-    { "InH",    0, DInH  },
-    { "In-",   -1, DInm  },
-    { "Na+",    1, DNa   },
-    { "Cl-",   -1, DCl   },
+    { "H+",     1, Dh   * rescale   },
+    { "HO-",   -1, Dw   * rescale   },
+    { "InH",    0, DInH * rescale   },
+    { "In-",   -1, DInm * rescale   },
+    { "Na+",    1, DNa  * rescale   },
+    { "Cl-",   -1, DCl  * rescale   },
     { "GelH2+", 1, 0     },
     { "GelH",   0, 0     },
     { "Gel-",  -1, 0     }
@@ -46,7 +48,7 @@ Csalt = 0.1;
 Na       = { Csalt, {1,"Na+"} };
 Cl       = { Csalt, {1,"Cl-" } };
 Indic    = { 1e-4,  {1,"InH"}, {1,"In-" } };
-Gelatine = { 0.01,  {1, "GelH2+"}, {1,"GelH"}, {1,"Gel-"} };
+Gelatine = { 0.002, {1, "GelH2+"}, {1,"GelH"}, {1,"Gel-"} };
 
 -- boundary/initial conditions
 pH_left  = 2;
@@ -77,10 +79,5 @@ ini_core =
 
 right_wall = 1;
 
-ini_right =
-{
-    Na,
-    { 10^(-pH_right), {1,"H+"} }
-}
 
 
