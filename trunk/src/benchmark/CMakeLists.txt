@@ -1,6 +1,6 @@
 PROJECT(benchmark)
 
-ADD_EXECUTABLE(benchmark main.cpp) 
+ADD_EXECUTABLE(benchmark main.cpp config.lua) 
 
 TARGET_LINK_YOCTO(benchmark spade lua lua++ mk)
 
