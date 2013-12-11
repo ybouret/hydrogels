@@ -10,6 +10,9 @@
 #include "yocto/math/ode/stiff-drvkr.hpp"
 #include "yocto/eta.hpp"
 #include "yocto/math/kernel/matrix.hpp"
+#include "yocto/lua/lua.hpp"
+#include "yocto/lua/lua-config.hpp"
+#include "yocto/lua/lua-state.hpp"
 
 #include <iostream>
 
@@ -77,14 +80,14 @@ public:
     const ghosts_setup          no_ghost;
     fields_setup<Layout>        fields;
     
-    Parameters( size_t nv, Real len) :
-    volumes(nv),
+    Parameters( lua_State *L ) :
+    volumes( max_of<size_t>( Lua::Config::Get<lua_Number>(L,"volumes"),2) ),
     imax(volumes),
-    length( len ),
+    length( max_of<Real>( Lua::Config::Get<lua_Number>(L,"length"),0) ),
     dx(length/volumes),
-    Dh(1e-8),
-    Dw(1e-8),
-    ftol(1e-3),
+    Dh(   Lua::Config::Get<lua_Number>(L,"Dh")   ),
+    Dw(   Lua::Config::Get<lua_Number>(L,"Dw")   ),
+    ftol( Lua::Config::Get<lua_Number>(L,"ftol") ),
     imaxm1(imax-1),
     imaxm2(imax-2),
     sim_layout(0,volumes),
@@ -143,8 +146,8 @@ public:
     double       t_diff;
     double       t_chem;
     
-    explicit Simulation( size_t nv, Real len ) :
-    Parameters(nv,len),
+    explicit Simulation( lua_State *L ) :
+    Parameters(L),
     Workspace(sim_layout,fields,no_ghost),
     h(    (*this)["h" ].as<Array>() ),
     w(    (*this)["w" ].as<Array>() ),
@@ -610,25 +613,49 @@ int main(int argc, char *argv[])
     const char *progname = vfs::get_base_name( argv[0]);
     try
     {
-        
+        if(argc<=1)
+            throw exception("usage: %s [file.lua|-f \"code\"]+",progname);
         ////////////////////////////////////////////////////////////////////////
         // Parsing arguments: N, alpha, Tmax, dt_save
         ////////////////////////////////////////////////////////////////////////
+        Lua::State VM;
+        lua_State *L = VM();
+        
+        for(int i=1;i<argc;++i)
+        {
+            const string args = argv[i];
+            if( args == "-f" )
+            {
+                if(++i>=argc)
+                    throw exception("missing code after flag!!!");
+                const string code = argv[i];
+                std::cerr << "... compiling code '" << code << "'" << std::endl;
+                Lua::Config::DoString(L, code);
+            }
+            else
+            {
+                std::cerr << "... loading file '" << args << "'" << std::endl;
+                Lua::Config::DoFile(L, argv[i]);
+            }
+            
+        }
+
         
         ////////////////////////////////////////////////////////////////////////
         // Computing remaining constants
-        ////////////////////////////////////////////////////////////////////////        
-        const Real alpha    = 0.02;
-        Simulation sim(600,1e-2);
+        ////////////////////////////////////////////////////////////////////////
+        Simulation sim(L);
+
+        const Real alpha    = clamp<Real>(0.01,Lua::Config::Get<lua_Number>(L,"alpha"),0.5);
         const Real dt_max   = alpha * (sim.dx*sim.dx) / max_of(sim.Dh,sim.Dw);
         const Real dt       = dt_round(dt_max);
-        Real       dt_save  = 0.2;
-        const Real t_run    = 10;
+        Real       dt_save  = Lua::Config::Get<lua_Number>(L,"dt_save");
+        const Real t_run    = Lua::Config::Get<lua_Number>(L,"t_run");
         size_t     iter_max = 1+ceil(t_run/dt);
         size_t     every    = clamp<size_t>(1,dt_save/dt,iter_max);
         dt_save  = every * dt;
         while( 0 != (iter_max%every) ) ++iter_max;
-        const size_t num_acc = 10;
+        const size_t num_acc = max_of<size_t>(1,Lua::Config::Get<lua_Number>(L,"iter"));
         const size_t num_out = iter_max / every;
         
         timings perf_rel(num_acc,num_out);

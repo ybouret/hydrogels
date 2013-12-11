@@ -64,11 +64,26 @@ int main(int argc, char *argv[])
                 P.pop_back();
             }
             
+            
+            
             //______________________________________________________________________
             //
             // Build Auxiliary Qtty
             //______________________________________________________________________
             const size_t N = t.size();
+            if(N<=0)
+            {
+                std::cerr << "No Points" << std::endl;
+                continue;
+            }
+            
+            {
+                const double t0 = t[1];
+                for(size_t i=1; i <= N;++i)
+                {
+                    t[i] -= t0;
+                }
+            }
             vector<double> AP(N,0);
             
             for(size_t i=1; i <= N; ++i )
