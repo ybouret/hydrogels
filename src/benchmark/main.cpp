@@ -13,6 +13,7 @@
 #include "yocto/lua/lua.hpp"
 #include "yocto/lua/lua-config.hpp"
 #include "yocto/lua/lua-state.hpp"
+#include "yocto/fs/local-fs.hpp"
 
 #include <iostream>
 
@@ -548,7 +549,8 @@ private:
 };
 
 static
-void perform(size_t       acc,
+void perform(const string dirname,
+             size_t       acc,
              Simulation  &sim,
              void        (Simulation:: *proc)(Real,Real),
              const string &name,
@@ -557,6 +559,9 @@ void perform(size_t       acc,
              const size_t every,
              timings     &perf)
 {
+    
+    vfs &fs = local_fs::instance();
+    fs.create_sub_dir(dirname);
     assert( 0 == (iter_max%every) );
     array<double> &t_diff = perf.t_diff[acc];
     array<double> &t_chem = perf.t_chem[acc];
@@ -568,7 +573,7 @@ void perform(size_t       acc,
     std::cerr << "\t------------------------" << std::endl;
     std::cerr << std::endl;
     
-    const string errfn = name + "-err.dat";
+    const string errfn = dirname + name + "-err.dat";
     if(first)
         ios::ocstream::overwrite( errfn );
     
@@ -576,7 +581,7 @@ void perform(size_t       acc,
     sim.initialize();
     Real t=0;
     ETA.reset();
-    sim.save_profile("h0.dat",0);
+    sim.save_profile(dirname + "h0.dat",0);
     sim.reset_times();
     for(size_t iter=1,j=0;iter<=iter_max;++iter)
     {
@@ -603,7 +608,7 @@ void perform(size_t       acc,
     std::cerr << std::endl;
     if(first)
     {
-        const string fn = name + ".dat";
+        const string fn = dirname + name + ".dat";
         sim.save_profile(fn,t);
     }
 }
@@ -666,10 +671,12 @@ int main(int argc, char *argv[])
         std::cerr << "iter_max   = " << iter_max << std::endl;
         std::cerr << "save every = " << every << ", dt_save=" << dt_save << std::endl;
         
+        const string dirname = vformat("bench-vol%u-ptol%g/", unsigned(sim.volumes), -log10(sim.ftol) );
+        
         for(size_t acc=1;acc<=num_acc;++acc)
         {
-            perform(acc,sim, & Simulation::run_relaxed,  "relaxed",  iter_max, dt, every, perf_rel );
-            perform(acc,sim, & Simulation::run_explicit, "explicit", iter_max, dt, every, perf_exp );
+            perform(dirname,acc,sim, & Simulation::run_relaxed,  "relaxed",  iter_max, dt, every, perf_rel );
+            perform(dirname,acc,sim, & Simulation::run_explicit, "explicit", iter_max, dt, every, perf_exp );
         }
         
         std::cerr << std::endl;
