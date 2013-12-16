@@ -14,6 +14,8 @@
 #include "yocto/lua/lua-config.hpp"
 #include "yocto/lua/lua-state.hpp"
 #include "yocto/fs/local-fs.hpp"
+#include "yocto/sys/hw.hpp"
+#include "yocto/threading/thread.hpp"
 
 #include <iostream>
 
@@ -622,6 +624,13 @@ int main(int argc, char *argv[])
     {
         if(argc<=1)
             throw exception("usage: %s [file.lua|-f \"code\"]+",progname);
+        
+        const size_t ncpus = hardware::nprocs();
+        std::cerr << "#CPU=" << ncpus << std::endl;
+        const size_t icpu = (ncpus>>1)-1;
+        std::cerr << "#CPU=" << icpu << std::endl;
+        threading::thread::assign_cpu( threading::thread::get_current_handle(), icpu);
+        
         ////////////////////////////////////////////////////////////////////////
         // Parsing arguments: N, alpha, Tmax, dt_save
         ////////////////////////////////////////////////////////////////////////
