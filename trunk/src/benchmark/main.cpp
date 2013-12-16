@@ -463,7 +463,7 @@ void process( eta &ETA, const double ratio, const string &kind , Real t)
     const string   sdone = vformat("%02d:%02d:%02d",done.h,done.m,int(done.s));
     const string   sleft = vformat("%02d:%02d:%04.1f",left.h,left.m,left.s);
     
-    std::cerr << kind << percent << " in " << sdone << " | ETA " << sleft << " @=t" << t << "  \r";
+    std::cerr << kind << percent << " in " << sdone << " | ETA " << sleft << " @t= " << t << "  \r";
 }
 
 
