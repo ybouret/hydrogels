@@ -418,6 +418,7 @@ public:
     void save_profile( const string &fn, Real t ) const
     {
         ios::ocstream fp( fn, false);
+        fp("#X h w pH Kernel\n");
         for(unit_t i=0; i <= imax; ++i )
         {
             fp("%g %g %g %g %g\n", X[i], h[i], w[i], -log10(h[i]), -log10( Kernel(t,X[i])));
@@ -560,8 +561,6 @@ void perform(const string dirname,
              timings     &perf)
 {
     
-    vfs &fs = local_fs::instance();
-    fs.create_sub_dir(dirname);
     assert( 0 == (iter_max%every) );
     array<double> &t_diff = perf.t_diff[acc];
     array<double> &t_chem = perf.t_chem[acc];
@@ -575,7 +574,10 @@ void perform(const string dirname,
     
     const string errfn = dirname + name + "-err.dat";
     if(first)
-        ios::ocstream::overwrite( errfn );
+    {
+        ios::ocstream fp(errfn,false);
+        fp("#t log10(err)\n");
+    }
     
     eta ETA;
     sim.initialize();
@@ -644,13 +646,13 @@ int main(int argc, char *argv[])
             }
             
         }
-
+        
         
         ////////////////////////////////////////////////////////////////////////
         // Computing remaining constants
         ////////////////////////////////////////////////////////////////////////
         Simulation sim(L);
-
+        
         const Real alpha    = clamp<Real>(0.01,Lua::Config::Get<lua_Number>(L,"alpha"),0.5);
         const Real dt_max   = alpha * (sim.dx*sim.dx) / max_of(sim.Dh,sim.Dw);
         const Real dt       = dt_round(dt_max);
@@ -672,6 +674,9 @@ int main(int argc, char *argv[])
         std::cerr << "save every = " << every << ", dt_save=" << dt_save << std::endl;
         
         const string dirname = vformat("bench-vol%u-ptol%g/", unsigned(sim.volumes), -log10(sim.ftol) );
+        vfs &fs = local_fs::instance();
+        fs.create_sub_dir(dirname);
+        fs.remove_files_with_extensions(dirname, "dat");
         
         for(size_t acc=1;acc<=num_acc;++acc)
         {
