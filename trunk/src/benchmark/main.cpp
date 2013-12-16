@@ -689,7 +689,7 @@ int main(int argc, char *argv[])
         perf_exp.stats();
         
         {
-            ios::ocstream fp("perf.dat",false);
+            ios::ocstream fp(dirname+"perf.dat",false);
             fp("#t step_explicit step_relaxed diff_explicit diff_relaxed chem_explicit chem_relaxed\n");
             for(size_t j=1;j<=num_out;++j)
             {
