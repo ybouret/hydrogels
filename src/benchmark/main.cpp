@@ -628,7 +628,7 @@ int main(int argc, char *argv[])
         const size_t ncpus = hardware::nprocs();
         std::cerr << "#CPU=" << ncpus << std::endl;
         const size_t icpu = (ncpus>>1)-1;
-        std::cerr << "#CPU=" << icpu << std::endl;
+        std::cerr << "@CPU=" << icpu << std::endl;
         threading::thread::assign_cpu( threading::thread::get_current_handle(), icpu);
         
         ////////////////////////////////////////////////////////////////////////
@@ -704,7 +704,7 @@ int main(int argc, char *argv[])
         
         {
             ios::ocstream fp(dirname+"perf.dat",false);
-            fp("#t step_explicit step_relaxed diff_explicit diff_relaxed chem_explicit chem_relaxed\n");
+            fp("#t step_explicit step_relaxed diff_explicit diff_relaxed chem_explicit chem_relaxed speed_up\n");
             for(size_t j=1;j<=num_out;++j)
             {
                 fp("%g",  perf_rel.t[j]);
@@ -716,6 +716,8 @@ int main(int argc, char *argv[])
                 
                 fp(" %g", perf_exp.ave_chem[j]);
                 fp(" %g", perf_rel.ave_chem[j]);
+                
+                fp(" %g", perf_exp.ave_step[j]/perf_rel.ave_step[j]);
                 fp("\n");
             }
         }
