@@ -583,6 +583,13 @@ void perform(const string dirname,
         fp("#t log10(err)\n");
     }
     
+    const string rmsfn = dirname + name + "-rms.dat";
+    if(first)
+    {
+        ios::ocstream fp(rmsfn,false);
+        fp("#t rms\n");
+    }
+    
     eta ETA;
     sim.initialize();
     Real t=0;
@@ -606,6 +613,19 @@ void perform(const string dirname,
                 const Real err = sim.get_error();
                 if( err > 0)
                     fp("%g %g\n", t, log10(err) );
+            }
+            if(first)
+            {
+                ios::ocstream fp( rmsfn, true);
+                Real rms = 0;
+                for(unit_t i=2;i<sim.imax;++i)
+                {
+                    const Real hk = sim.Kernel(t, sim.X[i]);
+                    const Real dh = hk - sim.h[i];
+                    rms += dh*dh;
+                }
+                rms = sqrt(rms/sim.volumes);
+                fp("%g %g\n", t, rms);
             }
             sim.reset_times();
             process(ETA,double(iter)/iter_max,name,t);
