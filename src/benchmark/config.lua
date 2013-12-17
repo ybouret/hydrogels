@@ -7,6 +7,6 @@ Dw = Dh;
 
 ftol   = 1e-3; -- #default tolerance for Newton/ODE
 t_run  = 200;
-dt_save= 0.5;
+dt_save= 1;
 
-iter=100;
+iter=50;
