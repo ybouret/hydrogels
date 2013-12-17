@@ -504,6 +504,7 @@ public:
     
     vector<double> ave_step;
     vector<double> err_step;
+    
     vector<double> t;
     
     void stats()
@@ -630,7 +631,7 @@ int main(int argc, char *argv[])
         std::cerr << "#CPU=" << ncpus << std::endl;
         const size_t icpu = (ncpus>>1)-1;
         std::cerr << "@CPU=" << icpu << std::endl;
-        threading::thread::assign_cpu( threading::thread::get_current_handle(), icpu);
+        threading::assign_current_thread_on(icpu);
         
         ////////////////////////////////////////////////////////////////////////
         // Parsing arguments: N, alpha, Tmax, dt_save
@@ -672,7 +673,7 @@ int main(int argc, char *argv[])
         size_t     every    = clamp<size_t>(1,dt_save/dt,iter_max);
         dt_save  = every * dt;
         while( 0 != (iter_max%every) ) ++iter_max;
-        const size_t num_acc = max_of<size_t>(1,Lua::Config::Get<lua_Number>(L,"iter"));
+        const size_t num_acc = max_of<size_t>(2,Lua::Config::Get<lua_Number>(L,"iter"));
         const size_t num_out = iter_max / every;
         
         timings perf_rel(num_acc,num_out);
@@ -700,27 +701,88 @@ int main(int argc, char *argv[])
         std::cerr << "\t------------" << std::endl;
         std::cerr << std::endl;
         
+        //-- stats for each method
         perf_rel.stats();
         perf_exp.stats();
         
+        //-- speed up stats
+        vector<double> ave_rate(num_out,0);
+        vector<double> err_rate(num_out,0);
+        {
+            for(size_t j=1;j<=num_out;++j)
+            {
+                double ave = 0;
+                for(size_t i=1; i<=num_acc; ++i )
+                {
+                    ave += perf_exp.t_step[i][j]/perf_rel.t_step[i][j];
+                }
+                ave /= num_acc;
+                ave_rate[j] = ave;
+                err_rate[j] = 0;
+                for(size_t i=1; i<=num_acc; ++i )
+                {
+                    const double d = ave - perf_exp.t_step[i][j]/perf_rel.t_step[i][j];
+                    err_rate[j] += d*d;
+                }
+                err_rate[j] = sqrt( err_rate[j]/(num_acc-1))/sqrt(num_acc);
+            }
+            
+           
+            
+        }
+        
         {
             ios::ocstream fp(dirname+"perf.dat",false);
-            //   1 2             3            4             5            6             7            8
-            fp("#t step_explicit step_relaxed diff_explicit diff_relaxed chem_explicit chem_relaxed speed_up\n");
+            fp << "#t ";
+            fp << "step_exp ";     // 2
+            fp << "step_exp_err "; // 3
+            
+            fp << "step_rel ";     // 4
+            fp << "step_rel_err "; // 5
+            
+            fp << "diff_exp ";     // 6
+            fp << "diff_exp_err "; // 7
+            
+            fp << "diff_rel ";     // 8
+            fp << "diff_rel_err "; // 9
+            
+            fp << "chem_exp ";     // 10
+            fp << "chem_exp_err "; // 11
+            
+            fp << "chem_rel ";     // 12
+            fp << "chem_rel_err "; // 13
+            
+            fp << "speedup "; // 14
+            fp << "speedup_err "; // 15
+
+            
+            fp << "\n";
+            
             for(size_t j=1;j<=num_out;++j)
             {
                 fp("%g",  perf_rel.t[j]);
                 
-                fp(" %g", perf_exp.ave_step[j]);
-                fp(" %g", perf_rel.ave_step[j]);
+                fp(" %g", perf_exp.ave_step[j]); // 2
+                fp(" %g", perf_exp.err_step[j]); // 3
                 
-                fp(" %g", perf_exp.ave_diff[j]);
-                fp(" %g", perf_rel.ave_diff[j]);
+                fp(" %g", perf_rel.ave_step[j]); // 4
+                fp(" %g", perf_rel.err_step[j]); // 5
                 
-                fp(" %g", perf_exp.ave_chem[j]);
-                fp(" %g", perf_rel.ave_chem[j]);
+                fp(" %g", perf_exp.ave_diff[j]); // 6
+                fp(" %g", perf_exp.err_diff[j]); // 7
                 
-                fp(" %g", perf_exp.ave_step[j]/perf_rel.ave_step[j]);
+                fp(" %g", perf_rel.ave_diff[j]); // 8
+                fp(" %g", perf_rel.err_diff[j]); // 9
+                
+                fp(" %g", perf_exp.ave_chem[j]); // 10
+                fp(" %g", perf_exp.err_chem[j]); // 11
+                
+                fp(" %g", perf_rel.ave_chem[j]); // 12
+                fp(" %g", perf_rel.err_chem[j]); // 13
+                
+                fp(" %g", ave_rate[j]); // 14
+                fp(" %g", err_rate[j]); // 15
+
                 fp("\n");
             }
         }
