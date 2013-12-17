@@ -553,7 +553,8 @@ private:
 
 static
 void perform(const string dirname,
-             size_t       acc,
+             const size_t acc,
+             const size_t num_acc,
              Simulation  &sim,
              void        (Simulation:: *proc)(Real,Real),
              const string &name,
@@ -570,7 +571,7 @@ void perform(const string dirname,
     const bool     first  = 1 == acc;
     std::cerr << std::endl;
     std::cerr << "\t------------------------" << std::endl;
-    std::cerr << "\trun " << name << " #" << acc << std::endl;
+    std::cerr << "\trun " << name << " #" << acc << "/" << num_acc << " @ftol=" << sim.ftol << std::endl;
     std::cerr << "\t------------------------" << std::endl;
     std::cerr << std::endl;
     
@@ -689,8 +690,8 @@ int main(int argc, char *argv[])
         
         for(size_t acc=1;acc<=num_acc;++acc)
         {
-            perform(dirname,acc,sim, & Simulation::run_relaxed,  "relaxed",  iter_max, dt, every, perf_rel );
-            perform(dirname,acc,sim, & Simulation::run_explicit, "explicit", iter_max, dt, every, perf_exp );
+            perform(dirname,acc,num_acc,sim, & Simulation::run_relaxed,  "relaxed",  iter_max, dt, every, perf_rel );
+            perform(dirname,acc,num_acc,sim, & Simulation::run_explicit, "explicit", iter_max, dt, every, perf_exp );
         }
         
         std::cerr << std::endl;
@@ -704,10 +705,12 @@ int main(int argc, char *argv[])
         
         {
             ios::ocstream fp(dirname+"perf.dat",false);
+            //   1 2             3            4             5            6             7            8
             fp("#t step_explicit step_relaxed diff_explicit diff_relaxed chem_explicit chem_relaxed speed_up\n");
             for(size_t j=1;j<=num_out;++j)
             {
                 fp("%g",  perf_rel.t[j]);
+                
                 fp(" %g", perf_exp.ave_step[j]);
                 fp(" %g", perf_rel.ave_step[j]);
                 
