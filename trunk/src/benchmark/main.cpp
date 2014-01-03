@@ -7,7 +7,7 @@
 #include "yocto/ios/ocstream.hpp"
 #include "yocto/math/fcn/functions.hpp"
 #include "yocto/sys/wtime.hpp"
-#include "yocto/math/ode/stiff-drvkr.hpp"
+#include "yocto/math/ode/implicit/driver-kr.hpp"
 #include "yocto/eta.hpp"
 #include "yocto/math/kernel/matrix.hpp"
 #include "yocto/lua/lua.hpp"
@@ -27,7 +27,7 @@ typedef double                         Real;
 typedef array1D<Real>                  Array;
 typedef layout1D                       Layout;
 typedef workspace<Layout,rmesh,Real>   Workspace;
-typedef ode::stiff_drvkr<Real>::type   Solver;
+typedef ode::driverKR<Real>::type      Solver;
 typedef ode::Field<Real>::Equation     DiffEq;
 typedef ode::Field<Real>::Jacobian     Jacobn;
 
