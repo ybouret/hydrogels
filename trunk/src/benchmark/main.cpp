@@ -28,8 +28,8 @@ typedef array1D<Real>                  Array;
 typedef layout1D                       Layout;
 typedef workspace<Layout,rmesh,Real>   Workspace;
 typedef ode::stiff_drvkr<Real>::type   Solver;
-typedef ode::field<Real>::type         DiffEq;
-typedef ode::field<Real>::diff         Jacobn;
+typedef ode::Field<Real>::Equation     DiffEq;
+typedef ode::Field<Real>::Jacobian     Jacobn;
 
 static const Real Kw = 1e-14;
 const        Real h0 = 1e-2;
@@ -583,7 +583,7 @@ void perform(const string dirname,
         fp("#t log10(err)\n");
     }
     
-    const string rmsfn = dirname + name + "-rms.dat";
+    const string rmsfn = dirname + name + "-abs.dat";
     if(first)
     {
         ios::ocstream fp(rmsfn,false);
@@ -621,11 +621,11 @@ void perform(const string dirname,
                 for(unit_t i=2;i<sim.imax;++i)
                 {
                     const Real hk = sim.Kernel(t, sim.X[i]);
-                    const Real dh = hk - sim.h[i];
-                    rms += dh*dh;
+                    const Real dh = (hk - sim.h[i])/hk;
+                    rms += Fabs(dh);
                 }
-                rms = sqrt(rms/sim.volumes);
-                fp("%g %g\n", t, rms);
+                rms = (rms/sim.volumes);
+                fp("%g %.7e\n", t, rms);
             }
             sim.reset_times();
             process(ETA,double(iter)/iter_max,name,t);
