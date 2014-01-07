@@ -2,10 +2,10 @@
 #define INIT_INCLUDED 1
 
 #include "chemsys.hpp"
-#include "yocto/chemical/initializer.hpp"
+#include "yocto/chemical/boot.hpp"
 
 
-class Initializer : public initializer
+class Initializer : public boot::loader
 {
 public:
     explicit Initializer(lua_State *L, const char *name, const collection &lib);

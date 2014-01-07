@@ -34,29 +34,21 @@ void compute_pH()
     
     //cs.build();
     
-    initializer ini;
+    boot::loader ini;
     
     //! add electroneutrality
     ini.electroneutrality(lib);
     
     //! add acid conservation
-    {
-        constraint &cn = ini.equals( strconv::to_real<double>( input_Ca->value(),"Ca") );
-        cn["AH"] = 1;
-        cn["A-"] = 1;
-    }
+    ini.conserve( lib["AH"], lib["A-"], strconv::to_real<double>( input_Ca->value(),"Ca"));
+    
     
     //! chloride
-    {
-        constraint &cn = ini.equals( strconv::to_real<double>( input_HCl->value(),"HCl") );
-        cn["Cl-"] = 1;
-    }
+    ini.define( lib["Cl-"], strconv::to_real<double>( input_HCl->value(),"HCl"));
     
     //! sodium
-    {
-        constraint &cn = ini.equals( strconv::to_real<double>( input_NaOH->value(),"NaOH") );
-        cn["Na+"] = 1;
-    }
+    ini.define( lib["Na+"],strconv::to_real<double>( input_NaOH->value(),"NaOH"));
+   
     
     std::cerr << "ini=" << std::endl << ini << std::endl;
     
