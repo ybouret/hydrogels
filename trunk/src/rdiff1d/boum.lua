@@ -30,8 +30,8 @@ eqs =
     { "K1",     4.6e-7,     { 1, "H+" }, { 1, "HCO3-" }, { -1, "CO2" } }
 };
 
-C_acid   = 1e-5;
-C_bicarb = 1e-5;
+C_acid   = 1e-3;
+C_bicarb = 1e-3;
 
 NoNa = { 0, {1, "Na+"  } };
 NoCl = { 0, {1, "Cl-"  } };
