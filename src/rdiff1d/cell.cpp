@@ -54,6 +54,7 @@ front_fn( this, &Cell:: zfront )
     std::cerr << "in_core=" << in_core << std::endl;
     std::cerr << "pH_core=" << in_core.pH() << std::endl;
     
+    std::cerr << "Initializing Right" << std::endl;
     ini_right(*this,*this,0);
     on_right.load(C);
     std::cerr << "on_right=" << on_right << std::endl;

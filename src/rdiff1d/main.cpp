@@ -68,6 +68,9 @@ int  main(int argc, char *argv[] )
         //______________________________________________________________________
         
         Cell cell(L);
+        
+        return 0;
+        
         if(cell.search_front)
         {
             ios::ocstream::overwrite("front.dat");
