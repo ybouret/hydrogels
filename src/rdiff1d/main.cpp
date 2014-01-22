@@ -69,7 +69,6 @@ int  main(int argc, char *argv[] )
         
         Cell cell(L);
         
-        return 0;
         
         if(cell.search_front)
         {
