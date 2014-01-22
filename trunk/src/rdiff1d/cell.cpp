@@ -1,5 +1,4 @@
 #include "cell.hpp"
-#include "yocto/math/kernel/lu.hpp"
 #include "yocto/lua/lua-config.hpp"
 
 using namespace math;
