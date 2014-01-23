@@ -162,7 +162,11 @@ void Cell:: norm_all( double t )
         }
         
         // chemistry
-        normalize_C(t);
+        if(!normalize_C(t))
+        {
+            std::cerr << "-- Unable to normalize chemistry !!!" << std::endl;
+            throw exception("Invalid composition @volume #%u", unsigned(i));
+        }
         
         // fill in workspace
         for(size_t k=M;k>0;--k)
