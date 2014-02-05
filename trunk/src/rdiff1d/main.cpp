@@ -138,11 +138,25 @@ int  main(int argc, char *argv[] )
                 fflush(stderr);
                 if(cell.search_front)
                 {
-                    double pos = 0;
-                    if( cell.find_front(pos) )
+                    if(cell.search_value<=0)
                     {
-                        ios::ocstream fp("front.dat",true);
-                        fp("%g %.15e\n",t,pos);
+                        double xx=0;
+                        double yy=0;
+                        if( cell.find_inflection(xx,yy) )
+                        {
+                            ios::ocstream fp("front.dat",true);
+                            fp("%g %.15e %.15e\n",t,xx,yy);
+                        }
+                        
+                    }
+                    else
+                    {
+                        double pos = 0;
+                        if( cell.find_front(pos) )
+                        {
+                            ios::ocstream fp("front.dat",true);
+                            fp("%g %.15e\n",t,pos);
+                        }
                     }
                 }
             }

@@ -4,6 +4,7 @@
 #include "yocto/fs/vfs.hpp"
 #include "yocto/exception.hpp"
 #include "yocto/ios/ocstream.hpp"
+#include "yocto/sequence/vector.hpp"
 
 using namespace yocto;
 
@@ -72,13 +73,34 @@ int main(int argc, char *argv[])
     try
     {
         
-        double t  = 5;
-        double dx = 0.00001;
+        vector<double> t;
+        t.push_back(25);
+        t.push_back(50);
+        t.push_back(100);
+        t.push_back(200);
+        t.push_back(400);
+        t.push_back(800);
+        t.push_back(1600);
+
+        
+        double dx = 0.0001;
         {
-			ios::ocstream fp( "profil.dat", false );
-	        for( double x=dx; x <= 0.002; x += dx )
+			ios::ocstream fp( "profils.dat", false );
+            fp("0 ");
+            for(size_t i=1; i<=t.size();++i)
+            {
+                fp(" %g", pH0);
+            }
+            fp("\n");
+            
+	        for( double x=dx; x <= 0.02; x += dx )
 	        {
-				fp("%g %g\n", x, -log10(get_h(t,x)) );
+                fp("%g",x);
+                for(size_t i=1; i<=t.size();++i)
+                {
+                    fp(" %g", -log10(get_h(t[i],x)) );
+                }
+                fp("\n");
 			}
 		}
         

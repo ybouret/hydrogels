@@ -60,11 +60,11 @@ ini_core =
 
 right_wall = 1;
 
-ini_right =
-{
-    Na,
-    { 10^(-pH_right), {1,"H+"} }
-}
+--ini_right =
+--{
+--    Na,
+--    { 10^(-pH_right), {1,"H+"} }
+--}
 
 
 

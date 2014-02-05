@@ -9,4 +9,4 @@ save  = 0.1;  -- in seconds
 
 search_front = 1;
 search_field = "pH";
-search_value = 9;
+search_value = -1;
