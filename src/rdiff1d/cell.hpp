@@ -67,6 +67,8 @@ public:
     double D_max() const throw();
     
     bool find_front(double &pos ) const;
+    bool find_inflection(double &xx, double &yy) const;
+    
     
 private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(Cell);
