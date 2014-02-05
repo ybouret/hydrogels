@@ -1,0 +1,7 @@
+PROJECT(iErfc)
+
+ADD_EXECUTABLE(iErfc ierfc.cpp)
+TARGET_LINK_YOCTO(iErfc mk)
+
+INSTALL( TARGETS iErfc RUNTIME DESTINATION bin )
+

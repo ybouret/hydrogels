@@ -89,13 +89,28 @@ bool Cell:: find_inflection(double &xx, double &yy) const
         const double dc = c1-c0;
         if( c0 * c1 <= 0.0 && ( fabs(dc)>0 ) )
         {
+            front_ip.free();
+            if(i>3)
+            {
+                front_ip.insert(X[i-2],get_curvature(X,A, i-2));
+            }
+            front_ip.insert(x0, c0);
+            front_ip.insert(x1, c1);
+            if(i<itop)
+            {
+                front_ip.insert(X[i+1],get_curvature(X,A, i+1));
+            }
             //std::cerr << "c0=" << c0 << std::endl;
             //std::cerr << "c1=" << c1 << std::endl;
-            
-            const double dx = x1-x0;
-            
-            xx = clamp<double>(x0,x0 - c0*dx/dc,x1);
-            yy = y0 + (xx-x0)*(y1-y0)/dx;
+            zfind<double> solve( 0 );
+            xx = solve(front_fn,x0,x1);
+            yy = y0 + (xx-x0)*(y1-y0)/(x1-x0);
+            /*
+             const double dx = x1-x0;
+             
+             xx = clamp<double>(x0,x0 - c0*dx/dc,x1);
+             yy = y0 + (xx-x0)*(y1-y0)/dx;
+             */
             
             return true;
         }
