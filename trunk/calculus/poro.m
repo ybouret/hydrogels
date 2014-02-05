@@ -18,5 +18,7 @@ eta_lo = (2*rho_lo) ./ (1+rho_hi);
 eta_hi = (2*rho_hi) ./ (1+rho_lo);
 
 eta_err = (eta_hi-eta_lo)/2;
+eta_plus = eta_hi - eta_av;
+eta_minus = eta_lo - eta_av;
 
-[ ag' eta_av' eta_lo' eta_hi' eta_err' ]
+[ ag' eta_av' eta_lo' eta_hi' eta_minus' eta_plus' eta_err' ]
