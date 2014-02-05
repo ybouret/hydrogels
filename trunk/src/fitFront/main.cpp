@@ -43,7 +43,7 @@ int main( int argc, char *argv[] )
     try
     {
         const double erfc_value  = iqerfc(0.5);
-        const double free_coeff  = 1.0/(4.0*erfc_value*erfc_value);
+        //const double free_coeff  = 1.0/(4.0*erfc_value*erfc_value);
         
         if(argc<=2)
             throw exception("usage: %s data_file max_length (<=0 for no cut)", progname);
@@ -99,7 +99,7 @@ int main( int argc, char *argv[] )
         {
             std::cerr << std::endl;
             std::cerr << "\tD    = " << aorg[1] << " +/- " << aerr[1]/2 << " m^2/s" << std::endl;
-            std::cerr << "\tDfree= " << aorg[1]*free_coeff << " +/- " << aerr[1]*free_coeff/2 << " m^2/s" << std::endl;
+            //std::cerr << "\tDfree= " << aorg[1]*free_coeff << " +/- " << aerr[1]*free_coeff/2 << " m^2/s" << std::endl;
             const double R = compute_correlation(y, z);
             std::cerr << "\tcorr = " << R << std::endl;
             

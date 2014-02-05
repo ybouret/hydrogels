@@ -59,6 +59,9 @@ front_fn( this, &Cell:: zfront )
     std::cerr << "on_right=" << on_right << std::endl;
     std::cerr << "pH_right=" << on_right.pH() << std::endl;
     
+    
+    if(search_value<=0) (double&)search_value = 0;
+    
     //__________________________________________________________________________
     //
     // mesh
