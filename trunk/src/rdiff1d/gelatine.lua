@@ -43,12 +43,13 @@ eqs =
 };
 
 Csalt = 0.1;
+--Cgel  = 0.0000;
 
 -- some constraints
 Na       = { Csalt, {1,"Na+"} };
 Cl       = { Csalt, {1,"Cl-" } };
 Indic    = { 1e-4,  {1,"InH"}, {1,"In-" } };
-Gelatine = { 0.002, {1, "GelH2+"}, {1,"GelH"}, {1,"Gel-"} };
+Gelatine = { Cgel,  {1, "GelH2+"}, {1,"GelH"}, {1,"Gel-"} };
 
 -- boundary/initial conditions
 pH_left  = 2;
@@ -79,5 +80,5 @@ ini_core =
 
 right_wall = 1;
 
-
+search_output = string.format("Cgel%.2g.dat", Cgel);
 

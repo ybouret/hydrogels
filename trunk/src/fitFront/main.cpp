@@ -42,7 +42,7 @@ int main( int argc, char *argv[] )
     const char *progname = vfs::get_base_name(argv[0]);
     try
     {
-        const double erfc_value  = iqerfc(0.5);
+        //const double erfc_value  = iqerfc(0.5);
         //const double free_coeff  = 1.0/(4.0*erfc_value*erfc_value);
         
         if(argc<=2)

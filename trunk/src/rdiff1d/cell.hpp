@@ -42,6 +42,7 @@ public:
     const bool        search_front;
     const double      search_value;
     const string      search_field;
+    const string      search_output;
     
     // fill side/core
     void init_all(void) throw();

@@ -72,11 +72,11 @@ int  main(int argc, char *argv[] )
         
         if(cell.search_front)
         {
-            ios::ocstream::overwrite("front.dat");
+            ios::ocstream::overwrite(cell.search_output);
         }
         else
         {
-            try { fs.remove_file("front.dat"); } catch(...) {}
+            try { fs.remove_file(cell.search_output); } catch(...) {}
         }
         //______________________________________________________________________
         //
@@ -144,7 +144,7 @@ int  main(int argc, char *argv[] )
                         double yy=0;
                         if( cell.find_inflection(xx,yy) )
                         {
-                            ios::ocstream fp("front.dat",true);
+                            ios::ocstream fp(cell.search_output,true);
                             fp("%g %.15e %.15e\n",t,xx,yy);
                         }
                         
@@ -154,7 +154,7 @@ int  main(int argc, char *argv[] )
                         double pos = 0;
                         if( cell.find_front(pos) )
                         {
-                            ios::ocstream fp("front.dat",true);
+                            ios::ocstream fp(cell.search_output,true);
                             fp("%g %.15e\n",t,pos);
                         }
                     }
