@@ -1,0 +1,138 @@
+
+
+*******************************************************************************
+Thu Feb  6 16:57:05 2014
+
+
+FIT:    data read from '../Dgel1.out'
+        format = z
+        #datapoints = 51
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x,a,b)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 0.0162645         delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 0.208384
+
+initial set of free parameter values
+
+a               = 0.9
+b               = 3
+
+After 3 iterations the fit converged.
+final sum of squares of residuals : 0.00136478
+rel. change during last iteration : -9.51303e-06
+
+degrees of freedom    (FIT_NDF)                        : 49
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.00527755
+variance of residuals (reduced chisquare) = WSSR/ndf   : 2.78526e-05
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+a               = 0.938889         +/- 0.004674     (0.4979%)
+b               = 3.06502          +/- 0.002985     (0.09738%)
+
+
+correlation matrix of the fit parameters:
+
+               a      b      
+a               1.000 
+b               0.005  1.000 
+
+
+*******************************************************************************
+Thu Feb  6 17:16:03 2014
+
+
+FIT:    data read from '../Dgel1.out'
+        format = z
+        #datapoints = 51
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g(x,c,d)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 12.741            delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 0.220861
+
+initial set of free parameter values
+
+c               = 0.99
+d               = 3.06
+
+After 6 iterations the fit converged.
+final sum of squares of residuals : 5.127
+rel. change during last iteration : -9.78885e-07
+
+degrees of freedom    (FIT_NDF)                        : 49
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.32347
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.104633
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c               = 0.676219         +/- 0.2975       (43.99%)
+d               = 1.38337          +/- 0.277        (20.02%)
+
+
+correlation matrix of the fit parameters:
+
+               c      d      
+c               1.000 
+d               0.547  1.000 
+
+
+*******************************************************************************
+Thu Feb  6 17:17:03 2014
+
+
+FIT:    data read from '../Dgel1.out'
+        format = z
+        #datapoints = 51
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g(x,c,d)
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 0.0615797         delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 0.220861
+
+initial set of free parameter values
+
+c               = 0.99
+d               = 3.06
+
+After 4 iterations the fit converged.
+final sum of squares of residuals : 0.000312111
+rel. change during last iteration : -6.16774e-08
+
+degrees of freedom    (FIT_NDF)                        : 49
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.00252381
+variance of residuals (reduced chisquare) = WSSR/ndf   : 6.36962e-06
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+c               = 0.782739         +/- 0.001757     (0.2244%)
+d               = 3.06503          +/- 0.001429     (0.04661%)
+
+
+correlation matrix of the fit parameters:
+
+               c      d      
+c               1.000 
+d               0.003  1.000 
