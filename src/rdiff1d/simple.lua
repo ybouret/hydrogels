@@ -36,4 +36,3 @@ search_front = 1;
 search_field = "H+";
 search_value = 1.5;
 
-front_file = "front0.dat";
