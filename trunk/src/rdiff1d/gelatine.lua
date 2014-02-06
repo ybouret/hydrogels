@@ -80,5 +80,5 @@ ini_core =
 
 right_wall = 1;
 
-search_output = string.format("Cgel%.2g.dat", Cgel);
+search_output = string.format("Cgel%.4e.dat", Cgel);
 

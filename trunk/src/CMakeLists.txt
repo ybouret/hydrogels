@@ -25,4 +25,5 @@ ADD_SUBDIRECTORY(benchmark)
 ADD_SUBDIRECTORY(rdiff1d)
 ADD_SUBDIRECTORY(bubble-growth)
 ADD_SUBDIRECTORY(ierfc)
+ADD_SUBDIRECTORY(build_gelatine)
 
