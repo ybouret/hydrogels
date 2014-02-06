@@ -26,4 +26,6 @@ ADD_SUBDIRECTORY(rdiff1d)
 ADD_SUBDIRECTORY(bubble-growth)
 ADD_SUBDIRECTORY(ierfc)
 ADD_SUBDIRECTORY(build_gelatine)
+ADD_SUBDIRECTORY(fit_gelatine)
+
 
