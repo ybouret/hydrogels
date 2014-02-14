@@ -4,7 +4,7 @@
 #include "yocto/math/io/data-set.hpp"
 #include "yocto/ios/icstream.hpp"
 #include "yocto/sequence/vector.hpp"
-#include "yocto/math/fit/lsf.hpp"
+#include "yocto/math/fit/least-squares.hpp"
 #include "yocto/code/utils.hpp"
 #include "yocto/ios/ocstream.hpp"
 #include "yocto/math/stat/descr.hpp"
@@ -24,6 +24,7 @@ struct diffusion
         return sqrt( a[1] * max_of<double>(0,x) );
     }
     
+#if 0
     bool cb(const fit::sample<double>     &s,
             const fit::lsf<double>::field &f,
             const array<double>           &a )
@@ -33,6 +34,7 @@ struct diffusion
         std::cerr << "\tVariables = " << a << std::endl;
         return true;
     }
+#endif
     
 };
 
@@ -77,6 +79,7 @@ int main( int argc, char *argv[] )
         vector<double> z(n,0.0);
         
         std::cerr << "-- Prepare the Fit Function" << std::endl;
+#if 0
         diffusion                   diff;
         fit::lsf<double>::field     F( &diff, &diffusion::compute );
         fit::lsf<double>::callback  G( &diff, &diffusion::cb      );
@@ -132,6 +135,7 @@ int main( int argc, char *argv[] )
         {
             std::cerr << "Failure" << std::endl;
         }
+#endif
         return 0;
     }
     catch( const exception &e )
