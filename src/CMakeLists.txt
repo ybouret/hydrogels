@@ -28,5 +28,6 @@ ADD_SUBDIRECTORY(ierfc)
 ADD_SUBDIRECTORY(build_gelatine)
 ADD_SUBDIRECTORY(fit_gelatine)
 ADD_SUBDIRECTORY(fit_exp_front)
+ADD_SUBDIRECTORY(fit_gel_front)
 
 
