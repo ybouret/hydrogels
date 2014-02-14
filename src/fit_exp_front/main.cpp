@@ -4,7 +4,7 @@
 #include "yocto/math/io/data-set.hpp"
 #include "yocto/ios/icstream.hpp"
 #include "yocto/sequence/vector.hpp"
-#include "yocto/math/fit/lsf.hpp"
+#include "yocto/math/fit/least-squares.hpp"
 #include "yocto/code/utils.hpp"
 #include "yocto/ios/ocstream.hpp"
 #include "yocto/math/stat/descr.hpp"
@@ -22,45 +22,39 @@ struct  Diffusion
 {
     double compute( double t, const array<double> &a )
     {
-        const double slope = a[1];
-        const double shift = a[2];
-        return slope * (t-shift);
-    }
-    
-    
-    double compute2( double t, const array<double> &a)
-    {
-        const double D = a[1];
-        return sqrt(D*max_of<double>(t,0));
+        const double Df = a[1];
+        const double t0 = a[2];
+        return sqrt( max_of<double>(Df * (t-t0),0 ) );
     }
 };
+
+typedef least_squares<double> LSF;
+
+static const double pix2tmx = 10.0;
+static const double pix2pos = 5.0/427;
 
 class Front
 {
 public:
     
-    const size_t N;
-    vector<double> t,x,x2,z2,z;
-    vector<double> aorg;
-    vector<double> aerr;
-    const double   slope;
-    const double   shift;
+    const string   filename;
+    const size_t   N;
+    vector<double> t,x,z;
+    const double   Df;
+    const double   t0;
     
     explicit  Front( const string &fn ) :
+    filename(fn),
     N(0),
     t(),
     x(),
-    x2(),
-    z2(),
     z(),
-    aorg(2,0),
-    aerr(2,0),
-    slope(0),
-    shift(0)
+    Df(0),
+    t0(0)
     {
         // load
         {
-            ios::icstream fp(fn);
+            ios::icstream fp(filename);
             data_set<double> ds;
             ds.use(3, t);
             ds.use(2, x);
@@ -75,65 +69,17 @@ public:
         co_qsort(t, x);
         
         // finalize
-        x2.make(N,0);
-        z2.make(N,0);
         z.make(N,0);
         for(size_t i=1;i<=N;++i)
         {
-            t[i] *= 10.0;    // in seconds
-            x[i] *= 5.0/427; // in mm
-            x2[i] = x[i] * x[i];
+            t[i] *= pix2tmx; // in seconds
+            x[i] *= pix2pos; // in mm
         }
         
-        // prepare fit
-        fit::sample<double> S( t, x2, z2);
+        // eval Df
+        (double &)Df = (x[N]*x[N] - x[1]*x[1])/(t[N] - t[1]);
         
-        //-- eval slope
-        aorg[1] = (x2[N]-x2[1])/(t[N]-t[1]);
-        aorg[2] = 0;
         
-        vector<bool> used(2,true);
-        fit::lsf<double>    LeastSquares;
-        LeastSquares.h = 1e-5;
-        Diffusion                 diff;
-        fit::lsf<double>::field   F( &diff, &Diffusion::compute );
-        LeastSquares( S, F, aorg, used, aerr, NULL );
-        if( S.status == fit:: success )
-        {
-            std::cerr << "Success: " << aorg << " +/-" << aerr << std::endl;
-            
-            
-            (double&)slope  = aorg[1];
-            (double&)shift  = aorg[2];
-            const string output = fn + ".fit";
-            const double slope_lo = slope - aerr[1];
-            const double slope_hi = slope + aerr[1];
-            
-            for(size_t i=1;i<=N;++i)
-            {
-                z[i] = sqrt(max_of<double>(z2[i],0));
-            }
-            
-            {
-                const double Xerr = 5.0/427;
-                ios::ocstream fp(output,false);
-                fp("#t X Xerr F Ferr\n");
-                fp("0 0 0 0 0\n");
-                for(size_t i=1;i<=N;++i)
-                {
-                    const double tt = t[i] - shift;
-                    const double zmax = sqrt( slope_hi * tt );
-                    const double zmin = sqrt( slope_lo * tt );
-                    const double zerr = (zmax-zmin)/2;
-                    fp("%g %g %g %g %g\n", tt, x[i], Xerr, z[i], zerr);
-                    
-                }
-            }
-        }
-        else
-        {
-            throw exception("Impossible fit!");
-        }
     }
     
     
@@ -162,121 +108,141 @@ int main( int argc, char *argv[] )
             fronts.push_back(pFront);
         }
         
-        
-        vector<double> t;
-        vector<double> x;
-        vector<double> z;
-        
-        //t.push_back(0);
-        //x.push_back(0);
-        
+        LSF::samples samples;
         for(size_t i=1;i<=fronts.size();++i)
         {
-            const Front &f = *fronts[i];
-            for(size_t j=1;j<=f.N;++j)
-            {
-                t.push_back(f.t[j]-f.shift);
-                x.push_back(f.x[j]);
-            }
+            Front &f = *fronts[i];
+            samples.append(f.t,f.x,f.z);
         }
+        const size_t ns   = samples.size();
+        const size_t npar = 2;
+        const size_t nvar = 1 + ns;
         
-        co_qsort(t, x);
-        
-        const size_t ntot = t.size();
-        z.make(ntot,0);
-        
-        fit::sample<double> S(t,x,z);
-        fit::lsf<double>    LeastSquares;
-        LeastSquares.h = 1e-5;
-        Diffusion                 diff;
-        fit::lsf<double>::field   F( &diff, &Diffusion::compute2 );
-        vector<double> aorg(1,0);
-        vector<bool>   used(1,true);
-        vector<double> aerr(1,0);
-        
-        aorg[1] = fronts[1]->slope;
-        
-        LeastSquares( S, F, aorg, used, aerr, NULL );
-        
-        if( S.status == fit:: success )
+        vector<double> a(nvar,0);
+        a[nvar] = 0; // t0
+        for(size_t i=1;i<=ns;++i)
         {
-            std::cerr << "aorg=" << aorg << " +/ " << aerr << std::endl;
+            LSF::sample &S =*samples[i];
+            S.prepare(nvar, npar);
+            matrix<double> &Gamma = S.Gamma;
+            
+            a[i] = fronts[i]->Df;
+            Gamma[1][i]    = 1; //!< first param=Df for each
+            Gamma[2][nvar] = 1; //!< last  param=t0 for all
+        }
+        Diffusion diff;
+        LSF::function F( &diff, & Diffusion::compute);
+        LSF lsf;
+        lsf.h    = 1e-4;
+        lsf.ftol = 1e-8;
+        
+        vector<double> aerr(nvar,0);
+        vector<bool>   used(nvar,true);
+        
+        // first pass
+        if( lsf(F,samples,a,used,aerr,NULL) != least_squares_failure )
+        {
+            std::cerr << "params=" << a << std::endl;
+            std::cerr << "errors=" << aerr << std::endl;
+            const double t_real = a[nvar];
+            a[nvar]     = pix2tmx * floor( t_real/pix2tmx + 0.5);
+            used[nvar] = false;
+        }
+        else
+        {
+            throw exception("Couldn't fit!!!");
+        }
+        std::cerr << "Exp t0=" << a[nvar] << std::endl;
+        
+        
+        
+        const string ext = vformat(".fit%u", unsigned(ns) );
+        
+        if( lsf(F,samples,a,used,aerr,NULL) != least_squares_failure )
+        {
+            std::cerr << "params=" << a << std::endl;
+            std::cerr << "errors=" << aerr << std::endl;
+            
+            double Dmin = 0;
+            double Dmax = 0;
+            double Emax = 0;
+            vector<double> t;
+            for(size_t i=1;i<=ns;++i)
             {
-                ios::ocstream fp("fit.dat", false);
-                fp("#t X F\n");
-                fp("0 0 0\n");
-                for(size_t i=1;i<=ntot;++i)
+                Front &f = *fronts[i];
+                (double &)(f.Df) = a[i];
+                (double &)(f.t0) = a[nvar];
+                if(i==1)
                 {
-                    fp("%g %g %g\n", t[i], x[i], z[i]);
+                    Dmin = f.Df;
+                    Dmax = f.Df;
+                }
+                else
+                {
+                    Dmin = min_of(Dmin,f.Df);
+                    Dmax = max_of(Dmax,f.Df);
+                }
+                Emax = max_of(Emax,Fabs(aerr[i]));
+                
+                t.reserve(f.N);
+                for(size_t j=1;j<=f.N;++j)
+                {
+                    t.push_back(f.t[j]);
+                }
+                
+                {
+                    ios::ocstream fp( f.filename + ext, false);
+                    fp("#t pos fit err\n");
+                    //fp("0 0 0 0\n");
+                    for(size_t j=1;j<=f.N;++j)
+                    {
+                        const double tj = f.t[j];
+                        const double xj = f.x[j];
+                        const double dt = tj - f.t0;
+                        const double Fj = sqrt( f.Df * dt );
+                        const double Fmax  = sqrt( (f.Df+aerr[i]) * dt );
+                        const double Fmin = sqrt( (f.Df-aerr[i]) * dt );
+                        const double Ferr = Fmax-Fmin;
+                        fp("%g %g %g %g\n",dt,xj,Fj,Ferr);
+                    }
+                }
+                {
+                    ios::ocstream fp( f.filename + ext + ".pix", false);
+                    for(size_t j=1;j<=f.N;++j)
+                    {
+                        const double Yj = (f.t[j] / pix2tmx);
+                        const double dt = f.t[j] - f.t0;
+                        const double Xj = sqrt( f.Df * dt )/pix2pos;
+                        fp("%g %g %g\n", f.x[j]/pix2pos, Yj, Xj);
+                    }
                 }
                 
             }
-        }
-        
-        
-        
-        
-#if 0
-        double slope     = 0;
-        double slope_max = 0;
-        double slope_min = 0;
-        double error     = 0;
-        size_t ntot  = 0;
-        for(size_t i=1;i<=fronts.size();++i)
-        {
-            const Front &f = *fronts[i];
-            slope += f.slope * f.N;
-            ntot  += f.N;
-            if(i==1)
+            std::cerr << "Dmin=" << Dmin << std::endl;
+            std::cerr << "Dmax=" << Dmax << std::endl;
+            const double Df   = 0.5 * (Dmax+Dmin);
+            const double Derr = 0.5 * (Dmax-Dmin) + Emax;
+            std::cerr << "Df  =" << Df << std::endl;
+            std::cerr << "Derr=" << Derr  << std::endl;
+            
+            quicksort(t);
+            
             {
-                slope_max = f.slope + f.aerr[1];
-                slope_min = f.slope - f.aerr[1];
-            }
-            else
-            {
-                slope_max = max_of<double>(slope_max,f.slope+f.aerr[1]);
-                slope_min = min_of<double>(slope_min,f.slope-f.aerr[1]);
-            }
-            error += f.N * (f.aerr[1]*f.aerr[1]);
-        }
-        slope /= ntot;
-        error  = sqrt( error/ntot );
-        
-        std::cerr << "slope     = " << slope     << std::endl;
-        std::cerr << "slope_max = " << slope_max << std::endl;
-        std::cerr << "slope_min = " << slope_min << std::endl;
-        std::cerr << "error     = " << error     << std::endl;
-        
-        vector<double> t(ntot,as_capacity);
-        for(size_t i=1;i<=fronts.size();++i)
-        {
-            const Front &f = *fronts[i];
-            const size_t n = f.N;
-            for(size_t i=1;i<=n;++i) t.push_back(f.t[i]-f.aorg[2]);
-        }
-        quicksort(t);
-        
-        vector<double> t_err;
-        vector<double> x_err;
-        
-        {
-            ios::ocstream fp("fit.dat", false);
-            fp("#t X n\n");
-            fp("0 0 0\n");
-            for(size_t i=1; i <= ntot; ++i )
-            {
-                const double zmax = sqrt(t[i]*slope_max);
-                const double zmin = sqrt(t[i]*slope_min);
-                const double zerr = (zmax-zmin)/2;
-                fp("%g %g %g\n", t[i], sqrt( slope * t[i]), zerr);
-                t_err.push_back(t[i]);
-                x_err.push_back(zmin);
-                
-                t_err.push_back(t[i]);
-                x_err.push_back(zmax);
+                ios::ocstream fp("water-front" + ext,false);
+                fp("#t pos err\n");
+                for(size_t j=1;j<=t.size();++j)
+                {
+                    const double dt = t[j]-a[nvar];
+                    const double xx = sqrt( Df * dt );
+                    const double xxmax = sqrt( (Df+Derr) * dt );
+                    const double xxmin = sqrt( (Df-Derr) * dt );
+                    const double xerr  = (xxmax-xxmin)/2;
+                    fp("%g %g %g\n", dt, xx, xerr);
+                }
             }
         }
-#endif
+        
+        
         
     }
     catch( const exception &e )
