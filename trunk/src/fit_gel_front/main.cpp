@@ -94,8 +94,10 @@ int main( int argc, char *argv[] )
                 t0 = -inter/Df;
                 std::cerr << "Df=" << Df << ", t0=" << t0 << std::endl;
             }
+            
             t0 = 0;
-        
+            used[2] = false;
+            
             Diffusion diff;
             least_squares<double>::function F( &diff, & Diffusion::compute );
           
