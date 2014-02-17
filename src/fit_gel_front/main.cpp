@@ -90,7 +90,7 @@ int main( int argc, char *argv[] )
                 const double slope = a[2];
                 const double inter = a[1];
                 std::cerr << "slope=" << slope << ", inter=" << inter << std::endl;
-                Df = slope;
+                Df =  slope;
                 t0 = -inter/Df;
                 std::cerr << "Df=" << Df << ", t0=" << t0 << std::endl;
             }
