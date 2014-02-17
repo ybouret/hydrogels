@@ -28,10 +28,7 @@ struct  Diffusion
     }
 };
 
-typedef least_squares<double> LSF;
-
-static const double pix2tmx = 10.0;
-static const double pix2pos = 5.0/427;
+static inline double __sqr(double x) throw() { return x*x; }
 
 
 int main( int argc, char *argv[] )
@@ -67,16 +64,53 @@ int main( int argc, char *argv[] )
                     }
                 }
             }
-            const size_t n = t.size();
-            vector<double> x2(n,0);
+            
+            co_qsort(t,x);
+            const size_t   n = t.size();
+            vector<double> z(n,0);
+            
+            least_squares<double>::samples samples;
+            samples.append(t,x,z);
+            
+            least_squares<double> LSF;
+            
+            // variables
+            vector<double> a(2,0.0);
+            vector<bool>   used(2,true);
+            vector<double> aerr(2,0.0);
+            
+            //! diffusion coefficient estimation
+            double &Df = a[1];
+            double &t0 = a[2];
             
             {
+                least_squares<double>::sample &sample = *samples[1];
+                numeric<double>::function      transf = cfunctor(__sqr);
+                sample.polynomial(a, used, aerr, &transf);
+                const double slope = a[2];
+                const double inter = a[1];
+                std::cerr << "slope=" << slope << ", inter=" << inter << std::endl;
+                Df = slope;
+                t0 = -inter/Df;
+                std::cerr << "Df=" << Df << ", t0=" << t0 << std::endl;
+            }
+            t0 = 0;
+        
+            Diffusion diff;
+            least_squares<double>::function F( &diff, & Diffusion::compute );
+          
+            if(LSF(F,samples,a,used,aerr,NULL) != least_squares_failure )
+            {
+                std::cerr << "Df=" << Df << " +/-" << aerr[1] << std::endl;
+                std::cerr << "t0=" << t0 << " +/-" << aerr[2] << std::endl;
                 ios::ocstream fp("output.dat",false);
                 for(size_t i=1;i<=n;++i)
                 {
-                    fp("%g %g\n", t[i], x[i]);
+                    fp("%g %g %g\n", t[i], x[i], (z[i]));
                 }
             }
+            
+            
         }
         
     }
