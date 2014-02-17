@@ -32,6 +32,7 @@ typedef least_squares<double> LSF;
 
 static const double pix2tmx = 10.0;
 static const double pix2pos = 5.0/427;
+static const double XOffset = 330;
 
 class Front
 {
@@ -73,6 +74,7 @@ public:
         for(size_t i=1;i<=N;++i)
         {
             t[i] *= pix2tmx; // in seconds
+            //x[i] -= XOffset; // in pixels
             x[i] *= pix2pos; // in mm
         }
         
@@ -97,7 +99,7 @@ int main( int argc, char *argv[] )
     {
         if(argc<=1)
         {
-            throw exception("usage: %s file1.txt ...",progname);
+            throw exception("usage: %s water1.txt ...",progname);
         }
         
         vector<Front::Ptr> fronts;
