@@ -24,17 +24,14 @@ struct diffusion
         return sqrt( a[1] * max_of<double>(0,x) );
     }
     
-#if 0
-    bool cb(const fit::sample<double>     &s,
-            const fit::lsf<double>::field &f,
-            const array<double>           &a )
-	{
+    bool cb(const least_squares<double>::function &F,
+            const least_squares<double>::samples  &S)
+    {
         std::cerr << std::endl;
-        std::cerr << "\tDistance:   " << s.D << std::endl;
-        std::cerr << "\tVariables = " << a << std::endl;
+        std::cerr << "\tDistance =" << S[1]->D2 << std::endl;
+        std::cerr << "\tVariables=" << S[1]->u  << std::endl;
         return true;
     }
-#endif
     
 };
 
@@ -78,7 +75,48 @@ int main( int argc, char *argv[] )
         
         vector<double> z(n,0.0);
         
+        std::cerr << "-- Prepare the Fit Sample" << std::endl;
+        least_squares<double>::samples samples;
+        samples.append(t,y,z);
+        
         std::cerr << "-- Prepare the Fit Function" << std::endl;
+        diffusion diff;
+        least_squares<double>::function F( &diff, &diffusion::compute );
+        least_squares<double>::callback G( &diff, &diffusion::cb      );
+        
+        std::cerr << "-- Prepare the Fit Variables" << std::endl;
+        const size_t   nv = 1;
+        const double   D0 = 1e-9;
+        vector<double> aorg(nv,D0);
+        vector<bool>   used(nv,true);
+        vector<double> aerr(nv,-1);
+        
+        least_squares<double> LSF;
+        LSF.h = D0 * 1e-3;
+        
+        if( LSF(F,samples,aorg,used,aerr,&G) != least_squares_failure )
+        {
+            std::cerr << std::endl;
+            std::cerr << "\tD    = " << aorg[1] << " +/- " << aerr[1]/2 << " m^2/s" << std::endl;
+            const double R = compute_correlation(y, z);
+            std::cerr << "\tcorr = " << R << std::endl;
+
+            std::cerr << "-- Saving Log" << std::endl;
+            {
+                const string outfile = filename + ".log";
+                ios::ocstream fp( outfile, false );
+                fp("D      = %.15g +/- %.15g m^2/s\n", aorg[1], aerr[1]);
+                fp("corr   = %.8f\n", R );
+                fp("Cut at = %.15g m\n", max_length);
+            }
+
+        }
+        else
+        {
+            std::cerr << "Failure " << std::endl;
+            
+        }
+        
 #if 0
         diffusion                   diff;
         fit::lsf<double>::field     F( &diff, &diffusion::compute );

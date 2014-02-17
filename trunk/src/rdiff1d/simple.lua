@@ -35,4 +35,4 @@ save  = 0.1;  -- in seconds
 search_front = 1;
 search_field = "H+";
 search_value = 1.5;
-
+search_output = "simple.dat";
