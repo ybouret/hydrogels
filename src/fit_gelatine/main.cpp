@@ -82,11 +82,11 @@ int main(int argc, char *argv[] )
             vector<double> poro;
             poro.push_back(1);
             poro.push_back(0.95);
-            poro.push_back(0.9);
+            poro.push_back(0.90);
             poro.push_back(0.85);
-            poro.push_back(0.8);
+            poro.push_back(0.80);
             poro.push_back(0.75);
-            
+            //poro.push_back(0.70);
             
             std::cerr << " ratio";
             for(size_t j=1; j<=poro.size(); ++j)
@@ -105,7 +105,7 @@ int main(int argc, char *argv[] )
                     const double fac      = sqrt_fac * sqrt_fac;
                     gel.match             = ratio/fac;
                     const double Cgel     = solve(zfunc,0,C.back());
-                    std::cerr << " " << Cgel;
+                    std::cerr << " " << -log10(Cgel);
                 }
                 std::cerr << std::endl;
             }
