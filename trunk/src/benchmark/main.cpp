@@ -587,7 +587,7 @@ void perform(const string dirname,
     if(first)
     {
         ios::ocstream fp(absfn,false);
-        fp("#t abs\n");
+        fp("#t abs lgAbs\n");
     }
     
     eta ETA;
@@ -617,14 +617,15 @@ void perform(const string dirname,
             if(first)
             {
                 ios::ocstream fp( absfn, true);
-                Real dmax = 0;
+                Real rms = 0;
                 for(unit_t i=2;i<sim.imax;++i)
                 {
                     const Real hk = sim.Kernel(t, sim.X[i]);
                     const Real dh = (hk - sim.h[i])/hk;
-                    dmax = max_of(dmax,Fabs(dh));
+                    rms += dh*dh; 
                 }
-                fp("%g %.7e\n", t, dmax);
+		rms = sqrt(rms/sim.volumes);
+                fp("%g %.7e %.5e\n", t, rms, log10(rms));
             }
             sim.reset_times();
             process(ETA,double(iter)/iter_max,name,t);
