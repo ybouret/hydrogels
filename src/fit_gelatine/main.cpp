@@ -55,7 +55,7 @@ int main(int argc, char *argv[] )
         
         DGel gel(C,Rho);
         
-#if 0
+#if 1
         const size_t N = C.size();
         ios::ocstream fp("dpline.dat",false);
         for(size_t i=0; i<=10000;++i)
@@ -86,7 +86,7 @@ int main(int argc, char *argv[] )
             poro.push_back(0.85);
             poro.push_back(0.80);
             poro.push_back(0.75);
-            //poro.push_back(0.70);
+            poro.push_back(0.70);
             
             std::cerr << " ratio";
             for(size_t j=1; j<=poro.size(); ++j)
