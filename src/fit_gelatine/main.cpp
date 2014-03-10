@@ -74,6 +74,12 @@ int main(int argc, char *argv[] )
         
         if(argc>1)
         {
+            const double phi_average = argc > 2 ? strconv::to<double>( argv[2], "phi_average") : -1;
+            const string logname     = vformat("Cg%g.out",phi_average);
+            if(phi_average>0)
+            {
+                ios::ocstream::overwrite(logname);
+            }
             vector<double> percent;
             vector<double> ratios;
             
@@ -106,12 +112,15 @@ int main(int argc, char *argv[] )
                 
                 
                 
-                const string fn = vformat("rho_gel%.5gp.dat",per);
+                const string fn = vformat("rho_gel%.5gp.out",per);
                 std::cerr << "--> <" << fn <<  ">" << std::endl;
                 
                 gel.match = rho;
                 const double Cmax     = solve(zfunc,0,C.back());
                 std::cerr << "Cmax= " << Cmax << std::endl;
+              
+                
+#define UCONC (1000.0)
                 
                 ios::ocstream fp(fn,false);
                 fp("#phi%g Cg\n",rho);
@@ -127,43 +136,20 @@ int main(int argc, char *argv[] )
                         Cg = solve(zfunc,0,C.back());
                     }
                     //std::cerr << phi << " " << gel.match << " " << Cg << std::endl;
-                    fp("%.5e %.5e\n", phi, Cg );
+                    fp("%.5e %.5e\n", phi, Cg*UCONC );
+                }
+                if(phi_average>phi_min && phi_average<=1)
+                {
+                    const double phi = phi_average;
+                    const double sqrt_fac = phi/(2.0-phi);
+                    const double fac      = sqrt_fac * sqrt_fac;
+                    gel.match             = rho/fac;
+                    const double Cg       = solve(zfunc,0,C.back());
+                    ios::ocstream fplog( logname, true);
+                    fplog("%g %g %g\n", per, Cg*UCONC, phi_average);
                 }
                 
             }
-            
-#if 0
-            vector<double> poro;
-            poro.push_back(1);
-            poro.push_back(0.95);
-            poro.push_back(0.90);
-            poro.push_back(0.85);
-            poro.push_back(0.80);
-            poro.push_back(0.75);
-            poro.push_back(0.70);
-            
-            std::cerr << " ratio";
-            for(size_t j=1; j<=poro.size(); ++j)
-            {
-                std::cerr << " " << poro[j];
-            }
-            std::cerr << std::endl;
-            for(size_t i=1; i <= ratios.size(); ++i )
-            {
-                const double ratio = ratios[i];
-                std::cerr << ratio;
-                for(size_t j=1; j <= poro.size();++j)
-                {
-                    const double phi      = poro[j];
-                    const double sqrt_fac = phi/(2.0-phi);
-                    const double fac      = sqrt_fac * sqrt_fac;
-                    gel.match             = ratio/fac;
-                    const double Cgel     = solve(zfunc,0,C.back());
-                    std::cerr << " " << -log10(Cgel);
-                }
-                std::cerr << std::endl;
-            }
-#endif
             
         }
         
