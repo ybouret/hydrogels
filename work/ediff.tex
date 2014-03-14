@@ -39,8 +39,22 @@ a chemical (univocal) topology matrix $\pmb{\nu}$, plus an extern source term $\
 	\partial_t [A_j] + \mathrm{div}\vec{F}_j = \left(\trn\pmb{\nu} \partial_t \vec{\xi} + \vec{\rho}\right)_j
 \end{equation}
 
+\section{Generic Poisson Equation}
+We shall always have
+\begin{equation}
+	\Delta \Psi = - \alpha\sum z_j C_j
+\end{equation}
+with
+$$
+	\alpha = \dfrac{10^3\mathcal{F}}{\epsilon}
+$$
 
-\section{Neutral, not reactive diffusion}
+\section{Neutral diffusion without external source term}
+A valid topology matrix conserves the charge...
 How to keep the electroneutrality in that case ?
-
+The standard approach is to cancel the net electric current with an internal electrical field.
+We use
+$$
+	\sum z_j \vec{F}_j = \vec{0}
+$$
 \end{document}
