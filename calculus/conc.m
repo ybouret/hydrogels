@@ -8,7 +8,7 @@ fac0   = 1e6/M0;
 fac_up = 1e6/Mlo;
 fac_lo = 1e6/Mup;
 
-X    = [1 2 4 8]';
+X    = [1 2 4 5 8]';
 Xfac = X./(100-X);
 
 C0   = fac0 * Xfac;

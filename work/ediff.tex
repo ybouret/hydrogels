@@ -1,0 +1,46 @@
+\documentclass{revtex4}
+
+\usepackage{graphicx}
+\usepackage{amssymb,amsmath}
+\usepackage{epstopdf}
+\usepackage{bm}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+
+\newcommand{\trn}{\!\!~^t}
+
+\begin{document}
+	\title{PNP}
+	\maketitle
+	
+\section{Notations}
+Let us assume that we have $M$ species $A_1,\ldots,A_M$ in solution.
+The electrochemical potential of a species is
+\begin{equation}
+	\mu_j = \mu^{0}_j + RT \ln \dfrac{\gamma_j[A_j]}{C_0} + z_j\mathcal{F}\Psi
+\end{equation}
+where $\gamma_j$ is the activity, $\Psi$ is the electric potential, $C_0=1M$, $z_j$ is the algebraic charge.
+The flux is
+\begin{equation}
+	\vec{F}_j = -D_j 
+	\left( 
+		\dfrac{1}{\gamma_j} \vec{\nabla} \left( \gamma_j [A_j] \right) + 
+		[A_j] \dfrac{z_j\mathcal{F}}{RT} \vec{\nabla}\Psi
+	\right)
+\end{equation}
+or
+\begin{equation}
+	\vec{F}_j = - \dfrac{D_j}{\gamma_j} \vec{\nabla} \left( \gamma_j [A_j] \right) + [A_j] z_j u_j \vec{E}
+\end{equation}
+where $u_j = \mathcal{F}D_j/(RT)$ is the absolute ionic mobility.
+If we now have $N$ reactions with individual chemical extents $\xi_i$ and
+a chemical (univocal) topology matrix $\pmb{\nu}$, plus an extern source term $\vec{\rho}$, the PNP equation is
+\begin{equation}
+	\partial_t [A_j] + \mathrm{div}\vec{F}_j = \left(\trn\pmb{\nu} \partial_t \vec{\xi} + \vec{\rho}\right)_j
+\end{equation}
+
+
+\section{Neutral, not reactive diffusion}
+How to keep the electroneutrality in that case ?
+
+\end{document}
