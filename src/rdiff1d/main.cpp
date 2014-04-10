@@ -34,7 +34,7 @@ int  main(int argc, char *argv[] )
         
         vfs &fs = local_fs::instance();
         fs.create_sub_dir("data");
-        fs.remove_files_with_extensions("data", "curve");
+        fs.remove_files_with_extension_in("data", "curve");
         
         //______________________________________________________________________
         //
