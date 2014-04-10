@@ -44,7 +44,7 @@ int main(int argc, char *argv[] )
                 
                 ios::icstream fp(ep->path);
                 string line;
-                if( !fp.read_line(line) < 0 )
+                if( fp.read_line(line) < 0 )
                     throw exception("couldn't open %s", ep->base_name);
                 
                 words.free();

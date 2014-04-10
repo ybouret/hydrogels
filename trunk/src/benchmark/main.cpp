@@ -707,7 +707,7 @@ int main(int argc, char *argv[])
         const string dirname = vformat("bench-vol%u-ptol%g/", unsigned(sim.volumes), -log10(sim.ftol) );
         vfs &fs = local_fs::instance();
         fs.create_sub_dir(dirname);
-        fs.remove_files_with_extensions(dirname, "dat");
+        fs.remove_files_with_extension_in(dirname, "dat");
         
         for(size_t acc=1;acc<=num_acc;++acc)
         {

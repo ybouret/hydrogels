@@ -14,47 +14,89 @@
 	\maketitle
 	
 \section{Notations}
+\subsection{PNP Equation}
 Let us assume that we have $M$ species $A_1,\ldots,A_M$ in solution.
 The electrochemical potential of a species is
 \begin{equation}
-	\mu_j = \mu^{0}_j + RT \ln \dfrac{\gamma_j[A_j]}{C_0} + z_j\mathcal{F}\Psi
+	\mu_j = \mu^{0}_j + RT \ln \dfrac{\gamma_jC_j}{C_0} + z_j\mathcal{F}\Psi
 \end{equation}
 where $\gamma_j$ is the activity, $\Psi$ is the electric potential, $C_0=1M$, $z_j$ is the algebraic charge.
 The flux is
 \begin{equation}
 	\vec{F}_j = -D_j 
 	\left( 
-		\dfrac{1}{\gamma_j} \vec{\nabla} \left( \gamma_j [A_j] \right) + 
-		[A_j] \dfrac{z_j\mathcal{F}}{RT} \vec{\nabla}\Psi
+		\dfrac{1}{\gamma_j} \vec{\nabla} \left( \gamma_j C_j \right) + 
+		C_j \dfrac{z_j\mathcal{F}}{RT} \vec{\nabla}\Psi 
+	\right)
+	=
+	 -D_j 
+	\left( 
+		\vec{\nabla}  C_j  + 
+		C_j \dfrac{z_j\mathcal{F}}{RT} \vec{\nabla}\Psi + C_j \vec{\nabla} \ln \gamma_j
 	\right)
 \end{equation}
 or
 \begin{equation}
-	\vec{F}_j = - \dfrac{D_j}{\gamma_j} \vec{\nabla} \left( \gamma_j [A_j] \right) + [A_j] z_j u_j \vec{E}
+	\vec{F}_j = - \underbrace{D_j\left( \vec{\nabla} C_j + C_j \vec{\nabla} \ln \gamma_j \right)}_{\vec{J}_j} + C_j z_j u_j \vec{E}
 \end{equation}
 where $u_j = \mathcal{F}D_j/(RT)$ is the absolute ionic mobility.
 If we now have $N$ reactions with individual chemical extents $\xi_i$ and
 a chemical (univocal) topology matrix $\pmb{\nu}$, plus an extern source term $\vec{\rho}$, the PNP equation is
 \begin{equation}
-	\partial_t [A_j] + \mathrm{div}\vec{F}_j = \left(\trn\pmb{\nu} \partial_t \vec{\xi} + \vec{\rho}\right)_j
+	\partial_t C_j + \mathrm{div}\vec{F}_j = \left(\trn\pmb{\nu} \partial_t \vec{\xi} + \vec{\rho}\right)_j
 \end{equation}
 
-\section{Generic Poisson Equation}
+\subsection{Generic Poisson Equation}
 We shall always have
 \begin{equation}
-	\Delta \Psi = - \alpha\sum z_j C_j
+	\Delta \Psi = - \alpha \left(C_{xs}+\sum z_j C_j\right)
 \end{equation}
 with
 $$
 	\alpha = \dfrac{10^3\mathcal{F}}{\epsilon}
 $$
+and $\epsilon_0=8.85\cdot 10^{-12} F.m^{-1}$.
 
-\section{Neutral diffusion without external source term}
-A valid topology matrix conserves the charge...
-How to keep the electroneutrality in that case ?
-The standard approach is to cancel the net electric current with an internal electrical field.
-We use
+The Bjerrum length is around 1 nm in water: the diffusion can't produce charge separation.
+But the Debye length is around a few nanometers: the charge can't interact above that distance...
+
+%\section{Neutral diffusion without external source term}
+%A valid topology matrix conserves the charge...
+%How to keep the electroneutrality in that case ?
+%The standard approach is to cancel the net electric current with an internal electrical field.
+%We use
+%$$
+%	\sum z_j \vec{F}_j = \vec{0}
+%$$
+\section{Neutralising Field}
+We could compute the potential, but we will have some very stiff fields.
+Can we write a neutralising field 
+
+\section{Poisson Boltzmann}
+\subsection{Quasi-Exact Formulation}
+The idea is that the electric field forces the charges to be in an electrochemical steady
+state, so that on a domain
+\begin{equation}
+	C_j(\vec{r}) \propto \tilde{C}_j e^{-\dfrac{z_j\mathcal{F}\Psi(\vec{r})}{RT}}
+\end{equation}
+and the mass conservation over the domain leads to
+\begin{equation}
+	\int_V  C_j(\vec{r}) \mathrm{d}\vec{r} = n_j = \tilde{C}_j \int_V e^{-\dfrac{z_j\mathcal{F}\Psi(\vec{r})}{RT}} \mathrm{d}\vec{r}.
+\end{equation}
+So $\tilde{C}_j$ is an "averaged" concentration
 $$
-	\sum z_j \vec{F}_j = \vec{0}
+	\tilde{C}_j = \dfrac{n_j}{\int_V e^{-\dfrac{z_j\mathcal{F}\Psi(\vec{r})}{RT}} \mathrm{d}\vec{r}}.
 $$
+\subsection{Order 1 approximation}
+We get
+\begin{equation}
+	\Delta \Psi 
+	%-\alpha \left[ C_{xs} + \sum_j z_j C_j \right]
+	%\simeq -\alpha \left[  C_{xs} + \sum_j  \dfrac{z_jn_j}{V}\left(1-\dfrac{z_j\mathcal{F}\Psi}{RT}\right) \right]
+	\simeq -\alpha \left[ 	C_{xs} 
+							+\left(\sum_j{z_j\bar{C}_j}\right)
+							- \dfrac{\mathcal{F}}{RT}\left(\sum_j z_j^2\bar{C}_j\right) \Psi
+							\right]
+\end{equation}
+
 \end{document}
