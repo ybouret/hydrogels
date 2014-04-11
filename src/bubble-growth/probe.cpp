@@ -6,6 +6,7 @@
 #include "yocto/exception.hpp"
 #include "yocto/math/sig/extend.hpp"
 #include "yocto/string/conv.hpp"
+#include "yocto/math/fit/least-squares.hpp"
 
 #include <iostream>
 
@@ -88,7 +89,6 @@ int main(int argc, char *argv[])
                 continue;
             }
             std::cerr << "#Effective Points = " << N << std::endl;
-            //std::cerr << "t=" << t << std::endl;
             
             {
                 const double t0 = t[1];
@@ -97,76 +97,62 @@ int main(int argc, char *argv[])
                     t[i] -= t0;
                 }
             }
-            vector<double> AP(N,0);
             
             for(size_t i=1; i <= N; ++i )
             {
                 A[i] *= 1.0e-6;      // SI: m^2
                 P[i] *= 1.0e2;       // SI: Pa
-                AP[i] = A[i] * P[i]; // SI...
             }
             
             //__________________________________________________________________
             //
-            // Build Smooth Quantity
+            // Fit Pressure
             //__________________________________________________________________
-            extend<double> xtd(extend_odd);
-            
-            
-            
-            vector<double> smA(N,0);            // smoothed area
-            vector<double> smdAdt(N,0);         // smoothed area time derivative
-            vector<double> smP(N,0);            // smoothed pressure
-            vector<double> smdPdt(N,0);         // smoothed pressure derivative
-            vector<double> smAP(N,0);           // smoothed area x pressure
-            vector<double> smdAPdt(N,0);        // smoothed (area x pressure) time derivative
-            std::cerr << "\tsmoothing Area" << std::endl;
-            xtd(smA,t,A,sm_dt,sm_dg,&smdAdt);
-            std::cerr << "\tsmoothing Pressure" << std::endl;
-            xtd(smP,t,P,sm_dt,sm_dg,&smdPdt);
-            std::cerr << "\tsmoothing Area x Pressure" << std::endl;
-            xtd(smAP,t,AP,sm_dt,sm_dg,&smdAPdt);
-            
-            //__________________________________________________________________
-            //
-            // Build Auxiliary Qtty
-            //__________________________________________________________________
-            std::cerr << "Loaded " << N  << " points" << std::endl;
-            
-#if 0
+            vector<double> Pfit(N,0);
+            vector<double> Pcof(2,0);
+            vector<double> Perr(2,0);
             {
-                ios::ocstream fp("bubble.dat",false);
-                fp << "#t A P AP smA smdAdt smP smdPdt smAP smdAPdt\n";
-                for(size_t i=1;i<=N;++i)
-                {
-                    //                                    1     2     3     4      5       6          7       8          9        10
-                    fp("%g %g %g %g %g %g %g %g %g %g\n", t[i], A[i], P[i], AP[i], smA[i], smdAdt[i], smP[i], smdPdt[i], smAP[i], smdAPdt[i] );
-                }
+                vector<bool> used(2,true);
+                least_squares<double>::sample SampleP(t,P,Pfit);
+                SampleP.polynomial(Pcof, used, Perr);
             }
-            
-            {
-                ios::ocstream fp("dt_area.dat",false);
-                for(size_t i=1;i<=N;++i)
-                {
-                    const double mech    = - A[i] * smdPdt[i] / P[i];
-                    const double sm_mech = - smA[i] * smdPdt[i] / smP[i];
-                    const double diff    = smdAPdt[i] / P[i];
-                    const double sm_diff = smdAPdt[i] / smP[i];
-                    //                                   1     2     3              4          5                 6     7       8     9
-                    fp("%g %g %g %g %g %g %g %g %g\n", t[i], A[i], smdAdt[i], (mech+diff), (sm_mech+sm_diff), mech, sm_mech, diff, sm_diff);
-                }
-                
-            }
-#endif
+            std::cerr << "Pcof=" << Pcof << " +/- " << Perr << std::endl;
+            const double Pdot = Pcof[2];
+            std::cerr << "slope=" << Pdot << std::endl;
             
             //__________________________________________________________________
             //
-            // Build Auxiliary Qtty
+            // Build Auxiliary quantities
             //__________________________________________________________________
+            extend2<double> xtd(extend_odd);
+            vector<double> smA(N,0);
+            vector<double> dAdt(N,0);
+            vector<double> AP(N,0);
+            vector<double> smAP(N,0);
+            vector<double> dAPdt(N,0);
+            
+            xtd(smA,t,A,sm_dt,sm_dg,dAdt); // smooth A and compute dAdt
+            for(size_t i=1;i<=N;++i)
+            {
+                AP[i] = Pfit[i] * smA[i];
+            }
+            xtd(smAP,t,AP,sm_dt,sm_dg,dAPdt); // smooth AP -> dAPdt
+            
             {
                 ios::ocstream fp(outname,false);
+                fp("#t A P Pfit smA dAdt AP dAPdt\n");
+                for(size_t i=1;i<=N;++i)
+                {
+                    //                              1     2     3     4        5       6        7       8          9          10          11
+                    fp("%g %g %g %g %g %g %g %g\n", t[i], A[i], P[i], Pfit[i], smA[i], dAdt[i], AP[i], dAPdt[i]);
+                }
                 
             }
+            
+            
+            
+            //return 0;
+            
             ++count;
         }
         std::cerr << std::endl;
