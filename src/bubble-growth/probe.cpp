@@ -140,11 +140,13 @@ int main(int argc, char *argv[])
             
             {
                 ios::ocstream fp(outname,false);
-                fp("#t A P Pfit smA dAdt AP dAPdt\n");
+                fp("#t A P Pfit smA dAdt AP dAPdt dPdt mech\n");
                 for(size_t i=1;i<=N;++i)
                 {
-                    //                              1     2     3     4        5       6        7       8          9          10          11
-                    fp("%g %g %g %g %g %g %g %g\n", t[i], A[i], P[i], Pfit[i], smA[i], dAdt[i], AP[i], dAPdt[i]);
+                    const double mech = - Pdot * smA[i] / Pfit[i];
+                    const double diff = dAPdt[i]/Pfit[i];
+                    //                                       1     2     3     4        5       6        7       8        9     10          11
+                    fp("%g %g %g %g %g %g %g %g %g %g %g\n", t[i], A[i], P[i], Pfit[i], smA[i], dAdt[i], AP[i], dAPdt[i], Pdot, mech, diff);
                 }
                 
             }
