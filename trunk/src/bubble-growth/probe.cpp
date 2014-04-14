@@ -128,23 +128,22 @@ int main(int argc, char *argv[])
             // Build Auxiliary quantities
             //__________________________________________________________________
             extend2<double> xtd(extend_odd);
-            vector<double> smA(N,0);
-            vector<double> dAdt(N,0);
-            vector<double> AP(N,0);
-            vector<double> smAP(N,0);
-            vector<double> dAPdt(N,0);
-            vector<double> R2D(N,0);
+            vector<double>  smA(N,0);
+            vector<double>  dAdt(N,0);
+            vector<double>  AP(N,0);
+            vector<double>  smAP(N,0);
+            vector<double>  dAPdt(N,0);
 
             xtd(smA,t,A,sm_dt,sm_dg,dAdt); // smooth A and compute dAdt
             for(size_t i=1;i<=N;++i)
             {
                 AP[i]   = Pfit[i] * smA[i];
-                R2D[i]  = sqrt( smA[i]/ M_PI );
             }
             xtd(smAP,t,AP,sm_dt,sm_dg,dAPdt); // smooth AP -> dAPdt
             
             {
                 ios::ocstream fp(outname,false);
+#if 0
                 fp("#t A P Pfit smA dAdt AP dAPdt dPdt mech\n");
                 for(size_t i=1;i<=N;++i)
                 {
@@ -153,12 +152,24 @@ int main(int argc, char *argv[])
                     //                                       1     2     3     4        5       6        7       8        9     10          11
                     fp("%g %g %g %g %g %g %g %g %g %g %g\n", t[i], A[i], P[i], Pfit[i], smA[i], dAdt[i], AP[i], dAPdt[i], Pdot, mech, diff);
                 }
-                
+#endif
+                const double omega2 = 0.375;
+                const double omega3 = 0.288;
+                fp("#t A P smA Pfit dAdt dPdt PdAdt AdPdt growth2D growthd3D\n");
+                for(size_t i=1;i<=N;++i)
+                {
+                    const double PdAdt = Pfit[i] * dAdt[i];
+                    const double AdPdt = smA[i]  * Pdot;
+                    const double g2d   = (PdAdt + AdPdt)/pow(dAdt[i],omega2);
+                    const double g3d   = (PdAdt + 2.0/3.0 * AdPdt)/pow(dAdt[i],omega3);
+                    
+                    //                                       1     2     3     4        5        6        7     8      9      10   11
+                    fp("%g %g %g %g %g %g %g %g %g %g %g\n", t[i], A[i], P[i], smA[i],  Pfit[i], dAdt[i], Pdot, PdAdt, AdPdt, g2d, g3d );
+                }
             }
             
             
             
-            //return 0;
             
             ++count;
         }
