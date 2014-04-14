@@ -98,11 +98,14 @@ int main(int argc, char *argv[])
                 }
             }
             
+            
             for(size_t i=1; i <= N; ++i )
             {
                 A[i] *= 1.0e-6;      // SI: m^2
                 P[i] *= 1.0e2;       // SI: Pa
             }
+            
+            
             
             //__________________________________________________________________
             //
@@ -130,11 +133,13 @@ int main(int argc, char *argv[])
             vector<double> AP(N,0);
             vector<double> smAP(N,0);
             vector<double> dAPdt(N,0);
-            
+            vector<double> R2D(N,0);
+
             xtd(smA,t,A,sm_dt,sm_dg,dAdt); // smooth A and compute dAdt
             for(size_t i=1;i<=N;++i)
             {
-                AP[i] = Pfit[i] * smA[i];
+                AP[i]   = Pfit[i] * smA[i];
+                R2D[i]  = sqrt( smA[i]/ M_PI );
             }
             xtd(smAP,t,AP,sm_dt,sm_dg,dAPdt); // smooth AP -> dAPdt
             
