@@ -4,7 +4,7 @@
 #include "yocto/math/io/data-set.hpp"
 #include "yocto/sequence/vector.hpp"
 #include "yocto/exception.hpp"
-#include "yocto/math/sig/extend.hpp"
+#include "yocto/math/sig/smoother.hpp"
 #include "yocto/string/conv.hpp"
 #include "yocto/math/fit/least-squares.hpp"
 
@@ -34,7 +34,14 @@ int main(int argc, char *argv[])
         fs.create_sub_dir(outdir);
         fs.remove_files_with_extension_in(outdir, "dat");
         
-        size_t count = 0;
+        size_t           count = 0;
+        smoother<double> smooth;
+        extender<double> xtd(extend_odd);
+
+        smooth.upper_range = sm_dt/2;
+        smooth.lower_range = sm_dt/2;
+        smooth.degree      = sm_dg;
+        
         for( int k=3; k < argc; ++k )
         {
             //__________________________________________________________________
@@ -123,48 +130,59 @@ int main(int argc, char *argv[])
             const double Pdot = Pcof[2];
             std::cerr << "slope=" << Pdot << std::endl;
             
+            
+            //__________________________________________________________________
+            //
+            // Fit Area
+            //__________________________________________________________________
+            vector<double> Anum(3,0);
+            vector<double> Aden(1,0);
+            vector<double> Afit(N,0);
+            {
+                vector<bool> usedP( Anum.size(), true );
+                vector<bool> usedQ( Aden.size(), true );
+                
+                usedP[1] = false;
+                Anum[1]  = A[1];
+                
+                least_squares<double>::sample SampleA(t,A,Afit);
+                SampleA.Pade(Anum,usedP,Aden,usedQ);
+            }
+            
             //__________________________________________________________________
             //
             // Build Auxiliary quantities
             //__________________________________________________________________
-            extend2<double> xtd(extend_odd);
-            vector<double>  smA(N,0);
-            vector<double>  dAdt(N,0);
-            vector<double>  AP(N,0);
-            vector<double>  smAP(N,0);
-            vector<double>  dAPdt(N,0);
+            vector<double> PA(N,0);
+            vector<double> smPA(N,0);
+            vector<double> dPAdt(N,0);
+            vector<double> smA(N,0);
+            vector<double> dAdt(N,0);
+            vector<double> PA32(N,0);
+            vector<double> smPA32(N,0);
+            vector<double> dPA32dt(N,0);
+            
+            smooth(smA,t,A,xtd,dAdt);
 
-            xtd(smA,t,A,sm_dt,sm_dg,dAdt); // smooth A and compute dAdt
             for(size_t i=1;i<=N;++i)
             {
-                AP[i]   = Pfit[i] * smA[i];
+                PA[i]   = Pfit[i] * smA[i];
+                PA32[i] = Pfit[i] * pow(smA[i],1.5);
             }
-            xtd(smAP,t,AP,sm_dt,sm_dg,dAPdt); // smooth AP -> dAPdt
+            
+            smooth(smPA,  t,PA,  xtd,dPAdt);
+            smooth(smPA32,t,PA32,xtd,dPA32dt);
             
             {
-                ios::ocstream fp(outname,false);
-#if 0
-                fp("#t A P Pfit smA dAdt AP dAPdt dPdt mech\n");
-                for(size_t i=1;i<=N;++i)
-                {
-                    const double mech = - Pdot * smA[i] / Pfit[i];
-                    const double diff = dAPdt[i]/Pfit[i];
-                    //                                       1     2     3     4        5       6        7       8        9     10          11
-                    fp("%g %g %g %g %g %g %g %g %g %g %g\n", t[i], A[i], P[i], Pfit[i], smA[i], dAdt[i], AP[i], dAPdt[i], Pdot, mech, diff);
-                }
-#endif
                 const double omega2 = 0.375;
                 const double omega3 = 0.288;
-                fp("#t A P smA Pfit dAdt dPdt PdAdt AdPdt growth2D growthd3D\n");
+                ios::ocstream fp(outname,false);
                 for(size_t i=1;i<=N;++i)
                 {
-                    const double PdAdt = Pfit[i] * dAdt[i];
-                    const double AdPdt = smA[i]  * Pdot;
-                    const double g2d   = (PdAdt + AdPdt)/pow(dAdt[i],omega2);
-                    const double g3d   = (PdAdt + 2.0/3.0 * AdPdt)/pow(dAdt[i],omega3);
-                    
-                    //                                       1     2     3     4        5        6        7     8      9      10   11
-                    fp("%g %g %g %g %g %g %g %g %g %g %g\n", t[i], A[i], P[i], smA[i],  Pfit[i], dAdt[i], Pdot, PdAdt, AdPdt, g2d, g3d );
+                    const double growth2d = dPAdt[i]/pow(dAdt[i],omega2);
+                    const double growth3d = (dPA32dt[i]/sqrt(smA[i]))/pow(dAdt[i],omega3);
+                    //                                    1     2     3     4        5        6        7      8         9        10
+                    fp("%g %g %g %g %g %g %g %g %g %g\n", t[i], A[i], P[i], Afit[i], Pfit[i], dAdt[i], PA[i], growth2d, PA32[i], growth3d);
                 }
             }
             
