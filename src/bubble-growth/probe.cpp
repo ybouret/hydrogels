@@ -7,6 +7,8 @@
 #include "yocto/math/sig/smoother.hpp"
 #include "yocto/string/conv.hpp"
 #include "yocto/math/fit/least-squares.hpp"
+#include "yocto/math/polynomial.hpp"
+#include "yocto/code/utils.hpp"
 
 #include <iostream>
 
@@ -37,10 +39,12 @@ int main(int argc, char *argv[])
         size_t           count = 0;
         smoother<double> smooth;
         extender<double> xtd(extend_odd);
-
+        
         smooth.upper_range = sm_dt/2;
         smooth.lower_range = sm_dt/2;
         smooth.degree      = sm_dg;
+        
+        ios::ocstream::overwrite("slopes.dat");
         
         for( int k=3; k < argc; ++k )
         {
@@ -116,7 +120,7 @@ int main(int argc, char *argv[])
             
             //__________________________________________________________________
             //
-            // Fit Pressure
+            // Fit Pressure with a line
             //__________________________________________________________________
             vector<double> Pfit(N,0);
             vector<double> Pcof(2,0);
@@ -133,22 +137,149 @@ int main(int argc, char *argv[])
             
             //__________________________________________________________________
             //
-            // Fit Area
+            // Fit Area with Pade (3,1), fixing A[1]
             //__________________________________________________________________
-            vector<double> Anum(3,0);
-            vector<double> Aden(1,0);
+            
             vector<double> Afit(N,0);
+            vector<double> dAfitdt(N,0);
+            
             {
+                vector<double> Anum(3,0);
+                vector<double> Aden(1,0);
                 vector<bool> usedP( Anum.size(), true );
                 vector<bool> usedQ( Aden.size(), true );
                 
                 usedP[1] = false;
-                Anum[1]  = A[1];
+                Anum[1]  = A[1];   // ??
                 
                 least_squares<double>::sample SampleA(t,A,Afit);
                 SampleA.Pade(Anum,usedP,Aden,usedQ);
+                
+                polynomial<double> PP;
+                for(size_t i=1;i<=Anum.size();++i) PP.add(i-1,Anum[i]);
+                polynomial<double> QQ; QQ.add(0,1);
+                for(size_t i=1;i<=Aden.size();++i) QQ.add(i,Aden[i]);
+                
+                std::cerr << "R(x)=" << PP << "/" << QQ << std::endl;
+                
+                //______________________________________________________________
+                //
+                // Deduce dAfitdt
+                //______________________________________________________________
+                polynomial<double>::derivative(PP,QQ);
+                std::cerr << "R'(x)=" << PP << "/" << QQ << std::endl;
+                for(size_t i=1;i<=N;++i)
+                {
+                    dAfitdt[i] = PP(t[i])/QQ(t[i]);
+                }
             }
             
+            //__________________________________________________________________
+            //
+            // Compute growth factors
+            //__________________________________________________________________
+            vector<double> PA(N,0);
+            vector<double> PA32(N,0);
+            for(size_t i=1;i<=N;++i)
+            {
+                PA[i]   = Pfit[i] * Afit[i];
+                PA32[i] = Pfit[i] * pow(Afit[i],1.5);
+            }
+            
+            vector<double> dPAdt(N,0);
+            vector<double> dPA32dt(N,0);
+            
+            for(size_t i=2;i<N;++i)
+            {
+                dPAdt[i]   = (PA[i+1]  -PA[i-1]  )/(t[i+1]-t[i-1]);
+                dPA32dt[i] = (PA32[i+1]-PA32[i-1])/(t[i+1]-t[i-1]);
+            }
+            dPAdt[1] = (4*PA[2]   - 3*PA[1] - PA[3]  )/(t[3]  -t[1]);
+            dPAdt[N] = (4*PA[N-1] - 3*PA[N] - PA[N-2])/(t[N-2]-t[N]);
+            
+            
+            dPA32dt[1] = (4*PA32[2]   - 3*PA32[1] - PA32[3]  )/(t[3]  -t[1]);
+            dPA32dt[N] = (4*PA32[N-1] - 3*PA32[N] - PA32[N-2])/(t[N-2]-t[N]);
+            
+            vector<double> g2d(N,0);
+            vector<double> g3d(N,0);
+            
+            //const double tpd    = 2 * M_PI * (2e-9);
+            const double omega2 = 0.375;
+            const double omega3 = 0.288;
+            const double Phi2   = 1.525;
+            const double Phi3   = 2.308;
+            
+            const double Theta  = 8.3144621 * (273+20);
+            
+            for(size_t i=1;i<=N;++i)
+            {
+               
+                const double rate = dAfitdt[i];
+                const double rho2 = Theta * pow(2*M_PI,(1-omega2))*Phi2*pow(rate,omega2);
+                const double rho3 = Theta * 3.0/pow(2*M_PI,omega3)*Phi3*pow(rate,omega3);
+                
+                g2d[i] = dPAdt[i];
+                g3d[i] = dPA32dt[i]/sqrt(Afit[i]);
+                
+                g3d[i] /= rho2;
+                g3d[i] /= rho3;
+            }
+
+        
+            
+            
+            ios::ocstream fp(outname,false);
+            for(size_t i=1;i<=N;++i)
+            {
+                //                                         1    2    3    4       5       6          7     8        9       10         11     12
+                fp("%g %g %g %g %g %g %g %g %g %g %g %g\n",t[i],A[i],P[i],Afit[i],Pfit[i],dAfitdt[i],PA[i],dPAdt[i],PA32[i],dPA32dt[i],g2d[i],g3d[i]);
+            }
+            
+            
+            const size_t   ns = min_of<size_t>(16,N);
+            vector<double> xx(ns,0);
+            vector<double> yy(ns,0);
+            vector<double> zz(ns,0);
+            
+            least_squares<double>::sample fit_slope(xx,yy,zz);
+            
+            const size_t   dof = 2;
+            vector<double> a2d(dof,0);
+            vector<double> e2d(dof,0);
+            vector<bool>   uad(dof,true);
+            for(size_t i=1;i<=ns;++i)
+            {
+                xx[i] = Pfit[i];
+                yy[i] = g2d[i];
+                zz[i] = 0;
+            }
+            fit_slope.polynomial(a2d, uad, e2d);
+            
+            vector<double> a3d(dof,0);
+            vector<double> e3d(dof,0);
+            for(size_t i=1;i<=ns;++i)
+            {
+                xx[i] = Pfit[i];
+                yy[i] = g3d[i];
+                zz[i] = 0;
+            }
+            fit_slope.polynomial(a3d, uad, e3d);
+            
+            
+            const double D = 2e-9;
+            const double D2d = pow(D,1-omega2);
+            const double D3d = pow(D,1-omega3);
+            const double slope2d = a2d[2];
+            const double slope3d = a3d[2];
+            {
+                ios::ocstream fp("slopes.dat",true);
+                fp("%u %g %g %g %g #%s\n",unsigned(count+1),slope2d,slope3d,-D2d/slope2d,-D3d/slope3d,vfs::get_base_name(argv[k]));
+            }
+            
+            
+            
+#if 0
             //__________________________________________________________________
             //
             // Build Auxiliary quantities
@@ -163,7 +294,7 @@ int main(int argc, char *argv[])
             vector<double> dPA32dt(N,0);
             
             smooth(smA,t,A,xtd,dAdt);
-
+            
             for(size_t i=1;i<=N;++i)
             {
                 PA[i]   = Pfit[i] * smA[i];
@@ -185,7 +316,7 @@ int main(int argc, char *argv[])
                     fp("%g %g %g %g %g %g %g %g %g %g\n", t[i], A[i], P[i], Afit[i], Pfit[i], dAdt[i], PA[i], growth2d, PA32[i], growth3d);
                 }
             }
-            
+#endif
             
             
             
