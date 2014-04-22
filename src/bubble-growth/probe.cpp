@@ -15,7 +15,14 @@
 using namespace yocto;
 using namespace math;
 
-
+static const double omega2 = 0.375;
+static const double omega3 = 0.288;
+static const double Phi2   = 1.525;
+static const double Phi3   = 2.308;
+static const double Theta  = 8.3144621 * (273+15);
+static const double D      = 1.9e-9;
+static const double gamma2 = 1.0;
+static const double gamma3 = 2.0/3.0;
 
 int main(int argc, char *argv[])
 {
@@ -23,11 +30,18 @@ int main(int argc, char *argv[])
     const char *prog = vfs::get_base_name(argv[0]);
     try
     {
+#if 0
         if(argc<=3)
             throw exception("usage: %s dt degree [datafiles]",prog);
         
         const double sm_dt  = strconv::to<double>(argv[1],"dt");        // smoothing window size
         const size_t sm_dg  = strconv::to<size_t>(argv[2],"degree");    // smoothing polynomial degree
+        smooth.upper_range = sm_dt/2;
+        smooth.lower_range = sm_dt/2;
+        smooth.degree      = sm_dg;
+
+#endif
+        
         
         vfs &fs = local_fs::instance();
         string  outdir = "pbubbles";
@@ -37,14 +51,16 @@ int main(int argc, char *argv[])
         fs.remove_files_with_extension_in(outdir, "dat");
         
         size_t           count = 0;
+        
         smoother<double> smooth;
         extender<double> xtd(extend_odd);
         
-        smooth.upper_range = sm_dt/2;
-        smooth.lower_range = sm_dt/2;
-        smooth.degree      = sm_dg;
         
-        ios::ocstream::overwrite("slopes.dat");
+        ios::ocstream::overwrite("fit2d.dat");
+        ios::ocstream::overwrite("fit3d.dat");
+
+        ios::ocstream::overwrite("a0.dat");
+        ios::ocstream::overwrite("kh.dat");
         
         for( int k=3; k < argc; ++k )
         {
@@ -116,7 +132,10 @@ int main(int argc, char *argv[])
                 P[i] *= 1.0e2;       // SI: Pa
             }
             
-            
+            {
+                ios::ocstream fp("a0.dat",true);
+                fp("%u %g\n", unsigned(count+1), A[1]);
+            }
             
             //__________________________________________________________________
             //
@@ -160,20 +179,21 @@ int main(int argc, char *argv[])
                 polynomial<double> QQ; QQ.add(0,1);
                 for(size_t i=1;i<=Aden.size();++i) QQ.add(i,Aden[i]);
                 
-                std::cerr << "R(x)=" << PP << "/" << QQ << std::endl;
+                //std::cerr << "R(x)=" << PP << "/" << QQ << std::endl;
                 
                 //______________________________________________________________
                 //
                 // Deduce dAfitdt
                 //______________________________________________________________
                 polynomial<double>::derivative(PP,QQ);
-                std::cerr << "R'(x)=" << PP << "/" << QQ << std::endl;
+                //std::cerr << "R'(x)=" << PP << "/" << QQ << std::endl;
                 for(size_t i=1;i<=N;++i)
                 {
                     dAfitdt[i] = PP(t[i])/QQ(t[i]);
                 }
             }
             
+#if 0
             //__________________________________________________________________
             //
             // Compute growth factors
@@ -204,13 +224,8 @@ int main(int argc, char *argv[])
             vector<double> g2d(N,0);
             vector<double> g3d(N,0);
             
-            //const double tpd    = 2 * M_PI * (2e-9);
-            const double omega2 = 0.375;
-            const double omega3 = 0.288;
-            const double Phi2   = 1.525;
-            const double Phi3   = 2.308;
+           
             
-            const double Theta  = 8.3144621 * (273+20);
             
             for(size_t i=1;i<=N;++i)
             {
@@ -225,24 +240,24 @@ int main(int argc, char *argv[])
                 g3d[i] /= rho2;
                 g3d[i] /= rho3;
             }
-
+#endif
         
             
             
             ios::ocstream fp(outname,false);
             for(size_t i=1;i<=N;++i)
             {
-                //                                         1    2    3    4       5       6          7     8        9       10         11     12
-                fp("%g %g %g %g %g %g %g %g %g %g %g %g\n",t[i],A[i],P[i],Afit[i],Pfit[i],dAfitdt[i],PA[i],dPAdt[i],PA32[i],dPA32dt[i],g2d[i],g3d[i]);
+                //                       1    2    3    4       5       6          7     8        9       10         11     12
+                fp("%g %g %g %g %g %g\n",t[i],A[i],P[i],Afit[i],Pfit[i],dAfitdt[i]);
             }
             
             
-            const size_t   ns = min_of<size_t>(16,N);
+            const size_t   ns = min_of<size_t>(32,N);
             vector<double> xx(ns,0);
             vector<double> yy(ns,0);
             vector<double> zz(ns,0);
             
-            least_squares<double>::sample fit_slope(xx,yy,zz);
+            least_squares<double>::sample fit_curve(xx,yy,zz);
             
             const size_t   dof = 2;
             vector<double> a2d(dof,0);
@@ -250,33 +265,50 @@ int main(int argc, char *argv[])
             vector<bool>   uad(dof,true);
             for(size_t i=1;i<=ns;++i)
             {
-                xx[i] = Pfit[i];
-                yy[i] = g2d[i];
+                xx[i] = 1.0/Pfit[i];
+                yy[i] = ( dAfitdt[i] + gamma2 * Pdot * Afit[i] / Pfit[i] ) * pow(dAfitdt[i],-omega2);
                 zz[i] = 0;
             }
-            fit_slope.polynomial(a2d, uad, e2d);
+            fit_curve.polynomial(a2d, uad, e2d);
+            const double inter2 = a2d[1]/(Phi2*pow(2*M_PI*D,1-omega2));
+            const double kh2    = -Theta/inter2;
+            
+            {
+                ios::ocstream fp("fit2d.dat",true);
+                for(size_t i=1;i<=ns;++i)
+                {
+                    fp("%g %g %g\n", xx[i], yy[i], zz[i]);
+                }
+                fp << "\n";
+            }
+            
             
             vector<double> a3d(dof,0);
             vector<double> e3d(dof,0);
             for(size_t i=1;i<=ns;++i)
             {
-                xx[i] = Pfit[i];
-                yy[i] = g3d[i];
+                xx[i] = 1.0/Pfit[i];
+                yy[i] = ( dAfitdt[i] + gamma3 * Pdot * Afit[i] / Pfit[i] ) * pow(dAfitdt[i],-omega3);
                 zz[i] = 0;
             }
-            fit_slope.polynomial(a3d, uad, e3d);
             
-            
-            const double D = 2e-9;
-            const double D2d = pow(D,1-omega2);
-            const double D3d = pow(D,1-omega3);
-            const double slope2d = a2d[2];
-            const double slope3d = a3d[2];
+            fit_curve.polynomial(a3d, uad, e3d);
             {
-                ios::ocstream fp("slopes.dat",true);
-                fp("%u %g %g %g %g #%s\n",unsigned(count+1),slope2d,slope3d,-D2d/slope2d,-D3d/slope3d,vfs::get_base_name(argv[k]));
+                ios::ocstream fp("fit3d.dat",true);
+                for(size_t i=1;i<=ns;++i)
+                {
+                    fp("%g %g %g\n", xx[i], yy[i], zz[i]);
+                }
+                fp << "\n";
             }
-            
+            const double inter3 = a3d[1]/(Phi3*pow(2*M_PI*D,1-omega3));
+            const double kh3    = -Theta/inter3;
+
+            if(kh2>0&&kh3>0)
+            {
+                ios::ocstream fp("kh.dat",true);
+                fp("%u %g %g\n", unsigned(count+1), kh2, kh3);
+            }
             
             
 #if 0
