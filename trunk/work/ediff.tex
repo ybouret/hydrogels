@@ -46,6 +46,8 @@ a chemical (univocal) topology matrix $\pmb{\nu}$, plus an extern source term $\
 	\partial_t C_j + \mathrm{div}\vec{F}_j = \left(\trn\pmb{\nu} \partial_t \vec{\xi} + \vec{\rho}\right)_j
 \end{equation}
 
+\end{document}
+
 \subsection{Generic Poisson Equation}
 We shall always have
 \begin{equation}
@@ -59,18 +61,6 @@ and $\epsilon_0=8.85\cdot 10^{-12} F.m^{-1}$.
 
 The Bjerrum length is around 1 nm in water: the diffusion can't produce charge separation.
 But the Debye length is around a few nanometers: the charge can't interact above that distance...
-
-%\section{Neutral diffusion without external source term}
-%A valid topology matrix conserves the charge...
-%How to keep the electroneutrality in that case ?
-%The standard approach is to cancel the net electric current with an internal electrical field.
-%We use
-%$$
-%	\sum z_j \vec{F}_j = \vec{0}
-%$$
-\section{Neutralising Field}
-We could compute the potential, but we will have some very stiff fields.
-Can we write a neutralising field 
 
 \section{Poisson Boltzmann}
 \subsection{Quasi-Exact Formulation}
@@ -115,4 +105,13 @@ We get
 \begin{equation}
 	\kappa \simeq \dfrac{0.3\;\mathrm{nm}}{\sqrt{\bar{I}}}
 \end{equation}
+with $\bar{I}$ in mole/L.
+
+We can solve $\tilde{\Psi}=\Psi+\Psi_0$ with
+$$
+	\Psi_0 = \kappa^2 \alpha \left[ 	C_{xs} 
+							+\left(\sum_j{z_j\bar{C}_j}\right)
+							\right]
+$$
+
 \end{document}
