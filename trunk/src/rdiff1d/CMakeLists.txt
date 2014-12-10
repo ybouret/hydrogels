@@ -10,7 +10,7 @@ ADD_EXECUTABLE(rdiff1d main.cpp
 	cell.hpp   cell.cpp cell-front.cpp
 )
 
-TARGET_LINK_YOCTO(rdiff1d chemical spade lua++ lua mk)
+TARGET_LINK_YOCTO(rdiff1d chem fame lua++ lua mk)
 
 INSTALL( TARGETS rdiff1d RUNTIME DESTINATION bin )
 

@@ -1,14 +1,15 @@
 #include "calc.h"
 #include "yocto/fs/vfs.hpp"
 #include "yocto/string/conv.hpp"
-#include "yocto/chemical/solution.hpp"
+#include "yocto/chemical/boot.hpp"
+#include "yocto/chemical/equilibria.hpp"
 
 using namespace chemical;
 
 void compute_pH()
 {
     
-    collection lib;
+    library lib;
     lib.add("H+",1);
     lib.add("HO-",-1);
     lib.add("Na+",1);
@@ -18,46 +19,46 @@ void compute_pH()
     
     equilibria cs;
     
-    equilibrium &water = cs.add( "water", pow(10,-strconv::to_real<double>( input_pKw->value(), "pKw") ) );
+    equilibrium &water = cs.add( new const_equilibrium("water", pow(10,-strconv::to_real<double>( input_pKw->value(), "pKw") )) );
     water.add( lib["H+"],  1);
     water.add( lib["HO-"], 1);
     //std::cerr << water << std::endl;
     
     
     const double Ka = pow(10, -strconv::to_real<double>( input_pKa->value(),"pKa") );
-    equilibrium &Ac = cs.add("AH",  Ka);
+    equilibrium &Ac = cs.add( new const_equilibrium("AH",  Ka) );
     Ac.add( lib["H+"], 1);
     Ac.add( lib["A-"], 1);
     Ac.add( lib["AH"],-1);
     //std::cerr << Ac << std::endl;
     
     
-    //cs.build();
+    cs.compile_for(lib);
     
-    boot::loader ini;
+    boot ini;
     
     //! add electroneutrality
     ini.electroneutrality(lib);
     
     //! add acid conservation
-    ini.conserve( lib["AH"], lib["A-"], strconv::to_real<double>( input_Ca->value(),"Ca"));
+    ini.conserve( strconv::to_real<double>( input_Ca->value(),"Ca"), lib["AH"], lib["A-"]);
     
     
     //! chloride
-    ini.define( lib["Cl-"], strconv::to_real<double>( input_HCl->value(),"HCl"));
+    ini.conserve(strconv::to_real<double>( input_HCl->value(),"HCl"),lib["Cl-"] );
     
     //! sodium
-    ini.define( lib["Na+"],strconv::to_real<double>( input_NaOH->value(),"NaOH"));
+    ini.conserve( strconv::to_real<double>( input_NaOH->value(),"NaOH"), lib["Na+"]);
    
     
     std::cerr << "ini=" << std::endl << ini << std::endl;
     
     //! initialize it
-    ini(cs,lib,0.0);
+    const size_t M = cs.M;
+    vector<double> C(M,0);
+    cs.create(C,ini, 0.0);
     
-    chemical::solution S(lib);
-    S.load(cs.C);
-    std::cerr << "S=" << S << std::endl;
+    lib.display(std::cerr, C) << std::endl;
     const double h  = cs.C[1];
     const double pH = -log10(h);
     
