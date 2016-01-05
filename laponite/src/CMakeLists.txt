@@ -1,6 +1,16 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(laponite)
+
+SET(YROOT "$ENV{HOME}/program/yocto4/sdk" )
+MESSAGE( STATUS "YROOT=${YROOT}" )
+INCLUDE(${YROOT}/share/yocto/rules.cmake)
+INCLUDE_DIRECTORIES("${YROOT}/include")
+LINK_DIRECTORIES("${YROOT}/lib")
+
+SET(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/..)
 
 SET(probe probe1)
 
 ADD_EXECUTABLE(${probe} ${probe}.cpp)
-
+TARGET_LINK_YOCTO(${probe})
+INSTALL( TARGETS ${probe}  RUNTIME DESTINATION bin )
