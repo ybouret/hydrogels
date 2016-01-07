@@ -1,0 +1,330 @@
+\documentclass[11pt]{revtex4}
+\usepackage{graphicx}
+\usepackage{amssymb,amsmath}
+\usepackage{epstopdf}
+\usepackage{bm}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+
+%\date{}                                           % Activate to display a given date or no date
+
+
+
+\begin{document}
+\title{Let's grow one bubble}
+
+\maketitle
+
+\section{Description}
+We have $N(t)$ moles of gas in a bubble of radius $R(t)$, and
+a dissolved concentration $C(r\geq R,t)$ in the viscoelastic liquid.
+The mass evolution law is given by the thermodynamic law of the gaz:
+\begin{equation}
+	\label{eq:evolve}
+	P^\star(t) V(t) = N(t) RT = N(t) \Theta
+\end{equation}
+
+\section{Physics at play}
+\subsection{Liquid incompressibility}
+Let $\vec{v}$ be the velocity field with $\mathrm{div} \vec{v}=0$.
+We have in 2D
+\begin{equation}
+	\label{eq:v2d}
+	\vec{v}(r) = \dot{R} \dfrac{R}{r}\vec{u}_{r}
+\end{equation}
+and in 3D
+\begin{equation}
+	\vec{v}(r) = \dot{R} \dfrac{R^2}{r^2} \vec{u}_{r}.
+\end{equation}
+
+\subsection{Mass exchange}
+The mass exchange is in 2D
+\begin{equation}
+	\label{eq:xch2d}
+	\partial_t N = 2\pi R(t) e D \partial_r C(r,t)\vert_{r=R(t)}
+\end{equation}
+and in 3D
+\begin{equation}
+	\label{eq:xch3d}
+	\partial_t N = 4\pi R^2(t) D \partial_r C(r,t)\vert_{r=R(t)}.
+\end{equation}
+%We will set
+%\begin{equation}
+%	\Phi(t) = \partial_r C(r,t)\vert_{r=R(t)}
+%\end{equation}
+
+\subsection{Mass Transport}
+The advection-diffusion equation is
+\begin{equation}
+	\label{eq:transport0}
+	\partial_t C + \mathrm{div}(C\vec{v}) = D \Delta C
+\end{equation}
+which reduces to
+\begin{equation}
+	\label{eq:transport}
+	\partial_t C + \vec{v}\cdot\vec{\nabla}C = D \Delta C.
+\end{equation}
+We got in 2D
+\begin{equation}
+	\label{eq:trn2d}
+	\partial_t C + \dot{R} \dfrac{R}{r} \partial_r C = D\left(\partial_r^2 C + \dfrac{1}{r} \partial_r C \right) = D \dfrac{1}{r}\partial_r\left(r\partial_r C\right)
+\end{equation}
+and in 3D
+\begin{equation}
+	\label{eq:trn3d}
+	\partial_t C + \dot{R}\dfrac{R^2}{r^2} \partial_r C = D\left(\partial_r^2 C + \dfrac{2}{r} \partial_r C \right) 
+	= D \dfrac{1}{r^2}\partial_r\left(r^2\partial_r C\right).
+\end{equation}
+
+
+\section{Experimental Description}
+\subsection{Coupling}
+We assume that we are at the mechanical equilibrium.
+Let us write the equation as a function of the projected bubble area $A(t)$.
+In 2D
+\begin{equation}
+	V(t)  = \pi e R^2(t) = eA(t) .
+\end{equation}
+In 3D
+\begin{equation}
+	V(t) = \dfrac{4}{3}\pi R^3(t) = \dfrac{4}{3\sqrt{\pi}} A^{3/2}(t).
+\end{equation}
+In 2D we transform \eqref{eq:evolve} and \eqref{eq:xch2d} into
+\begin{equation}
+	\label{eq:matter2D}
+	\Theta \partial_t N = 	2\pi e R \Theta D \partial_r C  = \partial_t \left(P^\star V\right) = \pi e \partial_t \left(P^\star R^2\right) = e \partial_t \left(P^\star A\right).
+\end{equation}
+In 3D we transform \eqref{eq:evolve} and \eqref{eq:xch3d} into
+\begin{equation}
+	\label{eq:matter3D}
+	\Theta \partial_t N = 4\pi R^2 D \partial_r C = \partial_t \left(P^\star V\right) = \dfrac{4}{3}\pi \partial_t \left(P^\star R^3\right) = \dfrac{4}{3\sqrt{\pi}} \partial_t \left(P^\star A^{\frac{3}{2}}\right).
+\end{equation}
+\subsection{Growth Rate}
+In 2D we obtain the two following laws
+\begin{equation}
+	\label{eq:rate2d}
+	\left\lbrace
+	\begin{array}{rcl}
+	\dot{R} & = & -\dfrac{\dot{P}}{2P} R + \dfrac{1}{2PR} \dfrac{\Theta}{\pi e} \partial_t N\\
+	\\
+	\dot{A} & = & -\dfrac{\dot{P}}{P} A + \dfrac{1}{P} \dfrac{\Theta}{e} \partial_t N. \\
+	\end{array}
+	\right.
+\end{equation}
+
+In 3D we obtain the two following laws
+\begin{equation}
+	\label{eq:rate3d}
+	\left\lbrace
+	\begin{array}{rcl}
+	\dot{R} & = & -\dfrac{\dot{P}}{3P} R + \dfrac{1}{3PR^2} \dfrac{3\Theta}{4\pi} \partial_t N\\
+	\\
+	\dot{A} & = & -\dfrac{2\dot{P}}{3P} A + \dfrac{1}{PA^{1/2}} \dfrac{\sqrt{\pi}\Theta}{2} \partial_t N. \\
+	\end{array}
+	\right.
+\end{equation}
+
+For each case, we see that there is a stretching term and a mass term.
+In every case, we see that the mass term is the leading term for small bubbles.
+
+\section{Advective-Diffusive Field}
+\subsection{Boundary Conditions}
+We assume that the on the boundary, the Henry law is verified so that
+\begin{equation}
+	P^\star(t) = k_H C^\star(t)
+\end{equation}
+
+\subsection{Rescaling}
+We will rescale the length by $R(t)$ by using $s=\dfrac{r}{R(t)}$.
+We want to solve
+\begin{equation}
+	\label{eq:trnAll}
+	\partial_t C + \dot{R}\left(\dfrac{R}{r}\right)^\alpha \partial_r C = D\left(\partial_r^2 C+ \dfrac{\alpha}{r} \partial_r C \right).
+\end{equation}
+We are looking for solutions in the form
+\begin{equation}
+	C(r,t) = C^\star(t) + \left[ C_\infty - C^\star(t)\right] Q(s).
+\end{equation}
+with $Q(1)=0$ and $Q(\infty)=1$.
+We obtain
+$$
+	\left\lbrace
+	\begin{array}{rcl}
+	\partial_r C   & = & \dfrac{\delta C(t)}{R(t)}\partial_s Q\\
+	\\
+	\partial_r^2 C & = & \dfrac{\delta C(t)}{R^2(t)}\partial_s^2 Q\\
+	\\
+	\partial_t  C  & = & \dot{C^\star}\left[1-Q\right] - s \delta C  \dfrac{\dot{R}}{R} \partial_s Q.\\
+	\end{array}
+	\right.
+$$
+Injecting into \eqref{eq:trnAll} we get
+$$
+	\dot{C^\star}\left[1-Q\right] - s \delta C  \dfrac{\dot{R}}{R} \partial_s Q
+	+ \dfrac{\dot{R}}{s^\alpha}  \dfrac{\delta C}{R}\partial_s Q = \dfrac{D\delta C}{R^2}\left[ \partial_s^2 Q + \dfrac{\alpha}{s}\partial_s Q\right]
+$$
+or
+$$
+	\dot{C^\star}\left[1-Q\right] + \delta C \dfrac{\dot{R}}{R} \left( \dfrac{1}{s^\alpha} -s \right) \partial_s Q = \dfrac{D\delta C}{R^2}\left[ \partial_s^2 Q + \dfrac{\alpha}{s}\partial_s Q\right]
+$$
+and finally
+\begin{equation}
+	\dfrac{R^2}{D} \dfrac{\dot{C^\star}}{\delta C} \left[1-Q\right] + \dfrac{R\dot{R}}{D} \left( \dfrac{1}{s^\alpha} -s \right) \partial_s Q = \left[ \partial_s^2 Q + \dfrac{\alpha}{s}\partial_s Q\right]
+\end{equation}
+
+\subsection{Approximation}
+\subsubsection{Both dimensions}
+Blah blah $R\to0$ blah blah $\dot{A}\approx$constant blah blah
+\begin{equation}
+	\underbrace{\dfrac{\dot{A}}{2\pi D}}_{\lambda} \left( \dfrac{1}{s^\alpha} -s \right) \partial_s Q = \left[ \partial_s^2 Q + \dfrac{\alpha}{s}\partial_s Q\right]
+\end{equation}
+We get
+\begin{equation}
+	\ln \left(\dfrac{\partial_s Q}{\partial_sQ^\star}\right) = \int_1^s \left[\dfrac{\lambda}{s^\alpha} - \lambda s -\dfrac{\alpha}{s}\right] \,\mathrm{d}s
+\end{equation}
+
+In 2D, $\alpha=1$ we get
+\begin{equation}
+	\label{eq:dsQ2d}
+	\partial_s Q_{2d} = \partial_s Q^\star \, e^{\frac{\lambda}{2}}s^{(\lambda-1)}e^{-\frac{\lambda}{2}s^2} = \partial_s Q^\star \, f_2(\lambda,s).
+\end{equation}
+
+In 3D, $\alpha=2$, we get
+\begin{equation}
+	\label{eq:dsQ3d}
+	\partial_s Q_{3d} = \partial_s Q^\star \, \dfrac{1}{s^2} e^{\frac{3\lambda}{2}} e^{-\frac{\lambda}{s}} e^{-\frac{\lambda}{2}s^2} = \partial_s Q^\star \, f_3(\lambda,s).
+\end{equation}
+
+The slope is obtained by
+$$
+	\int_1^\infty \partial_s Q \, \mathrm{d} s = 1
+$$
+leading to
+\begin{equation}
+	\partial_sQ^\star_{zd} = \left[ \int_1^\infty f_z(\lambda,s) \mathrm{d}s \right] ^{-1}
+\end{equation}
+
+\subsubsection{In 2D}
+\begin{equation}
+	\begin{array}{rl}
+	I_2(\lambda) = \int_1^\infty f_2(\lambda,s) \mathrm{d}s & =  e^{\frac{\lambda}{2}}\int_1^\infty s^{(\lambda-1)}e^{-\frac{\lambda}{2}s^2 } \mathrm{d}s\\
+	\end{array}
+\end{equation}
+with 
+$$
+	I_2(1) = \dfrac{\sqrt{2\pi}}{2} e^{\frac{1}{2}} \mathrm{erfc}
+	\left(\dfrac{\sqrt{2}}{2}\right) \approx 0.655679542418798
+$$
+we get 
+$$
+	I_2(\lambda) \simeq \dfrac{I_2(1)}{\lambda^{0.374954456663323}}
+$$
+so that
+\begin{equation}
+	\partial_s Q^\star_{2d} \simeq 1.525 \times \lambda^{0.375} = \Phi_2 \lambda^{\omega_2}
+\end{equation}
+
+Using the 2D fluxes,
+$$
+\Theta \partial_t N = 	2\pi e R \Theta D \partial_rC^\star
+= 2\pi e \Theta D \delta C  \partial_s Q^\star_{2d}
+$$
+we get
+$$
+	\dot{A}  =  -\dfrac{\dot{P}}{P} A + \dfrac{1}{P} \dfrac{\Theta}{e} \partial_t N 
+	=  -\dfrac{\dot{P}}{P} A + \dfrac{\delta C}{P} (2\pi D) \Theta \Phi_2 \left(\dfrac{\dot{A}}{2\pi D}\right)^{\omega_2}
+$$
+
+\subsubsection{In 3D}
+\begin{equation}
+	I_3(\lambda) = \int_1^\infty \dfrac{1}{s^2} e^{\frac{3\lambda}{2}} e^{-\frac{\lambda}{s}} e^{-\frac{\lambda}{2}s^2} \mathrm{d}s.
+\end{equation}
+We find
+\begin{equation}
+	\partial_s Q^\star_{3d} = 2.308 \lambda^{0.288} = \Phi_3 \lambda ^ {\omega_3}
+\end{equation}
+
+Using the 3D fluxes
+$$
+	\Theta \partial_t N = 4\pi \Theta R^2 D \partial_r C^\star = 4\pi \Theta R D \delta C  \Phi_3 \left(\dfrac{\dot{A}}{2\pi D}\right)^ {\omega_3}
+$$
+and the rate expression
+$$
+\dot{A}  =  -\dfrac{2\dot{P}}{3P} A + \dfrac{1}{PA^{1/2}} \dfrac{\sqrt{\pi}\Theta}{2} \partial_t N
+$$
+we get
+\begin{equation}
+	\dot{A}  =  -\dfrac{2\dot{P}}{3P} A + \dfrac{\delta C}{P} (2\pi D) \Theta \Phi_3 \left(\dfrac{\dot{A}}{2\pi D}\right)^ {\omega_3}
+\end{equation}
+
+
+\section{Adim}
+We set
+$$
+	A = A_0 a, \;\; \tau = \dfrac{A_0}{2\pi D}
+$$
+We get
+$$
+	\partial_\tau a = - \gamma_j \dfrac{\partial_\tau{P}(\tau)}{P(\tau)} a + \dfrac{\delta C(\tau)}{P(\tau)} \Theta \Phi_j \left( \partial_\tau a \right)^{\omega_j}
+$$
+with
+$$
+	\delta C = C_\infty - C^*(t) = \dfrac{1}{k_H}\left( P_\infty - P\right)
+$$
+finally
+$$
+	\partial_\tau a = - \gamma_j \dfrac{\partial_\tau{P}(\tau)}{P(\tau)} a + \dfrac{\Theta}{k_H} \left( \dfrac{P_\infty}{P} -1 \right) \Phi_j \left( \partial_\tau a \right)^{\omega_j}
+$$
+
+with 
+$$P(\tau) = P_\infty\left( 1 - \sigma\tau\right)$$
+then
+$$
+	\partial_\tau a = \gamma_j \dfrac{\sigma}{1-\sigma\tau} a(\tau)
+	+ \dfrac{\Theta}{k_H} \left( \dfrac{1}{1-\sigma\tau} - 1 \right) \Phi_j \left( \partial_\tau a \right)^{\omega_j}
+$$
+
+\section{Approximation, Level 2}
+We define
+$$
+	\Lambda = \frac{A}{2\pi D}
+$$
+and approximate
+$$
+	\dot\Lambda^\omega \approx (1-\omega) + \omega \dot\Lambda
+$$
+
+
+\section{Processing Curves}
+The general equation is
+%\begin{equation}
+%	\dot{A} = - \gamma_j \dfrac{\dot{P}}{P} A + \left(\dfrac{C_\infty}{P} - \dfrac{1}{k_H}\right) (2\pi D) \Theta \Phi_j \lambda^{\omega_j}
+%\end{equation}
+
+In 2D, we have
+$$
+	\partial_t (PA) = \Theta (2\pi D) \delta C \partial_s Q^\star_{2d}.
+$$
+
+In 3D, we have
+$$
+	 A^{-\frac{1}{2}}\partial_t (PA^{3/2}) = (3D) \Theta  \delta C \partial_s Q^\star_{3d}.
+$$
+In both cases
+$$
+	\delta C = C_\infty-\dfrac{P}{k_H}
+$$
+
+We get the final expressions:
+$$
+	\partial_t(PA) = \left((2\pi)^{(1-\omega_2)}\Phi_2 {\dot{A}}^{\omega_2}\right) \Theta D^{(1-\omega_2)} \delta C 
+$$
+and
+$$
+	 A^{-\frac{1}{2}}\partial_t (PA^{3/2}) = \left(\dfrac{3}{(2\pi)^{\omega^3}}\Phi_3 {\dot{A}}^{\omega_3}\right) \Theta D^{(1-\omega_3)} \delta C
+$$
+
+
+
+\end{document}
+
