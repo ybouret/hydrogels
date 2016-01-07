@@ -4,6 +4,7 @@ all:
 
 clean:
 	@echo "-- removing temporary files" && rm -f *.bin *.dat *.silo *.vtk *.xyz *.stl *.vtk *.log && rm -rf bin
+	@$(MAKE) -C docs clean
 
 veryclean: clean
 	@echo "-- removing out of sources builds" && cd forge && touch targets && ( cat targets | xargs rm -rf ) && rm -f targets
