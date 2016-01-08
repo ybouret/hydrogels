@@ -14,3 +14,7 @@ SET(probe probe1)
 ADD_EXECUTABLE(${probe} ${probe}.cpp)
 TARGET_LINK_YOCTO(${probe})
 INSTALL( TARGETS ${probe}  RUNTIME DESTINATION bin )
+
+ADD_EXECUTABLE(extract extract.cpp)
+TARGET_LINK_YOCTO(extract mk)
+INSTALL( TARGETS extract RUNTIME DESTINATION bin )

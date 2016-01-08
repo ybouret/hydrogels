@@ -127,6 +127,7 @@ and finally
 \end{equation}
 
 \subsection{Using Experimental Approximation}
+\subsubsection{Formal Expression}
 For small bubbles, we observe that the projected area growth almost linearly, so that we may discard the first term (TODO: for other reasons too...)
 and we get
 \begin{equation}
@@ -140,7 +141,7 @@ and we get
 In 2D, $\alpha=1$ we get
 \begin{equation}
 	\label{eq:dsQ2d}
-	\partial_s Q_{2d} = \partial_s Q^\star \, e^{\frac{\lambda}{2}}s^{(\lambda-1)}e^{-\frac{\lambda}{2}s^2} = \partial_s Q^\star \, f_{2s}(\lambda,s).
+	\partial_s Q_{2d} = \partial_s Q^\star \, e^{\frac{\lambda}{2}}s^{(\lambda-1)}e^{-\frac{\lambda}{2}s^2} = \partial_s Q^\star \, f_{2d}(\lambda,s).
 \end{equation}
 
 In 3D, $\alpha=2$, we get
@@ -175,7 +176,7 @@ $$
 $$
 so that
 \begin{equation}
-	\partial_s Q^\star_{2d} \simeq 1.525 \times \lambda^{0.375} = \Phi_2 \lambda^{\omega_2}
+	\partial_s Q^\star_{2d} \simeq 1.525 \times \lambda^{0.375} = \phi_1 \lambda^{\omega_1}
 \end{equation}
 
 
@@ -185,8 +186,54 @@ so that
 \end{equation}
 We find
 \begin{equation}
-	\partial_s Q^\star_{3d} = 2.308 \lambda^{0.288} = \Phi_3 \lambda ^ {\omega_3}
+	\partial_s Q^\star_{3d} = 2.308 \lambda^{0.288} = \phi_2 \lambda ^ {\omega_2}
 \end{equation}
 
+\subsection{Matter Exchange}
+\subsubsection{Generic case}
+We get
+\begin{equation}
+	\partial_r C^\star = \dfrac{\delta C(t)}{R(t)} \partial_s Q^\star = \dfrac{\delta C(t)}{R(t)} \phi_\alpha \left(\dfrac{\dot{A}}{2\pi D}\right)^{\omega_\alpha}
+\end{equation}
+
+\subsubsection{In 2D}
+\begin{equation}	
+	\label{eq:xch2d}
+	\left\lbrack \Theta \partial_t N\right\rbrack_{2d} 
+	= 2\pi R(t) e \Theta D \partial_r C^\star
+	=  2\pi e \Theta D \delta C(t) \phi_1 \left(\dfrac{\dot{A}}{2\pi D}\right)^{\omega_1}
+\end{equation}
+then
+\begin{equation}
+	\left\lbrack \Theta \partial_t N\right\rbrack_{2d} = \partial_t\left(P^\star V\right) = e \partial_t\left(P^\star A(t)\right)
+\end{equation}
+so that
+\begin{equation}
+	\partial_t \left( P^\star \dfrac{A(t)}{2\pi D}\right) = \dfrac{\Theta}{k_H}  \left[P_\infty- P^\star\right] \phi_1 \left(\dfrac{\dot{A}}{2\pi D}\right)^{\omega_1}
+\end{equation}
+or
+\begin{equation}
+	\label{eq:drive2d}
+	\dfrac{\dot{A}}{2\pi D} = -\dfrac{\dot{P}^\star}{P^\star} \dfrac{A(t)}{2\pi D} + \dfrac{\Theta}{k_H}  \left[\dfrac{P_\infty}{P^\star}-1\right] \phi_1 \left(\dfrac{\dot{A}}{2\pi D}\right)^{\omega_1}
+\end{equation}
+
+\subsubsection{In 3D}
+\begin{equation}
+	\label{eq:xch3d}
+	\left\lbrack \Theta \partial_t N\right\rbrack_{3d} =  4\pi R^2(t) \Theta D  \partial_r C^\star = 4\pi R(t) \Theta D  \delta C(t) \phi_2 \left(\dfrac{\dot{A}}{2\pi D}\right)^{\omega_2}.
+\end{equation}
+then
+\begin{equation}
+	\left\lbrack \Theta \partial_t N\right\rbrack_{3d} = \partial_t\left(P^\star V\right) = \dfrac{4}{3\sqrt{\pi}} \partial_t \left( P^\star A^{3/2}\right)
+\end{equation}
+then
+\begin{equation}
+	\partial_t \left( P^\star A^{3/2}\right) = 3\pi \sqrt{A} \Theta D \delta C  \phi_2 \left(\dfrac{\dot{A}}{2\pi D}\right)^{\omega_2} =
+	\dot{P}^\star A^{3/2} + \dfrac{3}{2} P^\star \dot{A} \sqrt{A}
+\end{equation}
+and finally
+\begin{equation}
+	\dfrac{\dot{A}}{2\pi D} = -\dfrac{2}{3} \dfrac{\dot{P}^\star}{P^\star} \dfrac{A(t)}{2\pi D} + \dfrac{\Theta}{k_H}  \left[\dfrac{P_\infty}{P^\star}-1\right] \phi_2 \left(\dfrac{\dot{A}}{2\pi D}\right)^{\omega_2}
+\end{equation}
 
 \end{document}
