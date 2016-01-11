@@ -131,23 +131,23 @@ and finally
 For small bubbles, we observe that the projected area growth almost linearly, so that we may discard the first term (TODO: for other reasons too...)
 and we get
 \begin{equation}
-	\underbrace{\dfrac{\dot{A}(t)}{2\pi D}}_{\lambda} \left( \dfrac{1}{s^\alpha} -s \right) \partial_s Q = \left[ \partial_s^2 Q + \dfrac{\alpha}{s}\partial_s Q\right].
+	\underbrace{\dfrac{\dot{A}(t)}{2\pi D}}_{\dot{\lambda}} \left( \dfrac{1}{s^\alpha} -s \right) \partial_s Q = \left[ \partial_s^2 Q + \dfrac{\alpha}{s}\partial_s Q\right].
 \end{equation}
 
 \begin{equation}
-	\ln \left(\dfrac{\partial_s Q}{\partial_sQ^\star}\right) = \int_1^s \left[\dfrac{\lambda}{s^\alpha} - \lambda s -\dfrac{\alpha}{s}\right] \,\mathrm{d}s
+	\ln \left(\dfrac{\partial_s Q}{\partial_sQ^\star}\right) = \int_1^s \left[\dfrac{\dot\lambda}{s^\alpha} - \dot\lambda s -\dfrac{\alpha}{s}\right] \,\mathrm{d}s
 \end{equation}
 
 In 2D, $\alpha=1$ we get
 \begin{equation}
 	\label{eq:dsQ2d}
-	\partial_s Q_{2d} = \partial_s Q^\star \, e^{\frac{\lambda}{2}}s^{(\lambda-1)}e^{-\frac{\lambda}{2}s^2} = \partial_s Q^\star \, f_{2d}(\lambda,s).
+	\partial_s Q_{2d} = \partial_s Q^\star \, e^{\frac{\dot\lambda}{2}}s^{(\dot\lambda-1)}e^{-\frac{\dot\lambda}{2}s^2} = \partial_s Q^\star \, f_{2d}(\dot\lambda,s).
 \end{equation}
 
 In 3D, $\alpha=2$, we get
 \begin{equation}
 	\label{eq:dsQ3d}
-	\partial_s Q_{3d} = \partial_s Q^\star \, \dfrac{1}{s^2} e^{\frac{3\lambda}{2}} e^{-\frac{\lambda}{s}} e^{-\frac{\lambda}{2}s^2} = \partial_s Q^\star \, f_{3d}(\lambda,s).
+	\partial_s Q_{3d} = \partial_s Q^\star \, \dfrac{1}{s^2} e^{\frac{3\dot\lambda}{2}} e^{-\frac{\dot\lambda}{s}} e^{-\frac{\dot\lambda}{2}s^2} = \partial_s Q^\star \, f_{3d}(\dot\lambda,s).
 \end{equation}
 
 The slope is obtained by
@@ -156,13 +156,13 @@ $$
 $$
 leading to
 \begin{equation}
-	\partial_sQ^\star_{zd} = \left[ \int_1^\infty f_{zd}(\lambda,s) \mathrm{d}s \right] ^{-1}
+	\partial_sQ^\star_{zd} = \left[ \int_1^\infty f_{zd}(\dot\lambda,s) \mathrm{d}s \right] ^{-1}
 \end{equation}
 
 \subsubsection{In 2D}
 \begin{equation}
 	\begin{array}{rl}
-	I_2(\lambda) = \int_1^\infty f_2(\lambda,s) \mathrm{d}s & =  e^{\frac{\lambda}{2}}\int_1^\infty s^{(\lambda-1)}e^{-\frac{\lambda}{2}s^2 } \mathrm{d}s\\
+	I_2(\dot\lambda) = \int_1^\infty f_2(\dot\lambda,s) \mathrm{d}s & =  e^{\frac{\dot\lambda}{2}}\int_1^\infty s^{(\dot\lambda-1)}e^{-\frac{\dot\lambda}{2}s^2 } \mathrm{d}s\\
 	\end{array}
 \end{equation}
 with 
@@ -172,21 +172,21 @@ $$
 $$
 we get 
 $$
-	I_2(\lambda) \simeq \dfrac{I_2(1)}{\lambda^{0.374954456663323}}
+	I_2(\dot\lambda) \simeq \dfrac{I_2(1)}{\dot\lambda^{0.374954456663323}}
 $$
 so that
 \begin{equation}
-	\partial_s Q^\star_{2d} \simeq 1.525 \times \lambda^{0.375} = \phi_1 \lambda^{\omega_1}
+	\partial_s Q^\star_{2d} \simeq 1.525 \times {\dot\lambda}^{0.375} = \phi_1 {\dot\lambda}^{\omega_1}
 \end{equation}
 
 
 \subsubsection{In 3D}
 \begin{equation}
-	I_3(\lambda) = \int_1^\infty \dfrac{1}{s^2} e^{\frac{3\lambda}{2}} e^{-\frac{\lambda}{s}} e^{-\frac{\lambda}{2}s^2} \mathrm{d}s.
+	I_3(\dot\lambda) = \int_1^\infty \dfrac{1}{s^2} e^{\frac{3\dot\lambda}{2}} e^{-\frac{\dot\lambda}{s}} e^{-\frac{\dot\lambda}{2}s^2} \mathrm{d}s.
 \end{equation}
 We find
 \begin{equation}
-	\partial_s Q^\star_{3d} = 2.308 \lambda^{0.288} = \phi_2 \lambda ^ {\omega_2}
+	\partial_s Q^\star_{3d} = 2.308 {\dot\lambda}^{0.288} = \phi_2 {\dot\lambda} ^ {\omega_2}
 \end{equation}
 
 \subsection{Matter Exchange}
