@@ -9,8 +9,17 @@
 using namespace yocto;
 using namespace math;
 
+static  double D      = 2.0e-8; //!< m^2/s
+static  double omega2 = 0.375;
+static  double phi2   = 1.525;
+static  double omega3 = 0.288;
+static  double phi3   = 2.208;
+
 YOCTO_PROGRAM_START()
 {
+
+    const double fac = numeric<double>::two_pi * D;
+
     for(int argi=1;argi<argc;++argi)
     {
         const string filename = argv[argi];
@@ -47,7 +56,8 @@ YOCTO_PROGRAM_START()
             ios::wcstream fp("sm.dat");
             for(size_t i=1;i<=n;++i)
             {
-                fp("%g %g %g %g %g\n",tmx[i],sm_pres[i],sm_area[i],sm_pres_diff[i],sm_area_diff[i]);
+                const double dotlam = sm_area_diff[i]/fac;
+                fp("%g %g %g %g\n",tmx[i],1.0/pres[i],pow(dotlam,1.0-omega2)/phi2,pow(dotlam,1.0-omega3)/phi3);
             }
         }
 
