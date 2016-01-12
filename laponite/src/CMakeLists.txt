@@ -9,7 +9,7 @@ LINK_DIRECTORIES("${YROOT}/lib")
 
 SET(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/..)
 
-SET(probe probe1)
+SET(probe probe2)
 
 ADD_EXECUTABLE(${probe} ${probe}.cpp)
 TARGET_LINK_YOCTO(${probe} mk)
