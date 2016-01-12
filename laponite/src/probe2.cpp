@@ -34,8 +34,6 @@ YOCTO_PROGRAM_START()
 {
 
     //const double fac = numeric<double>::two_pi * D;
-    GLS<double>::Function poly = _GLS::Create<double,_GLS::Polynomial>();
-    GLS<double>::Function pade = _GLS::Create<double,_GLS::Pade>();
 
     for(int argi=1;argi<argc;++argi)
     {
@@ -51,36 +49,61 @@ YOCTO_PROGRAM_START()
             ds.load(fp);
         }
         const size_t n = tmx.size();
+        std::cerr << "#data=" << n << std::endl;
 
-        vector<double> ipr(n);
-        vector<double> ipr_f(n);
-        for(size_t i=1;i<=n;++i)
-        {
-            ipr[i] = 1.0/pres[i];
-        }
-
-        vector<double> pres_f(n);
-        vector<double> area_f(n);
 
         //______________________________________________________________________
         //
-        // Pressure
+        // Fitting log(p) then getting dp/p
         //______________________________________________________________________
-        GLS<double>::Samples samples(1);
-        GLS<double>::Sample &ps = samples.append(tmx, ipr, ipr_f);
 
-        vector<double> pa(3);
-        samples.prepare(pa.size());
-        _GLS::Polynomial<double>::Start(ps, pa);
-        std::cerr << "predicted=" << pa << std::endl;
+        vector<double> lnp(n);
+        vector<double> lnp_f(n);
+        vector<double> dot_lnp(n);
+        for(size_t i=1;i<=n;++i)
+        {
+            lnp[i] = log( pres[i] );
+        }
+
+
+        GLS<double>::Samples samples(1);
+        GLS<double>::Sample &lpn_sample = samples.append(tmx,lnp,lnp_f);
+
+        vector<double> pcoef(min_of<size_t>(n-1,3));
+        vector<bool>   pused(pcoef.size(),true);
+        vector<double> pcerr(pcoef.size());
+
+        samples.prepare(pcoef.size());
+        _GLS::Polynomial<double>::Start(lpn_sample, pcoef);
+        GLS<double>::Function     poly = _GLS::Create<double,_GLS::Polynomial>();
+        if(!samples.fit_with(poly, pcoef, pused, pcerr))
+        {
+            throw exception("couldn't polynomial fit log(pressure) in %s", filename.c_str());
+        }
+
+        std::cerr << "Poly:" << std::endl;
+        GLS<double>::display(std::cerr,pcoef, pcerr);
+        GLS<double>::Wrapper      polyw(poly,pcoef);
+        numeric<double>::function polyF(&polyw, & GLS<double>::Wrapper::Compute);
+
+        for(size_t i=1;i<=n;++i)
+        {
+            dot_lnp[i] = samples.diff(polyF,tmx[i]);
+        }
 
         {
-            ios::wcstream fp("sm.dat");
+            ios::wcstream fp("smp.dat");
             for(size_t i=1;i<=n;++i)
             {
-                fp("%g %g %g\n", tmx[i], pres[i], 1.0/ipr_f[i] );
+                fp("%g %g %g %g\n", tmx[i], lnp[i], lnp_f[i], dot_lnp[i]);
             }
         }
+
+        
+        //______________________________________________________________________
+        //
+        // Fitting area
+        //______________________________________________________________________
 
 
     }
