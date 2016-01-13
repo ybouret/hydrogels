@@ -37,6 +37,11 @@ YOCTO_PROGRAM_START()
 
     for(int argi=1;argi<argc;++argi)
     {
+
+        //______________________________________________________________________
+        //
+        // Load Data
+        //______________________________________________________________________
         const string filename = argv[argi];
         vector<double> tmx, pres, area;
 
@@ -66,16 +71,17 @@ YOCTO_PROGRAM_START()
         }
 
 
-        GLS<double>::Samples samples(1);
-        GLS<double>::Sample &lpn_sample = samples.append(tmx,lnp,lnp_f);
+        GLS<double>::Samples    samples(1);
+        GLS<double>::Sample    &lpn_sample = samples.append(tmx,lnp,lnp_f);
+        GLS<double>::Function   poly = _GLS::Create<double,_GLS::Polynomial>();
+        GLS<double>::Proxy      poly_px(poly,min_of<size_t>(n-1,4));
 
-        vector<double> pcoef(min_of<size_t>(n-1,3));
-        vector<bool>   pused(pcoef.size(),true);
-        vector<double> pcerr(pcoef.size());
+        array<double>          &pcoef = poly_px.a;
+        vector<bool>            pused(pcoef.size(),true);
+        vector<double>          pcerr(pcoef.size());
 
         samples.prepare(pcoef.size());
         _GLS::Polynomial<double>::Start(lpn_sample, pcoef);
-        GLS<double>::Function     poly = _GLS::Create<double,_GLS::Polynomial>();
         if(!samples.fit_with(poly, pcoef, pused, pcerr))
         {
             throw exception("couldn't polynomial fit log(pressure) in %s", filename.c_str());
@@ -83,12 +89,11 @@ YOCTO_PROGRAM_START()
 
         std::cerr << "Poly:" << std::endl;
         GLS<double>::display(std::cerr,pcoef, pcerr);
-        GLS<double>::Wrapper      polyw(poly,pcoef);
-        numeric<double>::function polyF(&polyw, & GLS<double>::Wrapper::Compute);
+        numeric<double>::function poly_fn(&poly_px, & GLS<double>::Proxy::Compute);
 
         for(size_t i=1;i<=n;++i)
         {
-            dot_lnp[i] = samples.diff(polyF,tmx[i]);
+            dot_lnp[i] = samples.diff(poly_fn,tmx[i]);
         }
 
         {
@@ -99,13 +104,13 @@ YOCTO_PROGRAM_START()
             }
         }
 
-        
+
         //______________________________________________________________________
         //
         // Fitting area
         //______________________________________________________________________
-
-
+        
+        
     }
 }
 YOCTO_PROGRAM_END()
