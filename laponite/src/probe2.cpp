@@ -30,6 +30,28 @@ double F3D(double dotlam,
 }
 
 
+class Area
+{
+public:
+    explicit Area() throw()
+    {
+    }
+
+    virtual ~Area() throw()
+    {
+    }
+
+    double Compute(const double t, const array<double> &a )
+    {
+        double t0 = a[1];
+        double dt = t-t0;
+        return a[2]+a[3]*dt+a[4]*dt*dt;
+    }
+
+private:
+    YOCTO_DISABLE_COPY_AND_ASSIGN(Area);
+};
+
 YOCTO_PROGRAM_START()
 {
 
@@ -74,7 +96,7 @@ YOCTO_PROGRAM_START()
         GLS<double>::Samples    samples(1);
         GLS<double>::Sample    &lpn_sample = samples.append(tmx,lnp,lnp_f);
         GLS<double>::Function   poly = _GLS::Create<double,_GLS::Polynomial>();
-        GLS<double>::Proxy      poly_px(poly,min_of<size_t>(n-1,4));
+        GLS<double>::Proxy      poly_px(poly,min_of<size_t>(n-1,3));
 
         array<double>          &pcoef = poly_px.a;
         vector<bool>            pused(pcoef.size(),true);
@@ -109,8 +131,39 @@ YOCTO_PROGRAM_START()
         //
         // Fitting area
         //______________________________________________________________________
-        
-        
+        Area AA;
+        GLS<double>::Proxy    AreaPx( &AA, & Area::Compute, 4);
+
+        array<double> &acoef = AreaPx.a;
+        vector<bool>   aused( acoef.size(), true );
+        vector<double> acerr( acoef.size() );
+
+        double &slope = acoef[3];
+        //double &start = acoef[1];
+        slope = (area[n]-area[1])/(tmx[n]-tmx[1]);
+
+        vector<double> area_f(n);
+        samples.release();
+        (void) samples.append(tmx,area,area_f);
+        samples.prepare(acoef.size());
+
+
+        //aused[3] = false;
+
+        if(!samples.fit_with(AreaPx.F, acoef, aused, acerr))
+        {
+            throw exception("couldn't fit area in %s", filename.c_str());
+        }
+        std::cerr << "Area:" << std::endl;
+        GLS<double>::display(std::cerr,acoef,acerr);
+
+        {
+            ios::wcstream fp("sma.dat");
+            for(size_t i=1;i<=n;++i)
+            {
+                fp("%g %g %g\n", tmx[i], area[i], area_f[i]);
+            }
+        }
     }
 }
 YOCTO_PROGRAM_END()
