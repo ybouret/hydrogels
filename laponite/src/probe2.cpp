@@ -228,6 +228,45 @@ YOCTO_PROGRAM_START()
         //
         // Fitting...
         //______________________________________________________________________
+        vector<double> p2(2), p3( p2.size() ), p2err( p2.size() ), p3err( p2.size() );
+        vector<double> y2f(n);
+        vector<double> y3f(n);
+
+        vector<bool> lused(p2.size(),true);
+
+        samples.release();
+        _GLS::Polynomial<double>::Start( samples.append(ipr,y2,y2f), p2);
+        samples.prepare(p2.size());
+        if( ! samples.fit_with(poly,p2,lused,p2err) )
+        {
+            throw exception("unexpected fit failure for 2D");
+        }
+
+        std::cerr << "Fit2D: " << std::endl;
+        GLS<double>::display(std::cerr, p2, p2err);
+
+
+        samples.release();
+        _GLS::Polynomial<double>::Start( samples.append(ipr,y3,y3f), p3);
+        samples.prepare(p3.size());
+        if( ! samples.fit_with(poly,p3,lused,p3err) )
+        {
+            throw exception("unexpected fit failure for 3D");
+        }
+
+        std::cerr << "Fit3D: " << std::endl;
+        GLS<double>::display(std::cerr, p3, p3err);
+
+        {
+            ios::wcstream fp("fit.dat");
+            for(size_t i=1;i<=n;++i)
+            {
+                fp("%g %g %g %g %g\n",ipr[i],y2[i],y2f[i],y3[i],y3f[i]);
+            }
+        }
+
+
+
 
 
 

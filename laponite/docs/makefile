@@ -1,4 +1,4 @@
 all:
 
 clean:
-	rm -f *.aux *.log *.synctex.gz growth_v3.pdf growth_v4.pdf
+	rm -f *.aux *.log *.synctex.gz growth_v3.pdf growth_v4.pdf growth_v5.pdf
