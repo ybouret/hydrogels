@@ -180,16 +180,18 @@ YOCTO_PROGRAM_START()
 
         numeric<double>::function AreaFn( &AreaPx, & GLS<double>::Proxy::Compute);
 
+        vector<double> dot_area(n);
         for(size_t i=1;i<=n;++i)
         {
-            afit[i] *= ascale;
+            afit[i]    *= ascale;
+            dot_area[i] = ascale*samples.diff(AreaFn,tred[i])/tscale;
         }
 
         {
             ios::wcstream fp("sma.dat");
             for(size_t i=1;i<=n;++i)
             {
-                fp("%g %g %g\n", tmx[i], area[i], afit[i]);
+                fp("%g %g %g %g\n", tmx[i], area[i], afit[i], dot_area[i]);
             }
         }
     }
