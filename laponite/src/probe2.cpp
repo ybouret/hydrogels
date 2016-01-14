@@ -59,7 +59,6 @@ private:
 YOCTO_PROGRAM_START()
 {
 
-    //const double fac = numeric<double>::two_pi * D;
 
     for(int argi=1;argi<argc;++argi)
     {
@@ -74,9 +73,9 @@ YOCTO_PROGRAM_START()
         {
             ios::icstream fp(filename);
             data_set<double> ds;
-            ds.use(1, tmx);
-            ds.use(2, pres);
-            ds.use(3, area);
+            ds.use(1, tmx);   // seconds
+            ds.use(2, pres);  // mbar
+            ds.use(3, area);  // m^2
             ds.load(fp);
         }
         const size_t n = tmx.size();
@@ -94,9 +93,12 @@ YOCTO_PROGRAM_START()
         vector<double> lnp(n);
         vector<double> lnp_f(n);
         vector<double> dot_lnp(n);
+        vector<double> ipr(n);
         for(size_t i=1;i<=n;++i)
         {
-            lnp[i] = log( pres[i] );
+            pres[i] *= 100;
+            lnp[i]   = log( pres[i] );
+            ipr[i]   = 1.0 / pres[i];
         }
 
 
@@ -194,6 +196,41 @@ YOCTO_PROGRAM_START()
                 fp("%g %g %g %g\n", tmx[i], area[i], afit[i], dot_area[i]);
             }
         }
+
+        //______________________________________________________________________
+        //
+        // Constructing curves
+        //______________________________________________________________________
+        const double fac = numeric<double>::two_pi * D;
+        vector<double> lambda(n);
+        vector<double> dotlam(n);
+        vector<double> corlam(n);
+        vector<double> y2(n);
+        vector<double> y3(n);
+        for(size_t i=1;i<=n;++i)
+        {
+            lambda[i] = area[i]/fac;
+            dotlam[i] = dot_area[i]/fac;
+            corlam[i] = dot_lnp[i] * lambda[i];
+            y2[i]     = F2D(dotlam[i],corlam[i]);
+            y3[i]     = F3D(dotlam[i],corlam[i]);
+        }
+
+        {
+            ios::wcstream fp("lam.dat");
+            for(size_t i=1;i<=n;++i)
+            {
+                fp("%g %g %g %g\n", tmx[i],y2[i], y3[i], ipr[i]);
+            }
+        }
+
+        //______________________________________________________________________
+        //
+        // Fitting...
+        //______________________________________________________________________
+
+
+
     }
 }
 YOCTO_PROGRAM_END()
