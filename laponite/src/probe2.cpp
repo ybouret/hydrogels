@@ -43,9 +43,13 @@ public:
 
     double Compute(const double t, const array<double> &a )
     {
-        double t0 = a[1];
-        double dt = t-t0;
-        return a[2]+a[3]*dt+a[4]*dt*dt;
+        double num = a[1] + a[2] * t + a[3] * t*t;
+        double den = 1;
+        if(a.size()>=4)
+        {
+            den += a[4] * t;
+        }
+        return num/den;
     }
 
 private:
@@ -77,7 +81,10 @@ YOCTO_PROGRAM_START()
         }
         const size_t n = tmx.size();
         std::cerr << "#data=" << n << std::endl;
-
+        if(n<=3)
+        {
+            throw exception("not enough points!");
+        }
 
         //______________________________________________________________________
         //
@@ -131,24 +138,38 @@ YOCTO_PROGRAM_START()
         //
         // Fitting area
         //______________________________________________________________________
+
+        vector<double> ared(n); //!< reduced area for units
+        vector<double> afit(n); //!< fitted value
+        vector<double> tred(n); //!< reduced time
+
+        double ascale = tao::RMS(area);
+        double tscale = tmx[n] - tmx[1];
+        std::cerr << "ascale=" << ascale << std::endl;
+        for(size_t i=1;i<=n;++i)
+        {
+            ared[i] = area[i]/ascale;
+            tred[i] = (tmx[i]-tmx[1])/tscale;
+        }
+
+
+
         Area AA;
-        GLS<double>::Proxy    AreaPx( &AA, & Area::Compute, 4);
+        GLS<double>::Proxy    AreaPx( &AA, & Area::Compute, min_of<size_t>(n-1,4) );
 
         array<double> &acoef = AreaPx.a;
         vector<bool>   aused( acoef.size(), true );
         vector<double> acerr( acoef.size() );
 
-        double &slope = acoef[3];
-        //double &start = acoef[1];
-        slope = (area[n]-area[1])/(tmx[n]-tmx[1]);
-
-        vector<double> area_f(n);
         samples.release();
-        (void) samples.append(tmx,area,area_f);
+        GLS<double>::Sample &AS = samples.append(tred,ared,afit);
         samples.prepare(acoef.size());
 
-
-        //aused[3] = false;
+        {
+            vector<double> atmp(3);
+            _GLS::Polynomial<double>::Start(AS,atmp);
+            for(size_t i=1;i<=3;++i) acoef[i] = atmp[i];
+        }
 
         if(!samples.fit_with(AreaPx.F, acoef, aused, acerr))
         {
@@ -157,11 +178,18 @@ YOCTO_PROGRAM_START()
         std::cerr << "Area:" << std::endl;
         GLS<double>::display(std::cerr,acoef,acerr);
 
+        numeric<double>::function AreaFn( &AreaPx, & GLS<double>::Proxy::Compute);
+
+        for(size_t i=1;i<=n;++i)
+        {
+            afit[i] *= ascale;
+        }
+
         {
             ios::wcstream fp("sma.dat");
             for(size_t i=1;i<=n;++i)
             {
-                fp("%g %g %g\n", tmx[i], area[i], area_f[i]);
+                fp("%g %g %g\n", tmx[i], area[i], afit[i]);
             }
         }
     }
