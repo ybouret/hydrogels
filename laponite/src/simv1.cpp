@@ -5,6 +5,7 @@
 #include "yocto/math/core/tridiag.hpp"
 #include "yocto/code/ipower.hpp"
 #include "yocto/ios/ocstream.hpp"
+#include "yocto/math/round.hpp"
 
 using namespace yocto;
 using namespace math;
@@ -88,12 +89,16 @@ YOCTO_PROGRAM_START()
 
     save_profile(r,C);
 
-    const double dt  = 1e-3;
-    const double Ddt = D * dt;
+    double dt           = 1e-4;
+    double dt_save      = 0.1;
+    const  double t_run = 10;
+    const size_t every  = simulation_save_every(dt, dt_save);
+    const size_t nIter  = simulation_iter(t_run, dt, every);
+    const double Ddt    = D * dt;
 
     double t = 0;
-
-    for(size_t iter=1;iter<=20000;++iter)
+    std::cerr << "#iter=" << nIter << std::endl;
+    for(size_t iter=1;iter<=nIter;++iter)
     {
         t = iter * dt;
         const double R    = r[1];
@@ -144,20 +149,18 @@ YOCTO_PROGRAM_START()
         // compute gradient
         const double drC = D*(C[2]-C[1])/(r[2]-r[1]);
 
-        if( 0 == (iter%100) )
+        if( 0 == (iter%every) )
         {
             {
                 ios::acstream fp("grad.dat");
                 fp("%g %g\n", t, drC);
             }
-            
             save_q(r,C);
+            save_profile(r,C);
+            std::cerr << "."; std::cerr.flush();
         }
     }
-    
-    save_profile(r,C);
-    
-    
+    std::cerr << std::endl;
     
     
 }
