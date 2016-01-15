@@ -6,24 +6,15 @@
 #include "yocto/code/ipower.hpp"
 #include "yocto/ios/ocstream.hpp"
 #include "yocto/math/round.hpp"
+#include "yocto/math/fit/glsf.hpp"
 
 using namespace yocto;
 using namespace math;
 
-#if 0
 static const double Theta = Y_R * 298; //!< J/mol
 static const double kH    = 29.41*1e2; //!< m^3.Pa/mol = J/mol
-static const double rho   = Theta/kH;
-
-static const double Patm = 1e5; //!< Pa
-
-double getPressure( double t )
-{
-    return 300.0 * 100; //!< Pa
-}
 
 
-#endif
 
 static const double Rini    = 0.1 * 1e-3; //!< initial size
 static const double D       = 2e-9; //!< m^2/s
@@ -33,6 +24,28 @@ static const double Rend    = 1 * 1e-3; //!< final initial size
 
 static size_t alpha = 1;
 
+
+class QShape
+{
+public:
+    inline QShape() {}
+    inline ~QShape() throw() {}
+
+    double Compute(const double s, const array<double> &a )
+    {
+        const double X = s-1;
+        double       P = 0;
+        for(size_t i=1;i<=a.size();++i)
+        {
+            P += a[i] * ipower(X,i);
+        }
+        return 1.0 - exp( -P );
+    }
+
+
+private:
+    YOCTO_DISABLE_COPY_AND_ASSIGN(QShape);
+};
 
 static void save_profile(const array<double> &r,
                          const array<double> &C)
@@ -45,14 +58,15 @@ static void save_profile(const array<double> &r,
     fp("\n");
 }
 
-static void save_q(const array<double> &r,
-                   const array<double> &C)
+static void save_q(const array<double> &s,
+                   const array<double> &Q,
+                   const array<double> &Qf)
 {
-    ios::acstream fp("q.dat");
-    const size_t N = r.size();
+    ios::wcstream fp("q.dat");
+    const size_t N = s.size();
     for(size_t i=1;i<=N;++i)
     {
-        fp("%g %g\n", r[i]/r[1], (C[i]-C[1])/(C[N]-C[1]));
+        fp("%g %g %g\n", s[i], Q[i], Qf[i]);
     }
     fp("\n");
 }
@@ -62,21 +76,47 @@ static void save_q(const array<double> &r,
 YOCTO_PROGRAM_START()
 {
 
-    double dotR = 1e-3/60;
+    double rho   = Theta/kH;
+    std::cerr << "rho0=" << rho << std::endl;
+
     if(argc>1)
     {
-        dotR = strconv::to<double>(argv[1],"dotR");
+        alpha = strconv::to<size_t>(argv[1],"alpha");
+        if(alpha!=1&&alpha!=2)
+        {
+            throw exception("invalid alpha!");
+        }
     }
+
     const size_t N = 1000;
 
     vector<double>  r(N);
     vector<double>  C(N);
     TriDiag<double> M(N);
     vector<double>  rhs(N);
+    vector<double>  s(N);
+    vector<double>  Q(N);
+    vector<double>  Qf(N);
+
+
+    GLS<double>::Samples samples(1);
+    samples.append(s, Q, Qf);
+
+    const size_t nvar = 3;
+    vector<double> aorg(nvar);
+    vector<bool>   used(nvar,true);
+    vector<double> aerr(nvar);
+    samples.prepare(nvar);
+    aorg[1] = 1;
+    used[2] = false;
+    QShape shape;
+    GLS<double>::Function F(&shape, &QShape::Compute );
+
 
     ios::ocstream::overwrite("prof.dat");
     ios::ocstream::overwrite("q.dat");
     ios::ocstream::overwrite("grad.dat");
+    ios::ocstream::overwrite("coef.dat");
 
     // initialize
     for(size_t i=1; i<=N; ++i )
@@ -91,7 +131,7 @@ YOCTO_PROGRAM_START()
 
     double dt           = 1e-4;
     double dt_save      = 0.1;
-    const  double t_run = 10;
+    const  double t_run = 20;
     const size_t every  = simulation_save_every(dt, dt_save);
     const size_t nIter  = simulation_iter(t_run, dt, every);
     const double Ddt    = D * dt;
@@ -102,6 +142,11 @@ YOCTO_PROGRAM_START()
     {
         t = iter * dt;
         const double R    = r[1];
+
+        // compute flux
+        // compute gradient
+        const double J    = D*(C[2]-C[1])/(r[2]-r[1]);
+        const double dotR = rho * J / C[1];
         const double dR   = dt * dotR;
 
         // contact
@@ -146,23 +191,43 @@ YOCTO_PROGRAM_START()
             r[i] += dR * ipower(R/r[i],alpha);
         }
 
-        // compute gradient
-        const double drC = D*(C[2]-C[1])/(r[2]-r[1]);
 
         if( 0 == (iter%every) )
         {
+
+            for(size_t i=1;i<=N;++i)
+            {
+                s[i] = r[i]/r[1];
+                Q[i] = (C[i]-C[1])/(C[N]-C[1]);
+            }
+
             {
                 ios::acstream fp("grad.dat");
-                fp("%g %g\n", t, drC);
+                fp("%g %g %g\n", t, J, (Q[2]-Q[1])/(s[2]-s[1]) );
             }
-            save_q(r,C);
+
+            if(!samples.fit_with(F,aorg,used,aerr) )
+            {
+                throw exception("Couldn't fit Q");
+            }
+            //std::cerr << "aorg=" << aorg << std::endl;
+            {
+                ios::acstream fp("coef.dat");
+                fp("%g", t);
+                for(size_t i=1;i<=nvar;++i)
+                {
+                    fp(" %g", aorg[i]);
+                }
+                fp("\n");
+            }
+            save_q(s,Q,Qf);
             save_profile(r,C);
             std::cerr << "."; std::cerr.flush();
         }
     }
     std::cerr << std::endl;
     
-    
+
 }
 YOCTO_PROGRAM_END()
 
