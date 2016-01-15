@@ -83,7 +83,7 @@ then
 	+\left( D\left[\left(\partial_{rr}s\right) + \dfrac{\alpha}{r} \left(\partial_r s\right) \right] - \left[ \left(\partial_t s\right) + \dot{R} \left(\dfrac{R}{r}\right)^\alpha \left(\partial_r s\right)\right]\right)Q'
 \end{equation}
 
-\subsection{First trial}
+\subsection{Substitution}
 If we choose
 \begin{equation}
 	s = r/R(t),\; r = s R(t),\; \partial_r s = 1/R,\;\partial_{rr} s = 0, \partial_t s = - s \dot{R}/R
@@ -106,45 +106,8 @@ we get
 	2\dfrac{\dot{C}^\star}{\delta C} \left[1-Q\right] \tau = Q'' + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s-\dfrac{1}{s^\alpha}\right]\right) Q'
 \end{equation}
 
-\subsection{Second trial}
-We may also use
-\begin{equation}
-	s = r^2/R^2,\; r = R\sqrt{s},\; \partial_r s = 2 \sqrt{s}/R = ,\;\partial_{rr} s = 1/R^2, \partial_t s = -2 r^2 \dot{R}/R^3 = -2 s \dot{R}/R
-\end{equation}
+
 \end{document}
 
-with $Q(1)=0$ and $Q(\infty)=1$.
-We get
-\begin{equation}
-	\partial_r C = \dfrac{\delta C}{\Lambda} Q',\; \partial_{rr} C = \dfrac{\delta C}{\Lambda^2} Q''
-\end{equation}
-and
-\begin{equation}
-	\partial_t C = \left[1-Q\right] \dot{C}^\star - \delta C \dfrac{\dot{\Lambda}}{\Lambda} s Q'.
-\end{equation}
-The generic equation becomes
-\begin{equation}
-	\left[1-Q\right] \dot{C}^\star - \delta C \dfrac{\dot{\Lambda}}{\Lambda} s Q' 
-	+ \dot{R} \left(\dfrac{R}{s\Lambda}\right)^\alpha \dfrac{\delta C}{\Lambda} Q' = \dfrac{D\delta C}{\Lambda^2}\left( Q'' + \dfrac{\alpha}{s} Q' \right)
-\end{equation}
-or
-\begin{equation}
-	\dfrac{\Lambda^2 \dot{C}^\star}{D \delta C} \left[1-Q\right] 
-	+ \left[ \Lambda \dot{R} \left(\dfrac{R}{s\Lambda}\right)^\alpha - s \Lambda \dot{\Lambda} \right] \dfrac{Q'}{D}
-	= \left( Q'' + \dfrac{\alpha}{s} Q' \right)
-\end{equation}
-and with $\Lambda(t)=R(t)$,
-\begin{equation}
-\dfrac{R^2 \dot{C}^\star}{D \delta C} \left[1-Q\right] + \dfrac{R\dot{R}}{D} \left[ \dfrac{1}{s^\alpha} - s \right] Q' =  \left( Q'' + \dfrac{\alpha}{s} Q' \right).
-\end{equation}
-
-Using the projected area $A(t) = \pi R^2$, $\dot{A}=2\pi R \dot{R}$, and the time
-\begin{equation}
-	\tau = \dfrac{A}{2\pi D}
-\end{equation}
-
-\begin{equation}
-	\dfrac{2 \dot{C}^\star}{\delta C} \left[1-Q\right] \tau + \dot{\tau} \left[ \dfrac{1}{s^\alpha} - s \right] Q' =  \left( Q'' + \dfrac{\alpha}{s} Q' \right).
-\end{equation}
 
 \end{document}
