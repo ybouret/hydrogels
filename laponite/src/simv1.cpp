@@ -75,6 +75,7 @@ YOCTO_PROGRAM_START()
 
     ios::ocstream::overwrite("prof.dat");
     ios::ocstream::overwrite("q.dat");
+    ios::ocstream::overwrite("grad.dat");
 
     // initialize
     for(size_t i=1; i<=N; ++i )
@@ -90,8 +91,11 @@ YOCTO_PROGRAM_START()
     const double dt  = 1e-3;
     const double Ddt = D * dt;
 
+    double t = 0;
+
     for(size_t iter=1;iter<=20000;++iter)
     {
+        t = iter * dt;
         const double R    = r[1];
         const double dR   = dt * dotR;
 
@@ -129,7 +133,7 @@ YOCTO_PROGRAM_START()
         // solve new concs
         M.solve(C,rhs);
 
-        // compute gradient
+
 
         // move grid
         for(size_t i=1;i<=N;++i)
@@ -137,17 +141,25 @@ YOCTO_PROGRAM_START()
             r[i] += dR * ipower(R/r[i],alpha);
         }
 
-        if( 0 == (iter%1000) )
+        // compute gradient
+        const double drC = D*(C[2]-C[1])/(r[2]-r[1]);
+
+        if( 0 == (iter%100) )
         {
+            {
+                ios::acstream fp("grad.dat");
+                fp("%g %g\n", t, drC);
+            }
+            
             save_q(r,C);
         }
     }
-
+    
     save_profile(r,C);
-
-
-
-
+    
+    
+    
+    
 }
 YOCTO_PROGRAM_END()
 

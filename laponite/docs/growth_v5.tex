@@ -22,7 +22,7 @@ gaseous mol $N$.
 We want to find the growth rate under the assumption that the bubble is formed with dissolved gaz
 and that the gas must diffuse through the expanding fluid.\\
 Since this can be in 2 or 3 dimensions, we give the bubble a radius $R$.
-We set $\alpha=1$ for 2D (and the bubble has a height $e$), and $\alpha=3$ for $3D$.
+We set $\alpha=1$ for 2D (and the bubble has a height $e$), and $\alpha=2$ for $3D$.
 
 \subsection{Velocity fluid}
 The incompressible fluid velocity is assume to be
@@ -32,21 +32,58 @@ The incompressible fluid velocity is assume to be
 
 \subsection{Matter exchange}
 In the following, the $\star$ exponent is for the contact value, at $r=R(t)$.\\
+
+\subsubsection{In 2D}
 In 2D
 \begin{equation}
 	\left[\partial_t N\right]_{2d} = 2\pi e R  D \partial_r C^\star.
 \end{equation}
-In 3D
+giving,  with $\rho=\dfrac{\mathcal{R}T}{k_H}$,
+\begin{equation}
+	\partial_t\left( C^\star \pi e R^2\right) = \rho 2\pi e R  D \partial_r C^\star.
+\end{equation}
+then
+\begin{equation}
+	\dot{C}^\star R + 2 C^\star \dot{R}  = 2\rho  D \partial_r C^\star.
+\end{equation}
+and finally
+\begin{equation}
+	\dot{R} = \dfrac{ 2\rho  D \partial_r C^\star - \dot{C}^\star R }{2C^\star}
+\end{equation}
+
+\subsubsection{In 3D}
 \begin{equation}
 	\left[\partial_t N\right]_{3d} =  4\pi R^2 D \partial_r C^\star.
 \end{equation}
+Then
+\begin{equation}
+	\partial_t\left( C^\star \dfrac{4\pi}{3} R^3 \right) = \rho   4\pi R^2 D \partial_r C^\star
+\end{equation}
+or
+\begin{equation}
+	\partial_t\left( C^\star R^3\right) = 3\rho R^2 D \partial_r C^\star
+\end{equation}
+and
+\begin{equation}
+	\dot{C}^\star R + 3 C^\star \dot{R}  = 3\rho  D \partial_r C^\star
+\end{equation}
+and finally
+\begin{equation}
+	\dot{R} = \dfrac{3\rho  D \partial_r C^\star - R\dot{C}^\star}{3C^\star}
+\end{equation}
 
+\subsubsection{Compact Form}
+\begin{equation}
+	\dot{R} = \dfrac{(\alpha+1)\rho  D \partial_r C^\star - R\dot{C}^\star}{(\alpha+1)C^\star}
+\end{equation}
 
 \subsection{Matter transport}
 The incompressible diffusion equation is
 \begin{equation}
 	\partial_t C + \dot{R} \left(\dfrac{R}{r}\right)^\alpha  \partial_r C = D \left( \partial_{rr} C + \dfrac{\alpha}{r} \partial_r C \right) = D \, \dfrac{1}{r^\alpha} \partial_r \left(r^\alpha\partial_r C\right)
 \end{equation}
+
+
 
 \section{Matter Intake}
 \subsection{Generic case}
