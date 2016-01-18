@@ -155,6 +155,45 @@ and
 \begin{equation}
 \dot{\tau} = \rho \dfrac{\delta C}{C^\star} Q'^\star - \dfrac{2}{1+\alpha} \dfrac{\dot{C}^\star}{C^\star} \tau
 \end{equation}
+
+\subsection{Some tolutions}
+
+\subsubsection{Constant inside conc}
+We get
+\begin{equation}
+ 0 = Q'' + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s-\dfrac{1}{s^\alpha}\right]\right) Q'
+\end{equation}
+Using $Y=Q'$,
+\begin{equation}
+	0 = Y' + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s-\dfrac{1}{s^\alpha}\right]\right) Y
+\end{equation}
+so that
+\begin{equation}
+	\log Y - \log Y^\star = -\int_{1}^s \left( \dfrac{\alpha}{u} + \dot{\tau} \left[u-\dfrac{1}{u^\alpha}\right]\right) \, \mathrm{d}u
+\end{equation}
+We get
+\begin{equation}
+\left\lbrace
+\begin{array}{rclcl}
+\log Y_1 - \log Y^\star_1 & = &\int_{1}^s \left( \dfrac{\dot{\tau}-1}{u} - \dot{\tau} u \right) \, \mathrm{d}u & = & (\dot{\tau}-1) \log s - \dfrac{\dot{\tau}}{2}(s^2-1)\\
+\\
+\log Y_2 - \log Y^\star_2 & = &\int_{1}^s \left( \dfrac{\dot{\tau}}{u^2} - \dfrac{2}{u} - \dot{\tau} u \right) \, \mathrm{d}u & = & \dot{\tau}\left(1-\dfrac{1}{s}\right)-2 \log s - \dfrac{\dot{\tau}}{2}(s^2-1)\\
+\end{array}
+\right.
+\end{equation}
+then
+\begin{equation}
+\left\lbrace
+\begin{array}{rcl}
+Y_1(s) & = & Y^\star_1 e^{\frac{\dot{\tau}}{2}} s^{(\dot{\tau}{-1})} e^{\frac{\dot{\tau}}{2}s^2}\\
+\\
+Y_2(s) & = & Y^\star_2 \dfrac{1}{s^2} e^{\frac{3\dot{\tau}}{2}} e^{-\frac{\dot{\tau}}{s}} e^{\frac{\dot{\tau}}{2}s^2}\\
+\end{array}
+\right.
+\end{equation}
+
+
+\subsubsection{Other?}
 We look for solution
 \begin{equation}
 	Q(s) = 1 - e^{-f(s)}
