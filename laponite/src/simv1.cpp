@@ -136,7 +136,7 @@ YOCTO_PROGRAM_START()
     GLS<double>::Samples samples(1);
     samples.append(s, Q, Qf);
 
-    const size_t nvar = 3;
+    const size_t nvar = 4;
     vector<double> aorg(nvar);
     vector<bool>   used(nvar,true);
     vector<double> aerr(nvar);
@@ -163,10 +163,12 @@ YOCTO_PROGRAM_START()
     const string q_name = "q" + suffix;
     const string j_name = "j" + suffix;
     const string f_name = "f" + suffix;
+    const string g_name = "g" + suffix;
     ios::ocstream::overwrite(p_name);
     ios::ocstream::overwrite(q_name);
     ios::ocstream::overwrite(j_name);
     ios::ocstream::overwrite(f_name);
+    ios::ocstream::overwrite(g_name);
 
 
     save_profile(p_name,r,C);
@@ -274,6 +276,15 @@ YOCTO_PROGRAM_START()
                 fp("\n");
             }
             save_q(q_name,s,Q,Qf);
+            {
+                ios::acstream fp(g_name);
+                for(size_t i=1;i<=N;++i)
+                {
+                    fp("%g %g\n", s[i], Q[i]);
+                }
+                fp("\n");
+            }
+
             save_profile(p_name,r,C);
             ETA(iter/double(nIter));
             const duration _left(ETA.time_left);
