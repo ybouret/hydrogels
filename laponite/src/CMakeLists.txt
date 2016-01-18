@@ -19,6 +19,6 @@ ADD_EXECUTABLE(extract extract.cpp)
 TARGET_LINK_YOCTO(extract mk)
 INSTALL( TARGETS extract RUNTIME DESTINATION bin )
 
-ADD_EXECUTABLE(simv1 simv1.cpp)
-TARGET_LINK_YOCTO(simv1 mk)
+ADD_EXECUTABLE(simv1 simv1.cpp param.lua)
+TARGET_LINK_YOCTO(simv1 mk lua++ lua)
 INSTALL( TARGETS simv1 RUNTIME DESTINATION bin )
