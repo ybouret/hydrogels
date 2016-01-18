@@ -74,7 +74,7 @@ and finally
 
 \subsubsection{Compact Form}
 \begin{equation}
-	\dot{R} = \dfrac{(\alpha+1)\rho  D \partial_r C^\star - R\dot{C}^\star}{(\alpha+1)C^\star} = \dfrac{\rho}{C^\star} D\partial_rC^\star - \dfrac{R\dot{C}^\star}{\alpha+1}
+	\dot{R} = \dfrac{(\alpha+1)\rho  D \partial_r C^\star - R\dot{C}^\star}{(\alpha+1)C^\star} = \dfrac{\rho}{C^\star} D\partial_rC^\star - \dfrac{R\dot{C}^\star}{\left(\alpha+1\right)C^\star}
 \end{equation}
 
 \subsection{Matter transport}
@@ -136,13 +136,25 @@ or
 \end{equation}
 and using the time
 \begin{equation}
-	\tau = \dfrac{A}{2\pi D}
+	\tau = \dfrac{A}{2\pi D} = \dfrac{R^2}{2D}, \;\; \dot{\tau} = \dfrac{\dot{A}}{2\pi D} = \dfrac{R\dot{R}}{D}
 \end{equation}
 we get
 \begin{equation}
 	2\dfrac{\dot{C}^\star}{\delta C} \left[1-Q\right] \tau = Q'' + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s-\dfrac{1}{s^\alpha}\right]\right) Q'
 \end{equation}
 
+Moreover, we have
+\begin{equation}
+	\partial_r C^\star = \dfrac{\delta C}{R} Q'^\star
+\end{equation}
+then
+\begin{equation}
+	R \dot{R} = \rho \dfrac{\delta C}{C^\star} D Q'^\star - \dfrac{R^2\dot{C}^\star}{\left(1+\alpha\right)C^\star}
+\end{equation}
+and
+\begin{equation}
+\dot{\tau} = \rho \dfrac{\delta C}{C^\star} Q'^\star - \dfrac{2}{1+\alpha} \dfrac{\dot{C}^\star}{C^\star} \tau
+\end{equation}
 
 \end{document}
 

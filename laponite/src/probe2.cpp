@@ -10,7 +10,8 @@
 using namespace yocto;
 using namespace math;
 
-static  double D      = 2.0e-8; //!< m^2/s
+static  double D      = 2.0e-9; //!< m^2/s
+#if 0
 static  double omega2 = 0.375;
 static  double phi2   = 1.525;
 static  double omega3 = 0.288;
@@ -28,6 +29,7 @@ double F3D(double dotlam,
 {
     return (dotlam + (2.0/3.0) * corlam) / (phi3*pow(dotlam,omega3));
 }
+#endif
 
 
 class Area
@@ -96,9 +98,9 @@ YOCTO_PROGRAM_START()
         vector<double> ipr(n);
         for(size_t i=1;i<=n;++i)
         {
-            pres[i] *= 100;
-            lnp[i]   = log( pres[i] );
-            ipr[i]   = 1.0 / pres[i];
+            pres[i] *= 100;            //-- pressure in pascal
+            lnp[i]   = log( pres[i] ); //-- log(pressure/pascal)
+            ipr[i]   = 1.0 / pres[i];  //-- Pa^(-1)
         }
 
 
@@ -197,77 +199,31 @@ YOCTO_PROGRAM_START()
             }
         }
 
+
         //______________________________________________________________________
         //
-        // Constructing curves
+        // Fitting curves
         //______________________________________________________________________
-        const double fac = numeric<double>::two_pi * D;
-        vector<double> lambda(n);
-        vector<double> dotlam(n);
-        vector<double> corlam(n);
+        vector<double> tau(n);
+        vector<double> dot_tau(n);
         vector<double> y2(n);
         vector<double> y3(n);
+        const double fac = numeric<double>::two_pi * D;
         for(size_t i=1;i<=n;++i)
         {
-            lambda[i] = area[i]/fac;
-            dotlam[i] = dot_area[i]/fac;
-            corlam[i] = dot_lnp[i] * lambda[i];
-            y2[i]     = F2D(dotlam[i],corlam[i]);
-            y3[i]     = F3D(dotlam[i],corlam[i]);
+            tau[i]     = area[i]/fac;
+            dot_tau[i] = dot_area[i]/fac;
+            y2[i]      = dot_tau[i]+ tau[i] * dot_lnp[i];
+            y3[i]      = dot_tau[i]+ (2.0/3.0) * tau[i] * dot_lnp[i];
         }
-
-        {
-            ios::wcstream fp("lam.dat");
-            for(size_t i=1;i<=n;++i)
-            {
-                fp("%g %g %g %g\n", tmx[i],y2[i], y3[i], ipr[i]);
-            }
-        }
-
-        //______________________________________________________________________
-        //
-        // Fitting...
-        //______________________________________________________________________
-        vector<double> p2(2), p3( p2.size() ), p2err( p2.size() ), p3err( p2.size() );
-        vector<double> y2f(n);
-        vector<double> y3f(n);
-
-        vector<bool> lused(p2.size(),true);
-
-        samples.release();
-        _GLS::Polynomial<double>::Start( samples.append(ipr,y2,y2f), p2);
-        samples.prepare(p2.size());
-        if( ! samples.fit_with(poly,p2,lused,p2err) )
-        {
-            throw exception("unexpected fit failure for 2D");
-        }
-
-        std::cerr << "Fit2D: " << std::endl;
-        GLS<double>::display(std::cerr, p2, p2err);
-
-
-        samples.release();
-        _GLS::Polynomial<double>::Start( samples.append(ipr,y3,y3f), p3);
-        samples.prepare(p3.size());
-        if( ! samples.fit_with(poly,p3,lused,p3err) )
-        {
-            throw exception("unexpected fit failure for 3D");
-        }
-
-        std::cerr << "Fit3D: " << std::endl;
-        GLS<double>::display(std::cerr, p3, p3err);
 
         {
             ios::wcstream fp("fit.dat");
             for(size_t i=1;i<=n;++i)
             {
-                fp("%g %g %g %g %g\n",ipr[i],y2[i],y2f[i],y3[i],y3f[i]);
+                fp("%g %g %g %g %g\n", ipr[i], y2[i], y3[i], tau[i], dot_tau[i]);
             }
         }
-
-
-
-
 
 
     }

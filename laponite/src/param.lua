@@ -1,9 +1,9 @@
 N=1000;
 
-alpha=1;
+alpha=1; -- dim-1
 
 function Cstar(t)
-return 0.5;
+return 0.9;
 end
 
 D = 2.0e-9; -- m^2/s
