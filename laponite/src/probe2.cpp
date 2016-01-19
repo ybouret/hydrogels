@@ -61,6 +61,7 @@ private:
 YOCTO_PROGRAM_START()
 {
 
+    ios::ocstream::overwrite("coef.dat");
 
     for(int argi=1;argi<argc;++argi)
     {
@@ -217,12 +218,54 @@ YOCTO_PROGRAM_START()
             y3[i]      = dot_tau[i]+ (2.0/3.0) * tau[i] * dot_lnp[i];
         }
 
+
+
+        vector<double> y2f(n);
+        vector<double> y3f(n);
+
+        const size_t   nf = 2;
+        vector<double> p2(nf), p2err(nf);
+        vector<double> p3(nf), p3err(nf);
+        vector<bool>   used(nf,true);
+
+        if(!samples.fit_with(poly, ipr, y2, y2f, p2, used, p2err))
+        {
+            throw exception("2D fit failure");
+        }
+        else
+        {
+            std::cerr << "2D:" << std::endl;
+            GLS<double>::display(std::cerr, p2, p2err);
+        }
+
+
+
+        if(!samples.fit_with(poly, ipr, y3, y3f, p3, used, p3err))
+        {
+            throw exception("3D fit failure");
+        }
+        else
+        {
+            std::cerr << "3D:" << std::endl;
+            GLS<double>::display(std::cerr, p3, p3err);
+        }
+        
+
+
+
+
         {
             ios::wcstream fp("fit.dat");
             for(size_t i=1;i<=n;++i)
             {
-                fp("%g %g %g %g %g\n", ipr[i], y2[i], y3[i], tau[i], dot_tau[i]);
+                fp("%g %g %g %g %g\n", ipr[i], y2[i], y3[i], y2f[i], y3f[i]);
             }
+        }
+
+        {
+            ios::acstream fp("coef.dat");
+            fp("#%s\n", filename.c_str());
+            fp("%d %g %g %g %g\n", argi, p2[2], p3[2], p2[1], p3[1]);
         }
 
 
