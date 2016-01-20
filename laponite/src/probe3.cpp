@@ -5,8 +5,9 @@
 #include "yocto/sequence/vector.hpp"
 #include "yocto/math/sig/smooth.hpp"
 #include "yocto/math/fit/glsf-spec.hpp"
-
-
+#include "yocto/math/fcn/composition.hpp"
+#include "yocto/math/point2d.hpp"
+#include "yocto/sort/unique.hpp"
 
 using namespace yocto;
 using namespace math;
@@ -40,9 +41,64 @@ private:
     YOCTO_DISABLE_COPY_AND_ASSIGN(Area);
 };
 
+typedef point2d<double> coord_t;
+static inline int compare_coord( const coord_t &lhs, const coord_t &rhs )
+{
+    return __compare<double>(lhs.x, rhs.x);
+}
+
 YOCTO_PROGRAM_START()
 {
 
+    //__________________________________________________________________________
+    //
+    //
+    // First Pass:: collecting all the pressure for the same experiment
+    //
+    //__________________________________________________________________________
+    vector<coord_t> coords;
+
+
+    for(int argi=1;argi<argc;++argi)
+    {
+
+        //______________________________________________________________________
+        //
+        // Load Data
+        //______________________________________________________________________
+        const string filename = argv[argi];
+        vector<double> tt, pp;
+        {
+            ios::icstream fp(filename);
+            data_set<double> ds;
+            ds.use(1, tt);  // seconds
+            ds.use(2, pp);  // mbar
+            ds.load(fp);
+        }
+        const size_t n = tt.size();
+        std::cerr << "#data=" << n << std::endl;
+        for(size_t i=1;i<=n;++i)
+        {
+            coord_t c(tt[i],pp[i]*100);
+            coords.push_back(c);
+        }
+    }
+
+    std::cerr << "unique of " << coords.size() << std::endl;
+    unique(coords,compare_coord);
+    const size_t np = coords.size();
+    std::cerr << "np=" << np<< std::endl;
+
+    {
+        ios::wcstream fp("allpress.dat");
+        for(size_t i=1;i<=np;++i)
+        {
+            fp("%g %g\n",coords[i].x, coords[i].y);
+        }
+    }
+
+
+#if 0
     ios::ocstream::overwrite("coef.dat");
 
     // for fit
@@ -124,7 +180,7 @@ YOCTO_PROGRAM_START()
         vector<double> dot_ln_p(n);
 
         GLS<double>::Function     Poly = _GLS::Create<double,_GLS::Polynomial>();
-        GLS<double>::Proxy        PolyPx(Poly,min_of<size_t>(n-1,3));
+        GLS<double>::Proxy        PolyPx(Poly,min_of<size_t>(n-1,2));
         numeric<double>::function PolyFn( &PolyPx, &GLS<double>::Proxy::Compute);
         array<double>          &pcoef = PolyPx.a;
         vector<bool>            pused(pcoef.size(),true);
@@ -137,10 +193,11 @@ YOCTO_PROGRAM_START()
         std::cerr << "invp:" << std::endl;
         GLS<double>::display(std::cerr, pcoef, pcerr);
 
+        numeric<double>::function lnInvP = composition<double>::build(log,PolyFn);
         for(size_t i=1;i<=n;++i)
         {
             fit_invp[i] *= iscale;
-            dot_ln_p[i]  = - samples.diff(PolyFn,red_time[i])/PolyFn(red_time[i]) / tscale;
+            dot_ln_p[i]  = - samples.diff(lnInvP,red_time[i]) / tscale;
         }
 
         {
@@ -150,13 +207,12 @@ YOCTO_PROGRAM_START()
             ios::wcstream fp(outname);
             for(size_t i=1;i<=n;++i)
             {
-                fp("%g %g %g %g\n", tmx[i], invp[i], fit_invp[i], dot_ln_p[i]);
+                fp("%g %g %g %g %g %g\n", tmx[i], invp[i], fit_invp[i], dot_ln_p[i], red_time[i], exp( lnInvP(red_time[i]) )*iscale );
             }
 
         }
 
 
-#if 0
         //______________________________________________________________________
         //
         // smooth...
@@ -177,10 +233,7 @@ YOCTO_PROGRAM_START()
                 fp("%g %g %g %g\n", tmx[i], log(pres[i]), lnpr_f[i]*pscale, dot_lnp[i]);
             }
         }
-#endif
 
-
-#if 0
         //______________________________________________________________________
         //
         // Fitting lnpr then deducing d(log(p))/dt
@@ -214,10 +267,7 @@ YOCTO_PROGRAM_START()
                 fp("%g %g %g %g\n", tmx[i], log(pres[i]), lnpr_f[i]*pscale, dot_lnp[i]);
             }
         }
-#endif
 
-
-#if 0
         //______________________________________________________________________
         //
         // Fitting log(p) then getting dp/p
@@ -398,8 +448,9 @@ YOCTO_PROGRAM_START()
             fp("%d %g %g %g %g\n", argi, p2[2], p3[2], p2[1], p3[1]);
         }
         
-#endif
-        
+
     }
+#endif
+
 }
 YOCTO_PROGRAM_END()
