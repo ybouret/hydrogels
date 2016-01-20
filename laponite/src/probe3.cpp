@@ -47,8 +47,15 @@ static inline int compare_coord( const coord_t &lhs, const coord_t &rhs )
     return __compare<double>(lhs.x, rhs.x);
 }
 
+
+static double tscale = 0;
+static double tstart = 0;
+
+
 YOCTO_PROGRAM_START()
 {
+
+    GLS<double>::Samples samples(1);
 
     //__________________________________________________________________________
     //
@@ -85,16 +92,81 @@ YOCTO_PROGRAM_START()
     }
 
     std::cerr << "unique of " << coords.size() << std::endl;
+    quicksort(coords,compare_coord);
     unique(coords,compare_coord);
     const size_t np = coords.size();
     std::cerr << "np=" << np<< std::endl;
+
+    //__________________________________________________________________________
+    //
+    //
+    // Building the d lnp / dt function
+    //
+    //__________________________________________________________________________
+    vector<double> all_time(np);
+    vector<double> all_pres(np);
+    for(size_t i=1;i<=np;++i)
+    {
+        all_time[i] = coords[i].x;
+        all_pres[i] = coords[i].y;
+    }
+    
+
+
+
+    const double   pscale = tao::RMS(all_pres);
+    tstart = all_time[1];
+    tscale = all_time[np]-tstart;
+    vector<double> red_all_time(np);
+    vector<double> red_all_ln_p(np);
+    vector<double> fit_all_ln_p(np);
+
+    for(size_t i=1;i<=np;++i)
+    {
+        red_all_time[i] = (all_time[i]-tstart)/tscale;
+        red_all_ln_p[i] = log( all_pres[i] / pscale );
+    }
 
     {
         ios::wcstream fp("allpress.dat");
         for(size_t i=1;i<=np;++i)
         {
-            fp("%g %g\n",coords[i].x, coords[i].y);
+            fp("%g %g %g %g\n",all_time[i],all_pres[i],red_all_time[i],red_all_ln_p[i]);
         }
+    }
+
+    GLS<double>::Function     Poly = _GLS::Create<double,_GLS::Polynomial>();
+    GLS<double>::Proxy        PolyPx(Poly,min_of<size_t>(np-1,4));
+    numeric<double>::function PolyFn( &PolyPx, &GLS<double>::Proxy::Compute);
+    array<double>            &pcoef = PolyPx.a;
+    vector<bool>              pused(pcoef.size(),true);
+    vector<double>            pcerr(pcoef.size());
+    if( ! samples.fit_with(PolyPx.F, red_all_time, red_all_ln_p,  fit_all_ln_p, pcoef, pused, pcerr) )
+    {
+        throw exception("cannot fit log(p)");
+    }
+    std::cerr << "log(pressure):" << std::endl;
+    GLS<double>::display(std::cerr, pcoef, pcerr);
+
+
+    {
+        ios::wcstream fp("fitpress.dat");
+        for(size_t i=1;i<=np;++i)
+        {
+            fp("%g %g %g %g\n",all_time[i],red_all_ln_p[i],fit_all_ln_p[i], samples.diff(PolyFn,red_all_time[i])/tscale );
+        }
+
+    }
+
+    {
+        ios::wcstream fp("approx.dat");
+        for(size_t i=2;i<np;++i)
+        {
+            const double dt   = all_time[i+1]-all_time[i-1];
+            const double dlnp = log(all_pres[i+1]) - log(all_pres[i-1]);
+            fp("%g %g\n",all_time[i],dlnp/dt);
+        }
+
     }
 
 
