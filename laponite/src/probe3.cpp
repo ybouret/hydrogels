@@ -7,6 +7,7 @@
 #include "yocto/math/fit/glsf-spec.hpp"
 
 
+
 using namespace yocto;
 using namespace math;
 
@@ -43,7 +44,19 @@ YOCTO_PROGRAM_START()
 {
 
     ios::ocstream::overwrite("coef.dat");
+
+    // for fit
     GLS<double>::Samples    samples(1);
+
+    // for smoothing
+    smooth<double>          sm;
+    sm.degree      = 3;
+    sm.upper_range = 0.5;
+    sm.lower_range = 0.5;
+
+    // for expansion
+    expand<double>          xp(expand_odd);
+
 
     for(int argi=1;argi<argc;++argi)
     {
@@ -77,48 +90,93 @@ YOCTO_PROGRAM_START()
         //
         // preparing reduced data for fitting
         //______________________________________________________________________
-        vector<double> tred(n);   //!< reduced time
-
-        vector<double> lnpr(n);   //!< reduced ln(p)
-        vector<double> lnpr_f(n); //!< fitterd lnp
-        vector<double> dot_lnp(n);   //!< true d log(p) / dt
-        vector<double> ipr(n);       //!< 1/pres
-
-        vector<double> ared(n);   //!< reduced area
-        vector<double> ared_f(n); //!< fitted reduced area
-        vector<double> dot_area(n);  //!< true d area / dt
-
+        vector<double> red_time(n);
+        vector<double> red_area(n);
+        vector<double> invp(n);
+        vector<double> red_invp(n);
 
         for(size_t i=1;i<=n;++i)
         {
             pres[i] *= 100;             //-- pressure in pascal
-            lnpr[i]   = log( pres[i] ); //-- log(pressure/pascal)
-            ipr[i]   = 1.0 / pres[i];   //-- Pa^(-1)
+            invp[i]  = 1.0 / pres[i];   //-- Pa^(-1)
         }
 
         const double tscale = tmx[n] - tmx[1];
-        const double pscale = tao::RMS(lnpr); //-- WARNING, for lnp
         const double ascale = tao::RMS(area);
+        const double iscale = tao::RMS(invp);
 
         std::cerr << "tscale=" << tscale << std::endl;
         std::cerr << "ascale=" << ascale << std::endl;
-        std::cerr << "pscale=" << pscale << std::endl;
+        std::cerr << "iscale=" << iscale << std::endl;
 
         for(size_t i=1;i<=n;++i)
         {
-            ared[i] = area[i] / ascale;
-            lnpr[i] = lnpr[i] / pscale;
-            tred[i] = (tmx[i]-tmx[1]) / tscale;
+            red_area[i] = area[i] / ascale;
+            red_time[i] = (tmx[i]-tmx[1]) / tscale;
+            red_invp[i] = invp[i] / iscale;
+        }
+
+        //______________________________________________________________________
+        //
+        // fitting invp
+        //______________________________________________________________________
+        vector<double> fit_invp(n);
+
+
+        GLS<double>::Function     Poly = _GLS::Create<double,_GLS::Polynomial>();
+        GLS<double>::Proxy        PolyPx(Poly,min_of<size_t>(n-1,3));
+        numeric<double>::function PolyFn( &PolyPx, &GLS<double>::Proxy::Compute);
+        array<double>          &pcoef = PolyPx.a;
+        vector<bool>            pused(pcoef.size(),true);
+        vector<double>          pcerr(pcoef.size());
+        if( ! samples.fit_with(PolyPx.F, red_time, red_invp, fit_invp, pcoef, pused, pcerr) )
+        {
+            throw exception("cannot fit invp for %s", filename.c_str() );
+        }
+
+        std::cerr << "invp:" << std::endl;
+        GLS<double>::display(std::cerr, pcoef, pcerr);
+
+        for(size_t i=1;i<=n;++i)
+        {
+            fit_invp[i] *= iscale;
         }
 
         {
-            ios::wcstream fp("red.dat");
+            string outname = rootname;
+            vfs::change_extension(outname, "pres.fit.dat");
+            std::cerr << "outname=" << outname << std::endl;
+            ios::wcstream fp(outname);
             for(size_t i=1;i<=n;++i)
             {
-                fp("%g %g %g %g %g %g\n", tmx[i], tred[i], area[i], ared[i], log(pres[i]), lnpr[i]);
+                fp("%g %g %g\n", tmx[i], invp[i], fit_invp[i]);
             }
 
         }
+
+
+#if 0
+        //______________________________________________________________________
+        //
+        // smooth...
+        //______________________________________________________________________
+        sm(xp, lnpr_f, tred, lnpr, dot_lnp);
+        for(size_t i=1;i<=n;++i)
+        {
+            dot_lnp[i] = pscale * dot_lnp[i] / tscale;
+        }
+
+        {
+            string outname = rootname;
+            vfs::change_extension(outname, "pres.fit.dat");
+            std::cerr << "outname=" << outname << std::endl;
+            ios::wcstream fp(outname);
+            for(size_t i=1;i<=n;++i)
+            {
+                fp("%g %g %g %g\n", tmx[i], log(pres[i]), lnpr_f[i]*pscale, dot_lnp[i]);
+            }
+        }
+#endif
 
 
 #if 0
@@ -156,7 +214,7 @@ YOCTO_PROGRAM_START()
             }
         }
 #endif
-        
+
 
 #if 0
         //______________________________________________________________________
