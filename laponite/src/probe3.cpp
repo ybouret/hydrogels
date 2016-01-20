@@ -12,8 +12,13 @@
 using namespace yocto;
 using namespace math;
 
-//static  double D      = 2.0e-9; //!< m^2/s
+static  double D      = 2.2e-9; //!< m^2/s
 
+const double phi2   = 1.525;
+const double omega2 = 0.375;
+
+const double phi3   = 2.308;
+const double omega3 = 0.288;
 
 class Area
 {
@@ -277,6 +282,7 @@ YOCTO_PROGRAM_START()
             fp2("\n");
         }
 
+#if 0
         {
             const size_t NX = 1000;
             string outname = rootname;
@@ -289,6 +295,7 @@ YOCTO_PROGRAM_START()
                 fp("%g %g\n",t,ascale*AreaFn(tred));
             }
         }
+#endif
 
         //______________________________________________________________________
         //
@@ -301,13 +308,20 @@ YOCTO_PROGRAM_START()
         vector<double> y3(n);
         vector<double> dlnp(n);
         vector<double> invp(n);
+        const double fac = numeric<double>::two_pi * D;
         for(size_t i=1;i<=n;++i)
         {
             const double tred = (tmx[i] - tstart)/tscale;
             invp[i] = 1.0/pres[i];
             dlnp[i] = samples.diff(PolyFn,tred)/tscale;
-            y2[i]   = dot_area[i] + area[i] * dlnp[i];
-            y3[i]   = dot_area[i] + (2.0/3.0) * area[i] * dlnp[i];
+            const double tau     = area[i]     / fac;
+            const double dot_tau = dot_area[i] / fac;
+
+            y2[i]   = (dot_tau +             tau * dlnp[i]);
+            y2[i]  /= phi2*pow(dot_tau,omega2);
+
+            y3[i]   = (dot_tau + (2.0/3.0) * tau * dlnp[i]);
+            y3[i]  /= phi3*pow(dot_tau,omega3);
 
         }
 

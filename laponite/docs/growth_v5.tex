@@ -213,6 +213,44 @@ leading to
 	2\tau \dfrac{\dot{C}^\star}{\delta C} = f''(s) - f'^2(s) + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s-\dfrac{1}{s^\alpha}\right]\right) f'(s)
 \end{equation}
 
+\section{Try Again}
+
+The incompressible diffusion equation is
+\begin{equation}
+	\partial_t C + \dot{R} \left(\dfrac{R}{r}\right)^\alpha  \partial_r C = D \left( \partial_{rr} C + \dfrac{\alpha}{r} \partial_r C \right) = D \, \dfrac{1}{r^\alpha} \partial_r \left(r^\alpha\partial_r C\right)
+\end{equation}
+and
+with 
+\begin{equation}
+	s = r/R(t)
+\end{equation}
+and
+\begin{equation}
+	C(r,t) = C^\star + \left[C_\infty-C^\star\right] Q(s,t) = C^\star + \delta C Q(s,t)
+\end{equation}
+we get
+\begin{equation}
+	\partial_r C = \dfrac{\delta C}{R} \partial_s Q, \; \partial_{rr} C = \dfrac{\delta C}{R^2} \partial_s Q
+\end{equation}
+and
+\begin{equation}
+	\partial_t C = \dot{C}^\star \left[1-Q\right] + \delta C \left[\partial_t Q - s \dfrac{\dot{R}}{R} \partial_s Q \right]
+\end{equation}
+We get
+\begin{equation}
+	\dot{C}^\star \left[1-Q\right] + \delta C \left[\partial_t Q - s \dfrac{\dot{R}}{R} \partial_s Q \right] + \dfrac{\dot{R}}{R} \dfrac{1}{s^\alpha} \delta C \partial_s Q 
+	= \dfrac{D \delta C}{R^2} \left( \partial_{ss} Q + \dfrac{\alpha}{s} \partial_s Q \right)
+\end{equation}
+and
+\begin{equation}
+  \dfrac{R^2\dot{C}^\star}{D\delta C}\left[1-Q\right] + \dfrac{R^2}{D} \partial_t Q + \dfrac{R\dot{R}}{D} \left(\dfrac{1}{s^\alpha}-s\right) \partial_s Q =   \partial_{ss} Q + \dfrac{\alpha}{s} \partial_s Q
+\end{equation}
+then
+\begin{equation}
+	2 \tau \left( \partial_t Q + \dfrac{\dot{C}^\star}{\delta C} \left[1-Q\right] \right) =
+	 \partial_{ss} Q + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s - \dfrac{1}{s^\alpha} \right] \right) \partial_s Q
+\end{equation}
+
 \end{document}
 
 
