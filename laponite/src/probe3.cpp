@@ -43,6 +43,7 @@ YOCTO_PROGRAM_START()
 {
 
     ios::ocstream::overwrite("coef.dat");
+    GLS<double>::Samples    samples(1);
 
     for(int argi=1;argi<argc;++argi)
     {
@@ -52,6 +53,8 @@ YOCTO_PROGRAM_START()
         // Load Data
         //______________________________________________________________________
         const string filename = argv[argi];
+        const string rootname = vfs::get_base_name(filename);
+        std::cerr << "rootname=" << rootname << std::endl;
         vector<double> tmx, pres, area;
 
         {
@@ -75,9 +78,85 @@ YOCTO_PROGRAM_START()
         // preparing reduced data for fitting
         //______________________________________________________________________
         vector<double> tred(n);   //!< reduced time
+
         vector<double> lnpr(n);   //!< reduced ln(p)
         vector<double> lnpr_f(n); //!< fitterd lnp
+        vector<double> dot_lnp(n);   //!< true d log(p) / dt
+        vector<double> ipr(n);       //!< 1/pres
 
+        vector<double> ared(n);   //!< reduced area
+        vector<double> ared_f(n); //!< fitted reduced area
+        vector<double> dot_area(n);  //!< true d area / dt
+
+
+        for(size_t i=1;i<=n;++i)
+        {
+            pres[i] *= 100;             //-- pressure in pascal
+            lnpr[i]   = log( pres[i] ); //-- log(pressure/pascal)
+            ipr[i]   = 1.0 / pres[i];   //-- Pa^(-1)
+        }
+
+        const double tscale = tmx[n] - tmx[1];
+        const double pscale = tao::RMS(lnpr); //-- WARNING, for lnp
+        const double ascale = tao::RMS(area);
+
+        std::cerr << "tscale=" << tscale << std::endl;
+        std::cerr << "ascale=" << ascale << std::endl;
+        std::cerr << "pscale=" << pscale << std::endl;
+
+        for(size_t i=1;i<=n;++i)
+        {
+            ared[i] = area[i] / ascale;
+            lnpr[i] = lnpr[i] / pscale;
+            tred[i] = (tmx[i]-tmx[1]) / tscale;
+        }
+
+        {
+            ios::wcstream fp("red.dat");
+            for(size_t i=1;i<=n;++i)
+            {
+                fp("%g %g %g %g %g %g\n", tmx[i], tred[i], area[i], ared[i], log(pres[i]), lnpr[i]);
+            }
+
+        }
+
+
+#if 0
+        //______________________________________________________________________
+        //
+        // Fitting lnpr then deducing d(log(p))/dt
+        //______________________________________________________________________
+        GLS<double>::Function     Poly = _GLS::Create<double,_GLS::Polynomial>();
+        GLS<double>::Proxy        PolyPx(Poly,min_of<size_t>(n-1,3));
+        numeric<double>::function PolyFn( &PolyPx, &GLS<double>::Proxy::Compute);
+        array<double>          &pcoef = PolyPx.a;
+        vector<bool>            pused(pcoef.size(),true);
+        vector<double>          pcerr(pcoef.size());
+        if( ! samples.fit_with(PolyPx.F, tred, lnpr, lnpr_f, pcoef, pused, pcerr) )
+        {
+            throw exception("cannot with ln(pressure) for %s", filename.c_str() );
+        }
+
+        std::cerr << "reduced ln(pressure):" << std::endl;
+        GLS<double>::display(std::cerr, pcoef, pcerr);
+
+        for(size_t i=1;i<=n;++i)
+        {
+            dot_lnp[i] = pscale * samples.diff(PolyFn,tred[i])/tscale;
+        }
+
+        {
+            string outname = rootname;
+            vfs::change_extension(outname, "pres.fit.dat");
+            std::cerr << "outname=" << outname << std::endl;
+            ios::wcstream fp(outname);
+            for(size_t i=1;i<=n;++i)
+            {
+                fp("%g %g %g %g\n", tmx[i], log(pres[i]), lnpr_f[i]*pscale, dot_lnp[i]);
+            }
+        }
+#endif
+        
 
 #if 0
         //______________________________________________________________________
@@ -241,11 +320,11 @@ YOCTO_PROGRAM_START()
             std::cerr << "3D:" << std::endl;
             GLS<double>::display(std::cerr, p3, p3err);
         }
+
         
-
-
-
-
+        
+        
+        
         {
             ios::wcstream fp("fit.dat");
             for(size_t i=1;i<=n;++i)
@@ -253,15 +332,15 @@ YOCTO_PROGRAM_START()
                 fp("%g %g %g %g %g\n", ipr[i], y2[i], y3[i], y2f[i], y3f[i]);
             }
         }
-
+        
         {
             ios::acstream fp("coef.dat");
             fp("#%s\n", filename.c_str());
             fp("%d %g %g %g %g\n", argi, p2[2], p3[2], p2[1], p3[1]);
         }
-
+        
 #endif
-
+        
     }
 }
 YOCTO_PROGRAM_END()
