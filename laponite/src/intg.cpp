@@ -25,8 +25,8 @@ YOCTO_PROGRAM_START()
         ios::wcstream fp("i1.dat");
         for(double a=0.01;a<=8;a+=0.01)
         {
-            const double lndq = logInvI1(a);
-            fp("%15g %15g %15g %15g\n",log(a),lndq,a,exp(lndq));
+            const double lnY1 = logInvI1(a);
+            fp("%15g %15g %15g %15g\n",log(a),lnY1,a,exp(lnY1));
         }
     }
 }

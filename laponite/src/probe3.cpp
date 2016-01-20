@@ -97,6 +97,11 @@ YOCTO_PROGRAM_START()
     const size_t np = coords.size();
     std::cerr << "np=" << np<< std::endl;
 
+    if(np<=3)
+    {
+        throw exception("Not Enough points...");
+    }
+
     //__________________________________________________________________________
     //
     //
