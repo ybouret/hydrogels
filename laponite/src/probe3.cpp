@@ -121,7 +121,7 @@ YOCTO_PROGRAM_START()
         // fitting invp
         //______________________________________________________________________
         vector<double> fit_invp(n);
-
+        vector<double> dot_ln_p(n);
 
         GLS<double>::Function     Poly = _GLS::Create<double,_GLS::Polynomial>();
         GLS<double>::Proxy        PolyPx(Poly,min_of<size_t>(n-1,3));
@@ -140,6 +140,7 @@ YOCTO_PROGRAM_START()
         for(size_t i=1;i<=n;++i)
         {
             fit_invp[i] *= iscale;
+            dot_ln_p[i]  = - samples.diff(PolyFn,red_time[i])/PolyFn(red_time[i]) / tscale;
         }
 
         {
@@ -149,7 +150,7 @@ YOCTO_PROGRAM_START()
             ios::wcstream fp(outname);
             for(size_t i=1;i<=n;++i)
             {
-                fp("%g %g %g\n", tmx[i], invp[i], fit_invp[i]);
+                fp("%g %g %g %g\n", tmx[i], invp[i], fit_invp[i], dot_ln_p[i]);
             }
 
         }
