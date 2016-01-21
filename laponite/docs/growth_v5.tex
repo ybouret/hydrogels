@@ -156,7 +156,7 @@ and
 \dot{\tau} = \rho \dfrac{\delta C}{C^\star} Q'^\star - \dfrac{2}{1+\alpha} \dfrac{\dot{C}^\star}{C^\star} \tau
 \end{equation}
 
-\subsection{Some tolutions}
+\subsection{Some solutions}
 
 \subsubsection{Constant inside conc}
 We get
@@ -215,6 +215,7 @@ leading to
 
 \section{Try Again}
 
+\subsection{Equation and rescaling}
 The incompressible diffusion equation is
 \begin{equation}
 	\partial_t C + \dot{R} \left(\dfrac{R}{r}\right)^\alpha  \partial_r C = D \left( \partial_{rr} C + \dfrac{\alpha}{r} \partial_r C \right) = D \, \dfrac{1}{r^\alpha} \partial_r \left(r^\alpha\partial_r C\right)
@@ -249,6 +250,98 @@ then
 \begin{equation}
 	2 \tau \left( \partial_t Q + \dfrac{\dot{C}^\star}{\delta C} \left[1-Q\right] \right) =
 	 \partial_{ss} Q + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s - \dfrac{1}{s^\alpha} \right] \right) \partial_s Q
+\end{equation}
+
+\subsection{Exponential Form}
+We may look a solution like
+\begin{equation}
+	Q(s,t) = 1 - e^{-\Xi(s,t)}
+\end{equation}
+and we get, using
+$$
+	\Omega(t) = \dfrac{\dot{C}^\star}{\delta C}
+$$
+\begin{equation}
+	2\tau \left( \partial_t \Xi + \Omega \right) = \partial_{ss} \Xi - \left(\partial_s \Xi\right)^2 + \underbrace{\left( \dfrac{\alpha}{s} + \dot{\tau} \left[s - \dfrac{1}{s^\alpha} \right] \right)}_{-\lambda(s,t)} \partial_s \Xi 
+\end{equation}
+
+\subsection{Quasi-stat}
+With $ \partial_t \Xi \simeq 0$, $\dot{\tau}$ approximately constant, and $Y=\partial_s \Xi$, we get
+\begin{equation}
+	2\tau\Omega = Y' - Y^2 - \lambda(s) Y 
+\end{equation} 
+which is a kind of Ricatti equation.
+
+\subsubsection{Kernel}
+We solve the kernel equation
+\begin{equation}
+	Y'_0 = Y^2_0 + \lambda(s)Y_0
+\end{equation}
+using 
+$$
+	W = 1/Y_0
+$$
+so that
+\begin{equation}
+	-\dfrac{W'}{W^2} = \dfrac{1}{W^2} + \dfrac{\lambda(s)}{W}
+\end{equation}
+or
+\begin{equation}
+	W' = -\lambda(s) W + 1
+\end{equation}
+We define
+\begin{equation}
+	\Lambda(s) = \int_{1}^s \lambda(u) \, \mathrm{d}u
+\end{equation}
+and get
+\begin{equation}
+	W(s) = \left\lbrack W^\star - \int_1^s e^{\Lambda(u)} \, \mathrm{d} u \right\rbrack e^{-\Lambda(s)}
+\end{equation}
+or
+\begin{equation}
+	Y_0(s) = \partial_s \Xi = \dfrac{e^{\Lambda(s)}}{ \frac{1}{Y_0^\star} - \int_1^s e^{\Lambda(u)} \, \mathrm{d} u }
+\end{equation}
+which imposes
+\begin{equation}
+	Y_0^\star = \left[ 
+	\int_1^{+\infty} e^{\Lambda(u)} \, \mathrm{d} u 
+	\right]^{-1}
+\end{equation}
+
+We have
+\begin{equation}
+\left\lbrace
+\begin{array}{rclcl}
+\Lambda_1(s) & = &\int_{1}^s \left( \dfrac{\dot{\tau}-1}{u} - \dot{\tau} u \right) \, \mathrm{d}u & = & (\dot{\tau}-1) \log s - \dfrac{\dot{\tau}}{2}(s^2-1)\\
+\\
+\Lambda_2(s) & = &\int_{1}^s \left( \dfrac{\dot{\tau}}{u^2} - \dfrac{2}{u} - \dot{\tau} u \right) \, \mathrm{d}u & = & \dot{\tau}\left(1-\dfrac{1}{s}\right)-2 \log s - \dfrac{\dot{\tau}}{2}(s^2-1)\\
+\end{array}
+\right.
+\end{equation}
+then
+\begin{equation}
+\left\lbrace
+\begin{array}{rcl}
+e^{\Lambda_1(s)} & = & e^{\frac{\dot{\tau}}{2}}s^{\left(\dot{\tau}-1\right)} e^{-\frac{\dot{\tau}}{2}s^2 }\\
+\\
+e^{\Lambda_2(s)} & = & \dfrac{1}{s^2}e^{\frac{3\dot{\tau}}{2}} e^{-\frac{\dot{\tau}}{s}} e^{-\frac{\dot{\tau}}{2}s^2 }\\
+\end{array}
+\right.
+\end{equation}
+
+\subsubsection{First Order}
+
+We write $Y=Y_0+Y_1$ and we obtain
+\begin{equation}
+	Y_1' = \Psi + \left[ 2 Y_0(s) + \lambda(s) \right] Y_1(s), \;\; \Psi = 2 \tau \Omega
+\end{equation}
+We define
+\begin{equation}
+	\Upsilon(s) = \int_1^s 2Y_0(u) \mathrm{d} u
+\end{equation}
+we get
+\begin{equation}
+	Y_1 = \left\lbrack b_0 + \int_1^s e^{-\Upsilon(u)} e^{-\Lambda(u)} \, \mathrm{d} u  \right\rbrack e^{\Upsilon(s)} e^{\Lambda(s)}
 \end{equation}
 
 \end{document}
