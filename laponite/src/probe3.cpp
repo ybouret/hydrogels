@@ -277,7 +277,7 @@ YOCTO_PROGRAM_START()
             for(size_t i=1;i<=n;++i)
             {
                 fp("%g %g %g %g\n", tmx[i], area[i], fit_area[i], dot_area[i]);
-                fp2("%g %g\n", tmx[i], dot_area[i]);
+                fp2("%g %g %g\n", tmx[i], dot_area[i], dot_area[i]/fit_area[i]);
             }
             fp2("\n");
         }
