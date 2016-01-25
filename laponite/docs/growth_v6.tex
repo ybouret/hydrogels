@@ -87,326 +87,44 @@ We use the variable change
 \begin{equation}
 	s = r / R(t)
 \end{equation}
-and
+and we assume that
 \begin{equation}
-	C(r,t) = C_\infty(t) \left[1-Q(s,t)\right]
-\end{equation}
-so that
-\begin{equation}
-	\partial_t C = \dot{C}_\infty \left[1-Q\right] - C_\infty \left[ -\dfrac{r\dot{R}}{R^2} \partial_s Q \right]
-\end{equation}
-
-\begin{equation}
-	\partial_r C = - C_\infty \dfrac{1}{R} \partial_s Q
-\end{equation}
-
-\begin{equation}
-	\partial_{rr} C = - C_\infty \dfrac{1}{R^2} \partial_{ss} Q
-\end{equation}
-
-we get
-\begin{equation}
-	 \dot{C}_\infty \left[1-Q\right] - C_\infty \left[ -\dfrac{r\dot{R}}{R^2} \partial_s Q \right] 
-	 - \dot{R} \left(\dfrac{R}{r}\right)^\alpha  C_\infty \dfrac{1}{R} \partial_s Q =
-	  - \dfrac{DC_\infty}{R^2} \left(\partial_{ss} Q + \alpha \dfrac{R}{r} \partial_s Q\right)
-\end{equation}
-then
-\begin{equation}
-	\dfrac{R^2}{D}\dfrac{ \dot{C}_\infty}{C_\infty}\left[1-Q\right] + \dfrac{R\dot{R}}{D}\left(s-\dfrac{1}{s^\alpha}\right)\partial_s Q =  - \left(\partial_{ss}Q + \dfrac{\alpha}{s} \partial_s{Q}\right)
-\end{equation}
-
-\end{document}
-
-
-\section{Matter Intake}
-\subsection{Generic case}
-We use the scaled variable
-\begin{equation}
-	s(r,t)
-\end{equation}
-and
-\begin{equation}
-	C(r,t) = C^\star + \left[C_\infty-C^\star\right] Q(s) = C^\star + \delta C Q(s)
-\end{equation}
-so that
-\begin{equation}
-	\partial_r C = \delta C \left(\partial_r s\right) Q'(s)
-\end{equation}
-and
-\begin{equation}
-	\partial_{rr} C = \delta C \left[ \left(\partial_r s\right)^2 Q'' + \left(\partial_{rr}s\right) Q'\right]
-\end{equation}
-and
-\begin{equation}
-	\partial_{t} C = \dot{C}^\star \left[1-Q\right] + \delta C \left(\partial_t s\right) Q'
-\end{equation}
-
-We obtain
-\begin{equation}
-	\dfrac{\dot{C}^\star}{\delta C} \left[1-Q\right] +  \left(\partial_t s\right) Q' 
-	+\dot{R} \left(\dfrac{R}{r}\right)^\alpha \left(\partial_r s\right) Q' = D  \left[ \left(\partial_r s\right)^2 Q'' + \left(\partial_{rr}s\right) Q' + \dfrac{\alpha}{r} \left(\partial_r s\right) Q'\right]
-\end{equation}
-then
-\begin{equation}
-	\dfrac{\dot{C}^\star}{\delta C} \left[1-Q\right] = 
-	 D \left(\partial_r s\right)^2 Q''
-	+\left( D\left[\left(\partial_{rr}s\right) + \dfrac{\alpha}{r} \left(\partial_r s\right) \right] - \left[ \left(\partial_t s\right) + \dot{R} \left(\dfrac{R}{r}\right)^\alpha \left(\partial_r s\right)\right]\right)Q'
-\end{equation}
-
-\subsection{Substitution}
-If we choose
-\begin{equation}
-	s = r/R(t),\; r = s R(t),\; \partial_r s = 1/R,\;\partial_{rr} s = 0, \partial_t s = - s \dot{R}/R
-\end{equation}
-we get
-\begin{equation}
-\dfrac{\dot{C}^\star}{\delta C} \left[1-Q\right] = \dfrac{D}{R^2} Q'' + 
-\left( \dfrac{1}{s} \dfrac{D \alpha}{R^2} - \dfrac{\dot{R}}{R}\left[ \dfrac{1}{s^\alpha} - s \right]\right) Q'
-\end{equation}
-or
-\begin{equation} 
-\dfrac{R^2}{D}\dfrac{\dot{C}^\star}{\delta C} \left[1-Q\right] = Q'' + \left( \dfrac{\alpha}{s} + \dfrac{R\dot{R}}{D} \left[s-\dfrac{1}{s^\alpha}\right]\right) Q'
-\end{equation}
-and using the time
-\begin{equation}
-	\tau = \dfrac{A}{2\pi D} = \dfrac{R^2}{2D}, \;\; \dot{\tau} = \dfrac{\dot{A}}{2\pi D} = \dfrac{R\dot{R}}{D}
-\end{equation}
-we get
-\begin{equation}
-	2\dfrac{\dot{C}^\star}{\delta C} \left[1-Q\right] \tau = Q'' + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s-\dfrac{1}{s^\alpha}\right]\right) Q'
-\end{equation}
-
-Moreover, we have
-\begin{equation}
-	\partial_r C^\star = \dfrac{\delta C}{R} Q'^\star
-\end{equation}
-then
-\begin{equation}
-	R \dot{R} = \rho \dfrac{\delta C}{C^\star} D Q'^\star - \dfrac{R^2\dot{C}^\star}{\left(1+\alpha\right)C^\star}
-\end{equation}
-and
-\begin{equation}
-\dot{\tau} = \rho \dfrac{\delta C}{C^\star} Q'^\star - \dfrac{2}{1+\alpha} \dfrac{\dot{C}^\star}{C^\star} \tau
-\end{equation}
-
-\subsection{Some solutions}
-
-\subsubsection{Constant inside conc}
-We get
-\begin{equation}
- 0 = Q'' + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s-\dfrac{1}{s^\alpha}\right]\right) Q'
-\end{equation}
-Using $Y=Q'$,
-\begin{equation}
-	0 = Y' + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s-\dfrac{1}{s^\alpha}\right]\right) Y
-\end{equation}
-so that
-\begin{equation}
-	\log Y - \log Y^\star = -\int_{1}^s \left( \dfrac{\alpha}{u} + \dot{\tau} \left[u-\dfrac{1}{u^\alpha}\right]\right) \, \mathrm{d}u
+	C(r,t) = C_\infty(t) Q\left(s,t\right)
 \end{equation}
 We get
 \begin{equation}
-\left\lbrace
-\begin{array}{rclcl}
-\log Y_1 - \log Y^\star_1 & = &\int_{1}^s \left( \dfrac{\dot{\tau}-1}{u} - \dot{\tau} u \right) \, \mathrm{d}u & = & (\dot{\tau}-1) \log s - \dfrac{\dot{\tau}}{2}(s^2-1)\\
-\\
-\log Y_2 - \log Y^\star_2 & = &\int_{1}^s \left( \dfrac{\dot{\tau}}{u^2} - \dfrac{2}{u} - \dot{\tau} u \right) \, \mathrm{d}u & = & \dot{\tau}\left(1-\dfrac{1}{s}\right)-2 \log s - \dfrac{\dot{\tau}}{2}(s^2-1)\\
-\end{array}
-\right.
-\end{equation}
-then
-\begin{equation}
-\left\lbrace
-\begin{array}{rcl}
-Y_1(s) & = & Y^\star_1 e^{\frac{\dot{\tau}}{2}} s^{(\dot{\tau}{-1})} e^{-\frac{\dot{\tau}}{2}s^2}\\
-\\
-Y_2(s) & = & Y^\star_2 \dfrac{1}{s^2} e^{\frac{3\dot{\tau}}{2}} e^{-\frac{\dot{\tau}}{s}} e^{-\frac{\dot{\tau}}{2}s^2}\\
-\end{array}
-\right.
+	\partial_r C = \dfrac{C_\infty}{R} \partial_s Q 
 \end{equation}
 
-We get
 \begin{equation}
-	Y_1^\star = \dfrac{
-		2e^{-\dfrac{\dot{\tau}}{2}}
-		\left(\dfrac{\dot{\tau}}{2}\right)^{\dfrac{\dot{\tau}}{2}}
-	}
-	{\Gamma\left(\dfrac{\dot{\tau}}{2}\right)-\gamma\left(\dfrac{\dot{\tau}}{2},\dfrac{\dot{\tau}}{2}\right)}
+	\partial_{rr} C = \dfrac{C_\infty}{R^2} \partial_{ss} Q 
 \end{equation}
 
-
-
-\subsubsection{Other?}
-We look for solution
 \begin{equation}
-	Q(s) = 1 - e^{-f(s)}
-\end{equation}
-leading to
-\begin{equation}
-	2\tau \dfrac{\dot{C}^\star}{\delta C} = f''(s) - f'^2(s) + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s-\dfrac{1}{s^\alpha}\right]\right) f'(s)
+	\partial_t C  = \dot{C}_\infty Q + C_\infty \left[ -\dfrac{r \dot{R}}{R^2} \partial_s Q + \partial_t Q \right]
 \end{equation}
 
-\section{Try Again}
-
-\subsection{Equation and rescaling}
-The incompressible diffusion equation is
-\begin{equation}
-	\partial_t C + \dot{R} \left(\dfrac{R}{r}\right)^\alpha  \partial_r C = D \left( \partial_{rr} C + \dfrac{\alpha}{r} \partial_r C \right) = D \, \dfrac{1}{r^\alpha} \partial_r \left(r^\alpha\partial_r C\right)
-\end{equation}
-and
-with 
-\begin{equation}
-	s = r/R(t)
-\end{equation}
-and
-\begin{equation}
-	C(r,t) = C^\star + \left[C_\infty-C^\star\right] Q(s,t) = C^\star + \delta C Q(s,t)
-\end{equation}
-we get
-\begin{equation}
-	\partial_r C = \dfrac{\delta C}{R} \partial_s Q, \; \partial_{rr} C = \dfrac{\delta C}{R^2} \partial_s Q
-\end{equation}
-and
-\begin{equation}
-	\partial_t C = \dot{C}^\star \left[1-Q\right] + \delta C \left[\partial_t Q - s \dfrac{\dot{R}}{R} \partial_s Q \right]
-\end{equation}
-We get
-\begin{equation}
-	\dot{C}^\star \left[1-Q\right] + \delta C \left[\partial_t Q - s \dfrac{\dot{R}}{R} \partial_s Q \right] + \dfrac{\dot{R}}{R} \dfrac{1}{s^\alpha} \delta C \partial_s Q 
-	= \dfrac{D \delta C}{R^2} \left( \partial_{ss} Q + \dfrac{\alpha}{s} \partial_s Q \right)
-\end{equation}
-and
-\begin{equation}
-  \dfrac{R^2\dot{C}^\star}{D\delta C}\left[1-Q\right] + \dfrac{R^2}{D} \partial_t Q + \dfrac{R\dot{R}}{D} \left(\dfrac{1}{s^\alpha}-s\right) \partial_s Q =   \partial_{ss} Q + \dfrac{\alpha}{s} \partial_s Q
-\end{equation}
-then
-\begin{equation}
-	2 \tau \left( \partial_t Q + \dfrac{\dot{C}^\star}{\delta C} \left[1-Q\right] \right) =
-	 \partial_{ss} Q + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s - \dfrac{1}{s^\alpha} \right] \right) \partial_s Q
-\end{equation}
-
-With
-\begin{equation}
-	Y = 1-Q
-\end{equation}
-and
-\begin{equation}
-	\Omega(t) = \dfrac{\dot{C}^\star}{\delta C}
-\end{equation}
-
-we get
-\begin{equation}
-	2 \tau \left( \partial_t Y -  \Omega Y \right) =
-	 \partial_{ss} Y + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s - \dfrac{1}{s^\alpha} \right] \right) \partial_s Y
-\end{equation}
-Using
-\begin{equation}
-Y_0(t) = \exp \left[ \int_{t_0}^t \Omega(u) \,\mathrm{d}u\right]
-\end{equation}
-and
-\begin{equation}
-Y(s,t) = \Xi(s,t) Y_0(t),
-\end{equation}
-we get
-\begin{equation}
-	\tau \partial_t \Xi =  \partial_{ss} \Xi + \left( \dfrac{\alpha}{s} + \dot{\tau} \left[s - \dfrac{1}{s^\alpha} \right] \right) \partial_s \Xi
-\end{equation}
-
-\end{document}
-
-\subsection{Exponential Form}
-We may look a solution like
-\begin{equation}
-	Q(s,t) = 1 - e^{-\Xi(s,t)}
-\end{equation}
-and we get, using
-$$
-	\Omega(t) = \dfrac{\dot{C}^\star}{\delta C}
-$$
-\begin{equation}
-	2\tau \left( \partial_t \Xi + \Omega \right) = \partial_{ss} \Xi - \left(\partial_s \Xi\right)^2 + \underbrace{\left( \dfrac{\alpha}{s} + \dot{\tau} \left[s - \dfrac{1}{s^\alpha} \right] \right)}_{-\lambda(s,t)} \partial_s \Xi 
-\end{equation}
-
-\subsection{Quasi-stat}
-With $ \partial_t \Xi \simeq 0$, $\dot{\tau}$ approximately constant, and $Y=\partial_s \Xi$, we get
-\begin{equation}
-	2\tau\Omega = Y' - Y^2 - \lambda(s) Y 
-\end{equation} 
-which is a kind of Ricatti equation.
-
-\subsubsection{Kernel}
-We solve the kernel equation
-\begin{equation}
-	Y'_0 = Y^2_0 + \lambda(s)Y_0
-\end{equation}
-using 
-$$
-	W = 1/Y_0
-$$
 so that
+
 \begin{equation}
-	-\dfrac{W'}{W^2} = \dfrac{1}{W^2} + \dfrac{\lambda(s)}{W}
+	\dot{C}_\infty Q + C_\infty \left[ -\dfrac{r \dot{R}}{R^2} \partial_s Q + \partial_t Q \right] + 
+	\dot{R} \left(\dfrac{R}{r}\right)^\alpha \dfrac{C_\infty}{R} \partial_s Q 
+	= \dfrac{DC_\infty}{R^2} \left(\partial_{ss}Q + \alpha\dfrac{R}{r} \partial_s Q\right)
 \end{equation}
-or
+and
 \begin{equation}
-	W' = -\lambda(s) W + 1
-\end{equation}
-We define
-\begin{equation}
-	\Lambda(s) = \int_{1}^s \lambda(u) \, \mathrm{d}u
-\end{equation}
-and get
-\begin{equation}
-	W(s) = \left\lbrack W^\star - \int_1^s e^{\Lambda(u)} \, \mathrm{d} u \right\rbrack e^{-\Lambda(s)}
-\end{equation}
-or
-\begin{equation}
-	Y_0(s) = \partial_s \Xi = \dfrac{e^{\Lambda(s)}}{ \frac{1}{Y_0^\star} - \int_1^s e^{\Lambda(u)} \, \mathrm{d} u }
-\end{equation}
-which imposes
-\begin{equation}
-	Y_0^\star = \left[ 
-	\int_1^{+\infty} e^{\Lambda(u)} \, \mathrm{d} u 
-	\right]^{-1}
+ \dfrac{R^2}{D} \partial_t Q + \dfrac{R^2 \dot{C}_\infty}{D C_\infty} Q 
+ + \dfrac{R\dot{R}}{D}\left[ \dfrac{1}{s^\alpha} -s\right] \partial_s Q
+ = \left(\partial_{ss}Q + \dfrac{\alpha}{s} \partial_s Q\right)
 \end{equation}
 
-We have
+using
 \begin{equation}
-\left\lbrace
-\begin{array}{rclcl}
-\Lambda_1(s) & = &\int_{1}^s \left( \dfrac{\dot{\tau}-1}{u} - \dot{\tau} u \right) \, \mathrm{d}u & = & (\dot{\tau}-1) \log s - \dfrac{\dot{\tau}}{2}(s^2-1)\\
-\\
-\Lambda_2(s) & = &\int_{1}^s \left( \dfrac{\dot{\tau}}{u^2} - \dfrac{2}{u} - \dot{\tau} u \right) \, \mathrm{d}u & = & \dot{\tau}\left(1-\dfrac{1}{s}\right)-2 \log s - \dfrac{\dot{\tau}}{2}(s^2-1)\\
-\end{array}
-\right.
-\end{equation}
-then
-\begin{equation}
-\left\lbrace
-\begin{array}{rcl}
-e^{\Lambda_1(s)} & = & e^{\frac{\dot{\tau}}{2}}s^{\left(\dot{\tau}-1\right)} e^{-\frac{\dot{\tau}}{2}s^2 }\\
-\\
-e^{\Lambda_2(s)} & = & \dfrac{1}{s^2}e^{\frac{3\dot{\tau}}{2}} e^{-\frac{\dot{\tau}}{s}} e^{-\frac{\dot{\tau}}{2}s^2 }\\
-\end{array}
-\right.
-\end{equation}
-
-\subsubsection{First Order}
-
-We write $Y=Y_0+Y_1$ and we obtain
-\begin{equation}
-	Y_1' = \Psi + \left[ 2 Y_0(s) + \lambda(s) \right] Y_1(s), \;\; \Psi = 2 \tau \Omega
-\end{equation}
-We define
-\begin{equation}
-	\Upsilon(s) = \int_1^s 2Y_0(u) \mathrm{d} u
+	\tau = \dfrac{A}{2\pi D} = \dfrac{R^2}{2D}, \dot{\tau} = \dfrac{R\dot{R}}{D}
 \end{equation}
 we get
 \begin{equation}
-	Y_1 = \left\lbrack Y_1^\star + \Psi \int_1^s e^{-\Upsilon(u)} e^{-\Lambda(u)} \, \mathrm{d} u  \right\rbrack e^{\Upsilon(s)} e^{\Lambda(s)}
+	2\tau\left[\partial_t Q + \dfrac{\dot{C}_\infty}{C_\infty} Q \right] = \partial_{ss}Q + \left[\dfrac{\alpha}{s} + \dot{\tau}\left(s-\dfrac{1}{s^\alpha}\right) \right] \partial_s Q
 \end{equation}
-
-\end{document}
-
 
 \end{document}
