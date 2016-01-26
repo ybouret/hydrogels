@@ -83,6 +83,22 @@ The incompressible diffusion equation is
 	\partial_t C + \dot{R} \left(\dfrac{R}{r}\right)^\alpha  \partial_r C = D \left( \partial_{rr} C + \dfrac{\alpha}{r} \partial_r C \right) = D \, \dfrac{1}{r^\alpha} \partial_r \left(r^\alpha\partial_r C\right)
 \end{equation}
 
+We use
+\begin{equation}
+	C(r,t) = C^\infty(t) + \left[C^\star-C_\infty\right] Q(s(r,t),t)
+\end{equation}
+We have
+
+\begin{equation}
+	\partial_t C = \partial_t s \cdot  \partial_s Q + \partial_t Q
+\end{equation}
+
+\begin{equation}
+	\partial_r C = \partial_r s \cdot \partial_s Q
+\end{equation}
+
+\end{document}
+
 We use the variable change 
 \begin{equation}
 	s = r / R(t)
